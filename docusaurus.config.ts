@@ -21,7 +21,7 @@ const config: Config = {
   projectName: 'desktop', // Usually your repo name.
   deploymentBranch:'gh-pages',
   onBrokenLinks: 'throw',
-  onBrokenMarkdownLinks: 'warn'
+  onBrokenMarkdownLinks: 'warn',
 
   // Even if you don't use internationalization, you can use this field to set
   // useful metadata like html lang. For example, if your site is Chinese, you
@@ -80,18 +80,18 @@ const config: Config = {
           position: 'left',
           label: 'Tutorial',
         },
-        {to: '/blog', label: 'Blog', position: 'left'},
+        /*{to: '/blog', label: 'Blog', position: 'left'},
         {
           href: 'https://github.com/facebook/docusaurus',
           label: 'GitHub',
           position: 'right',
-        },
+        },*/
       ],
     },
     footer: {
       style: 'dark',
-      links: [
-        {
+    /*  links: [
+       {
           title: 'Docs',
           items: [
             {
@@ -130,7 +130,7 @@ const config: Config = {
             },
           ],
         },
-      ],
+      ],*/
       copyright: `Copyright © ${new Date().getFullYear()} My Project, Inc. Built with Docusaurus.`,
     },
     prism: {

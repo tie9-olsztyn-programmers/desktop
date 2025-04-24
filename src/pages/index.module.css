@@ -8,6 +8,16 @@
   text-align: center;
   position: relative;
   overflow: hidden;
+
+  background: linear-gradient(
+          135deg,
+          #2D8CFF 20%,   /* Avalonia */
+          #FF7139 50%,  /* Rider */
+          #512BD4 80%  /* .NET / C# */
+  );
+  color: white;
+  text-shadow: 1px 1px 4px #00000088;
+
 }
 
 @media screen and (max-width: 996px) {
@@ -20,4 +30,23 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
+.buttons button,
+.buttons a {
+  background-color: #FF7139; /* Rider orange */
+  color: white !important;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: bold;
+  text-decoration: none;
+  border: none;
+  transition: background 0.3s ease, color 0.3s ease, transform 0.2s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+.buttons button:hover,
+.buttons a:hover {
+  background-color: #2D8CFF; /* Avalonia blue on hover */
+  color: #fff;
+  transform: scale(1.05);
 }
