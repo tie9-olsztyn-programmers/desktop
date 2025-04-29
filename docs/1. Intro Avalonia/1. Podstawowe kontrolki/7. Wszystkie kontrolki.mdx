@@ -1,0 +1,24 @@
+---
+title: Wszystkie kontrolki
+---
+
+```xml
+<StackPanel Margin="10">
+    <TextBlock Text="Hello, Avalonia" FontSize="23"
+               HorizontalAlignment="Center"
+               Margin="0,0,0,10"/>
+    <Button Content="Click Me" HorizontalAlignment="Center" Margin="0,0,0,10" />
+    <Button Content="Click Me22Pading" Padding="10"/>
+    <CheckBox Content="Check me" IsChecked="False" Margin="0,0,0,10"/>
+    <RadioButton GroupName="Options" Content="Op 1" IsChecked="True" Margin="0,0,0,10" />
+    <RadioButton GroupName="Options" Content="Op 2" IsChecked="False" Margin="0,0,0,10" />
+    <TextBox Watermark="Enter some text..." Margin="0,0,0,10" />
+    <ComboBox SelectedIndex="0" Margin="0,0,0,10">
+        <ComboBox.Items>
+            <x:String>Option A</x:String>
+            <x:String>Option B</x:String>
+            <x:String>Option C</x:String>
+        </ComboBox.Items>
+    </ComboBox>
+</StackPanel>
+```

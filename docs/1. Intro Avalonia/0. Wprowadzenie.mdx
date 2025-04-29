@@ -2,6 +2,92 @@
 title: Wprowadzenie
 ---
 
+# Co to jest Avalonia?
+
+:::info Avalonia
+- wieloplatformowy framework do tworzenia aplikacji graficznych (GUI) w języku C#.
+- inspirowany technologiami takimi jak WPF (Windows Presentation Foundation) i UWP (Universal Windows Platform),
+- działa na wielu systemach operacyjnych, w tym Windows, macOS, Linux, a także Android i iOS (chociaż wsparcie mobilne jest mniej dojrzałe).
+- https://avaloniaui.net/
+:::
+
+# Środowisko
+1. Należy zainstalować dotnet 8.0 lub dotnet 9.0.
+2. Następnie instalujemy templates dla Avalonii `dotnet new install Avalonia.Templates`
+3. Instalujemy IDE Rider od JetBrains:
+    - warto utworzyć konto na JetBrains
+    - zainstaluj narzędzie do zarządzania programami od JetBrains `Toolbox`
+    - przy użyciu `Toolbox` zainstaluje Rider
+    - w IDE Rider doinstaluj plugin `AvaloniaRider` (*Settings > Plugin > AvaloniaRider*)
 
 
-coś tam coś
+# Tworzenie projektu
+## tworzenie projektu Avalonia w Rider
+- uruchom IDE Rider
+- wybierz new Solution
+- *Custom Templates*: wybierz `Avalonia.Net App`
+- dotnet 8 lub 9
+- nazwij swoją aplikację
+- uruchomienie przez kliknięcie ikony "play"
+
+## Tworzenie projektu Avalonia w konsolii
+- jako podstawową aplikację `dotnet new avalonia.app -n <NazwaProjektu>`
+- jako zbudowaną na wzorcu MVVM `dotnet new avalonia.mvvm -n N<azwaProjektu>`
+- uruchomienie projektu:
+    - `cd NazwaProjektu`
+    - `dotnet run`
+
+## Podstawowa struktura projektu
+Podstawowa struktura
+MyApp.csproj: Plik projektu, który zawiera informacje o konfiguracji projektu, takie jak zależności NuGet, wersje frameworków, itp.
+App.axaml: Plik XAML definiujący zasoby aplikacji, takie jak style, szablony i inne zasoby globalne. Ten plik odpowiada za konfigurację aplikacji.
+App.axaml.cs: Plik code-behind dla App.axaml. Zawiera logikę uruchamiania aplikacji, w tym inicjalizację i ustawienia startowe.
+MainWindow.axaml: Główny plik XAML definiujący interfejs użytkownika dla okna głównego aplikacji. Zawiera elementy wizualne i layout.
+MainWindow.axaml.cs: Plik code-behind dla MainWindow.axaml, który zawiera logikę i obsługę zdarzeń dla głównego okna aplikacji.
+Program.cs: Punkt wejścia aplikacji, gdzie znajduje się metoda Main. W tym pliku uruchamiana jest aplikacja Avalonia.
+Assets/: Folder zawierający zasoby, takie jak ikony, obrazy, czcionki, itp.
+ViewModels/: Folder zawierający modele widoków (ViewModels), które przechowują logikę biznesową aplikacji i są powiązane z widokami w architekturze MVVM. W tym przykładzie MainWindowViewModel.cs przechowuje logikę dla głównego okna.
+Views/: Folder zawierający widoki (Views), które definiują interfejs użytkownika w postaci plików XAML. Widoki są powiązane z modelami widoków. MainWindow.axaml jest jednym z takich widoków.
+
+## Przepływ aplikacji:
+Program.cs uruchamia aplikację, tworząc instancję klasy App
+App.axaml.cs inicjalizuje zasoby i ustawia główne okno aplikacji na MainWindow.
+MainWindow.axaml definiuje, jak wygląda główne okno, a MainWindow.axaml.cs zawiera logikę związaną z tym oknem.
+MainWindowViewModel.cs zarządza danymi i logiką związaną z widokiem MainWindow.
+
+
+# Okno główne
+```xml
+Okno główne axaml:
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="FirstAval.MainWindow"
+        Title="FirstAval"
+        Width="800"
+        Height="600"
+        WindowStartupLocation="CenterScreen"
+        CanResize="True"
+        WindowState="Normal"
+        TransparencyLevelHint="AcrylicBlur"
+        ExtendClientAreaToDecorationsHint="False"
+        SystemDecorations="Full"
+        >
+    Ustawienia Okna
+
+</Window>
+```
+
+
+
+
+
+
+
+
+
+
+
+

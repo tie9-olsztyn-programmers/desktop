@@ -1,0 +1,31 @@
+---
+title: StackPanel
+---
+`<StackPanel>`
+
+StackPanel w Avalonia UI to kontener układu, który ustawia swoje elementy (dzieci) w:
+- kolumnie (pionowo) - jeden pod drugim, lub
+- wierszu (poziomo) - jeden po drugim.
+
+Główne cechy:
+- Domyślnie układa elementy w pionie (Vertical).
+- Można zmienić orientację na poziomą (Horizontal) za pomocą `Orientation="Horizontal"`.
+- Każdy element dodawany do StackPanel zajmuje miejsce obok poprzedniego.
+```xml
+<StackPanel>
+        <Button Content="Przycisk 1"/>
+        <Button Content="Przycisk 2"/>
+        <Button Content="Przycisk 3"/>
+</StackPanel>
+```
+
+```xml
+<StackPanel Orientation="Horizontal">
+     <Button Content="Przycisk 1"/>
+     <Button Content="Przycisk 2"/>
+     <Button Content="Przycisk 3"/>
+</StackPanel>
+```
+
+
+
