@@ -1,0 +1,90 @@
+---
+title: Dane z TextBlock, TextBox
+----
+# `TextBox`, `Button`, `TextBlock`
+- `TextBox` - pobieranie danych (input)
+- `TextBlock` - wyświetlanie tekstu (output)
+- `Button` - akcje przekazywania danych
+
+
+# `MainWindow.axaml`
+```xml
+<StackPanel Margin="20" HorizontalAlignment="Center">
+    <TextBox x:Name="InputTextBox" Width="300" />
+    <Button x:Name="SubmitButton" Content="Submit"
+            Click="SubmitButton_Click" HorizontalContentAlignment="Center"
+            Width="100" Margin="0,20,0,0"
+            Background="Aquamarine"
+            CornerRadius="20"
+            BorderThickness="2"
+            BorderBrush="Black"
+            Foreground="Crimson"
+    />
+
+    <TextBlock x:Name="ShowTextBlock" Width="300" Margin="0,20,0,0" />
+</StackPanel>
+
+
+```
+- `x:Name` nadaje swoiste "id" dla danej kontrolki, dzięki tej nazwie będziemy używać tej kontroli w C#
+- `Click` ta właściwość odpowiada za obsługę zdarzenia kliknięcia, gdy ono wystąpi zostanie wywołana metoda `SubmitButton_Click`
+
+
+# `MainWindow.axaml.cs`
+```csharp
+public partial class MainWindow : Window
+{
+    // prywatne pola, w których będą przechowywane obiekty kontrolek
+    private TextBlock _showTextBlock;
+    private TextBox _inputTextBox;
+    private Button _submitButton ;
+
+
+// to konstruktor klasy
+    public MainWindow()
+    {
+        InitializeComponent();
+
+        // tu do prywatnych pól przypisujemy odpowiadające kontrolki
+        _inputTextBox = this.FindControl<TextBox>("InputTextBox");
+        _showTextBlock = this.FindControl<TextBlock>("ShowTextBlock");
+        _submitButton = this.FindControl<Button>("SubmitButton");
+
+    }
+
+    private void SubmitButton_Click(object? sender, RoutedEventArgs e)
+    {
+        // po kliknięciu Buttona kontrolce TextBlock
+        // znienimy wartość właściwości Text
+        // nowa wartość będzie pochodzi z kontrolki TextBox z jej właściowści Text
+        _showTextBlock.Text = _inputTextBox.Text;
+    }
+}
+
+```
+# Wersja skrócona `MainWindow.axaml.cs`
+
+:::tip
+
+Nie trzeba używać metody `FindControl`, bo od Avalonii 11 w tle tworzone są za nas pola, którym odpowiadają kontrolki z XML.
+
+:::
+
+```csharp
+public partial class MainWindow : Window
+{
+    public MainWindow()
+    {
+        InitializeComponent();
+    }
+
+    private void SubmitButton_Click(object? sender, RoutedEventArgs e)
+    {
+        ShowTextBlock.Text = InputTextBox.Text;
+    }
+}
+```
+
+
+
+
