@@ -1,0 +1,69 @@
+---
+title: Złożone typy danych
+---
+
+# Type referencyjny
+**Typy referencyjne** (*reference types*):
+- Przechowują odniesienie (wskaźnik) do rzeczywistej wartości, która znajduje się w pamięci na stercie (*heap*).
+- Kiedy przypisujesz jedną zmienną typu referencyjnego do innej, kopiujesz odniesienie (adres w pamięci), a nie samą wartość.
+
+## Charakterystyka typów referencyjnych
+- Przechowują wskaźnik (referencję) do obiektu przechowywanego na stercie (heap).
+- Kiedy przypisujesz je do innej zmiennej, kopiujesz referencję (odwołanie do tego samego obiektu).
+- Przechowywane na stercie, odniesienia są na stosie.
+
+```csharp
+string x = "Hello";
+string y = x;      // y to ta sama referencja co x
+x = "World";       // Zmieniamy x, ale y wciąż wskazuje na "Hello"
+
+Console.WriteLine(x); // World
+Console.WriteLine(y); // Hello
+```
+#### małe wyjaśnienie
+`x = "World";`
+- stringi są niemodyfikowalne, nie da się „podmienić” zawartości istniejącego obiektu "Hello"
+- powyższa instrukcja powoduje, że `x` zaczyna wskazywać na zupełnie nowy obiekt "World".
+- Obiekt "Hello" pozostaje nienaruszony w pamięci, a `y` dalej do niego odnosi.
+
+## Typy specjalne
+### `object`
+:::tip `object`
+- bazowy typ dla wszystkich innych typów w C#
+- każda zmienna może być przypisana do `object`, ale to typ referencyjny.
+```csharp
+object zmienna = "Hello";
+object zmienna = 10;
+object zmienna = new object();
+
+```
+
+:::
+
+### `var`
+:::tip `var`
+-  Słowo kluczowe, które pozwala na automatyczne wnioskowanie typu na podstawie wartości przypisanej do zmiennej.
+- *keyword* `var` w języku C# jest używane do deklaracji zmiennych:
+    - gdzie typ zmiennej jest określany przez kompilator na podstawie wartości przypisanej do zmiennej podczas inicjalizacji
+    - oznacza to, że kompilator automatycznie określa typ zmiennej na podstawie kontekstu.
+
+```csharp
+var age = 25; // age jest int
+var name = "John"; // name jest string
+var isValid = true; // isValid jest bool
+
+// var a = null // error
+```
+#### małe wyjaśnienie
+`var a = null ;`
+- `var` wymaga, aby przypisana wartość miała ustalony typ w czasie kompilacji.
+- literale `null` nie są typowane, więc kompilator nie może wywnioskować, jakiego typu ma być zmienna.
+
+
+:::
+
+
+
+
+
+
