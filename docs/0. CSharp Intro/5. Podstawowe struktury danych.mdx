@@ -1,0 +1,99 @@
+----
+title: Podstawowe struktury - tablice, listy, słowniki
+---
+# Tablice w C#
+## Tworzenie
+- to statyczne struktury danych,
+- pozwalają na przechowywanie elementów tego samego typu.
+- mają stały rozmiar, co oznacza, że:
+- liczba elementów musi być określona w momencie jej tworzenia i,
+- nie można jej później zmienić.
+
+```csharp
+using System;
+
+public class Program
+{
+    public static void Main()
+    {
+        int[] liczby = new int[5]; // Tablica o rozmiarze 5
+        liczby[0] = 10;
+        liczby[1] = 20;
+        Console.WriteLine(liczby); // System.Int32[]
+
+        int[] numbers = { 1, 2, 3, 4, 5 }; // inicjalizacja tablicy od razu z wartościami
+        Console.WriteLine(numbers) ; // System.Int32[]
+
+    }
+}
+
+```
+## Dostęp do elementów `[index]`
+```csharp
+using System;
+
+public class Program
+{
+    public static void Main()
+    {
+        string[] names = {"Gieżomin", "Holisława", "Kircika", "Hszźrćw2"}; // Tablica o rozmiarze 5
+        Console.WriteLine("pierwszy element: " + names[0]+ "drugi element: " + names[1] );
+        Console.WriteLine($"trzecie {names[2]} oraz ostatni element {names[3]}");
+    }
+}
+```
+## Iterowanie
+```csharp
+using System;
+
+public class Program
+{
+    public static void Main()
+    {
+        int[] liczby = {10,20,33,21,2} ;
+
+        for (int i = 0; i < liczby.Length; i++)
+        {
+            Console.WriteLine(liczby[i]);
+        }
+
+        Console.WriteLine("Iteracja z foreach") ;
+        foreach(int l in liczby)
+        {
+            Console.Write(l) ;
+        }
+    }
+}
+```
+---------
+# Struktury generyczne
+
+
+
+## Słowniki
+
+
+
+
+## Listy
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

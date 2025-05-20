@@ -1,0 +1,259 @@
+---
+title: ReactiveUI
+---
+Programiści Avalonii uznali *ReactiveUI* za podstawową bibliottekę MVVM.
+
+https://docs.avaloniaui.net/docs/concepts/reactiveui/
+
+# Utworzenie projektu
+- Rider
+- szablon MVVM:
+    - albo tworzymy cały projekt w konsoli `dotnet new avalonia.mvvm -m ReactiveUI -o <NazwaProjektu>`
+    - albo w Rider wybieramy szablon MVVM
+        - wybieramy *Advanced Settings*, w którym
+        - znajdujemy *MVVMToolkit* wybieramy *ReactiveUI*
+    - jeszcze w *AvaloniaVersion* napiszmy `11.3.0`
+- dodatkowe biblioteki instalujesz **będąc w folderze projektu**:
+    - `dotnet add package Avalonia.ReactiveUI` rdzeń i integracja z Avalonią
+    - `dotnet add package ReactiveUI.Fody` automatyczne generowanie kodu
+- zbuduj projekt
+
+
+Gdyby były problemy z wersją Avalonii:
+`dotnet add package Avalonia --version 11.3.0`
+
+W pliku `.csproj` powinieneś mieć m.in.:
+- `<PackageReference Include="Avalonia.ReactiveUI" Version="11.3.0" />`
+- `<PackageReference Include="ReactiveUI.Fody" Version="19.5.41" />`
+
+
+Mała zmiana w pliku `MainWindow.axaml.cs`
+- zamiast dziedziczenie po `Window`: `public partial class MainWindow : Window`
+- będziemy dziedziczyć po `ReactWindow`: `public partial class MainWindow : ReactiveWindow<MainWindowViewModel>`
+    - nasze okno będzie automatycznie połączone z typem `MainViewModel`
+    - *ReactiveUI* będzie wiedział jak automatycznie zainicjalizować *ViewModel*, powiązać właściwości i metody reaktywne
+    - daje nam pełną integrację z *ReactiveUI*
+
+```csharp
+using Avalonia.ReactiveUI;
+using FirstMVVMReactUI.ViewModels;
+
+namespace FirstMVVMReactUI.Views;
+
+public partial class MainWindow : ReactiveWindow<MainWindowViewModel>
+{
+    public MainWindow()
+    {
+        InitializeComponent();
+    }
+}
+```
+
+
+URUCHOM PROJEKT
+
+----
+# Anatomia projektu MVVM w ReactiveUI
+
+- `Program.cs` główny punkt wejścia
+- `App.axaml` zawiera globalne zasoby, style, motywy
+- `App.axaml.cs`
+    - rejestruje główne okno jako `MainWindow`,
+    - ustawia DataContext na `MainWindowViewModel`
+- `ViewModelBase.cs`
+    - `ReactiveObject` implementuje `INotifyPropertyChanged`
+    - Pozwala na użycie `RaiseAndSetIfChanged`, `WhenAnyValue`, `ObservableAsPropertyHelper`
+- `MainWindowViewModel` główny *ViewModel* dziedziczy po `ViewModelBase`
+- `MainWindow.axaml` oraz `MainWindow.axaml.cs` główny widok aplikacji
+
+---
+# Podstawowe pojęcia *Co-to-po-co*
+
+:::info Strumień
+Strumień (w kontekście Rx.NET) to
+    - **ciąg zdarzeń** lub **wartości**
+    - pojawiających się w **czasie**, który
+    - możesz **obserwować** („subskrybować”) i na który
+    - możesz **reagować** za pomocą operatorów (np. `Select`, `Where`)
+    — zamiast pytać o stan, pozwalasz źródłu „wypychać” nowe dane do Twojego kodu w chwili ich wystąpienia.
+
+Strumień może być:
+    - zimny (*cold*): rozpoczyna emisję dopiero po subskrypcji (np. `Observable.Range`)
+    - gorący (*hot*): emituje niezależnie od tego, kto i kiedy się subskrybuje (np. `Subject`, `zdarzenia UI`).
+
+Dzięki strumieniom tworzenie deklaratywnych potoków przetwarzania danych staje się naturalne i czytelne
+    - opisujesz „co” ma się dziać z przepływającymi zdarzeniami,
+    - a Rx.NET dba o ich dostarczenie i harmonogram.
+
+
+:::
+
+
+:::tip Strumień-metafora
+Strumień Rx.NET jest jak linia produkcyjna w fabryce:
+    - Źródło strumienia (`Observable`) to taśma produkcyjna, na której pojawiają się kolejne produkty (zdarzenia lub dane).
+        - Nie wiesz, kiedy dokładnie kolejny produkt się pojawi, ale
+        - możesz być gotowy na jego przyjęcie.
+    - Operatorzy (`Select`, `Where`, `Buffer`) to roboty pracujące przy taśmie - każdy z nich może
+        - zmieniać produkt,
+        - decydować,
+            - czy produkt ma przejść dalej,
+            - czy może być odłożony na bok.
+    - Subskrybent (`Observer`) to pracownik na końcu linii, który bierze gotowy produkt i coś z nim robi (np. zapisuje, wyświetla, przetwarza).
+
+Dzięki temu rozwiązaniu nie musisz ręcznie sprawdzać, czy produkt jest gotowy — produkty po prostu przychodzą do Ciebie, a Ty tylko reagujesz wtedy, gdy coś się pojawi.
+
+
+:::
+
+
+1. `ReactiveObject` - podstawowa klasa bazowa implementująca `INotifyPropertyChanged`. Dzięki niej:
+    - Masz metodę `RaiseAndSetIfChanged(ref field, value)` do atomowego ustawiania pola i wyzwalania powiadomień.
+    - Masz zdarzenia `Changing` i `Changed` dla każdej właściwości.
+
+2. `ReactiveCommand<TParam, TResult>` - reaktywna implementacja `ICommand`, zintegrowana z Rx:
+    - Tworzysz ją przez `ReactiveCommand.Create(...)` lub `CreateFromTask(...)`
+    - Automatycznie emituje strumień wyników (`IObservable<TResult>`)
+    - Obsługuje stan wykonywalności (`CanExecute`), kolejkuje żądania, wspiera asynchroniczność.
+
+3. `WhenAnyValue` - metoda rozszerzająca `ReactiveObject`, zwracająca `IObservable<TProperty>` dla zmiany jednej lub wielu właściwości ViewModelu:
+```csharp
+this.WhenAnyValue(x => x.Name)
+    .Subscribe(newName => …);
+```
+
+4. `ObservableAsPropertyHelper<T>` - pozwala zbudować “pojedynczą” właściwość ViewModelu w oparciu o dowolny strumień Rx:
+    - Tworzysz przez `someObservable.ToProperty(this, x => x.MyProp)`
+    - Wartość dostępna przez wygenerowane `MyProp.Value` lub przez opakowany property.
+
+5. `IViewFor<TViewModel>` / `ReactiveWindow<TVM>` / `ReactiveUserControl<TVM>` Interfejs (i gotowe klasy) łączące View z ViewModelem:
+    - Implementujesz ViewModel i object ViewModel
+    - Dzięki `UseReactiveUI()` i `WhenActivated` widok i `ViewModel` łączą się automatycznie
+
+6. `WhenActivated` - hook w widoku (`IViewFor`), wywoływany przy ładowaniu i zamykaniu kontrolki/okna:
+    - przyjmuje listę subskrypcji, które automatycznie są czyszczone po deaktywacji.
+    - idealne miejsce na dodatkowe powiązania Rx (np. manualne Bind/BindCommand).
+
+7. `UseReactiveUI()` -metoda, którą wywołujesz w `Program.BuildAvaloniaApp()`, aby:
+    - zarejestrować domyślne schedulery Rx dla UI.
+    - Podłączyć `IViewFor` do mechanizmu Avalonia.
+
+8. `Routing` (RoutingState / Router) - mechanizm nawigacji ViewModel ↔ View:
+    - `RoutingState` trzyma stos kolejnych ViewModeli
+    - `Router.Navigate.Execute(vm)` zmienia ekran.
+    - W XAML używasz RoutingView do wyświetlania aktualnego ViewModelu.
+
+9. `Interaction<TInput, TOutput>` - służy do wywoływania “dialogów” czy operacji wymagających odpowiedzi od UI, przy jednoczesnym zachowaniu testowalności:
+    - ViewModel wywołuje `Interaction.Handle(...)`, a View subskrybuje `this.BindInteraction(...)`
+
+------
+# Pierwsza aplikacja
+- wracamy do projektu
+- wprowadzamy pewne zmiany
+
+## View
+`MainWindow.axaml`
+```csharp
+
+    <StackPanel Margin="20" HorizontalAlignment="Center" >
+        <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        <Button Content="Odśwież" Command="{Binding UpgradeGreeting}" />
+    </StackPanel>
+```
+- tekst wyświetlany w `TextBlock` jest połączony z właściwością `Greeting` w `MainWindowViewModel.cs`
+- funkcja wykonana po naciśnięciu przycisku `UpgradeGreeting`, która jest zdefiniowana `MainWindowViewModel.cs`, jest połączona z `Command`
+
+## ViewModel
+`MainWindowViewModel.cs`
+```csharp
+public class MainWindowViewModel : ViewModelBase
+{
+    private string _greeting = "Witam w Avalonii!!!!!";
+    public string Greeting
+    {
+        get => _greeting;
+        set => this.RaiseAndSetIfChanged(ref _greeting, value);
+    }
+    public ReactiveCommand<Unit, Unit> UpgradeGreeting { get; }
+
+    public MainWindowViewModel()
+    {
+        UpgradeGreeting = ReactiveCommand.Create(() =>
+        {
+            Greeting = "Witam w MVVM ReactiveUI";
+        });
+    }
+
+}
+```
+- `RaiseAndSetIfChanged()` metoda klasy `ReactiveObject`:
+    - Sprawdza, czy nowa wartość różni się od starej (`!=`).
+    - Jeśli tak:
+        - przypisuje nową wartość do pola (_greeting = value)
+        - wywołuje `PropertyChanged`, czyli wysyła sygnał do UI: „ta właściwość się zmieniła”.
+        - `ref _greeting` jest przekazywana referencja do pola `_greeting`
+- `ReactiveCommand.Create()` – tworzysz komendę.
+- `() => { Greeting = "..." }` – definiuje akcję, która ma się wykonać po kliknięciu.
+- *ReactiveUI* automatycznie powiadamia widok, że wartość się zmieniła, a ten się odświeża.
+- `ReactiveCommand` specjalny typ komendy w *ReactiveUI* - jest:
+    - reaktywny, czyli oparty na strumieniach Rx.NET
+    - generyczny, bo określasz:
+        - typ wejściowy (parametr komendy)
+        - typ wyjściowy (zwaracany rezultat)
+        - np. `<Unit, Unit>` nic nie przyjmuje, nic nie zwraca
+        - `Unit` specjalny  typ w Rx.NET, który oznacza brak wartości
+
+
+Ponieważ mamy zainstalowany pakiet `Fody` możemy nasz kod uprościć:
+```csharp
+public class MainWindowViewModel : ViewModelBase
+{
+    [Reactive]
+    public string Greeting { get; set; } = "Witaj w Avalonii" ;
+
+    public ReactiveCommand<Unit, Unit> UpgradeGreeting { get; }
+
+    public MainWindowViewModel()
+    {
+        UpgradeGreeting = ReactiveCommand.Create(() =>
+        {
+            Greeting = "Witam w MVVM ReactiveUI";
+        });
+    }
+
+}
+
+```
+:::tip atrybut
+Atrybuty w C# to specjalne adnotacje, które dodajesz do:
+- klas,
+- metod,
+- właściwości
+- itp.,
+
+aby dodać im metadane (czyli informacje o tym, jak powinny być traktowane przez kompilator lub biblioteki).
+
+
+np.
+```csharp
+[Obsolete("Użyj nowej metody")]
+public void StaraMetoda() { }
+
+```
+`[Obsolete]` informuje programistę i kompilator, że metoda jest przestarzała
+:::
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

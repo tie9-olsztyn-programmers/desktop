@@ -1,0 +1,117 @@
+---
+title: Konwersja danych i parsowanie
+---
+
+# Konwersja danych
+
+:::info Konwersja (*Conversion*)
+- konwersja polega na przekształceniu jednego typu danych w inny
+- konwertowanie może dotyczyć zarówno typów prostych, jak i referencyjnych
+- działa na dowolnych typach danych (transformacja danych)
+- w C# konwersje mogą być:
+    - jawne (czyli musisz ręcznie określić sposób konwersji) lub
+    - niejawne (automatyczne, jeśli język wie, jak bezpiecznie to zrobić)
+- wykonywana przez metody:
+    - `Convert`
+    - `Parse`
+    - `TryParse`
+    - ...
+
+:::
+
+
+:::tip  rzutowanie (*cast*)
+- jabyś mówił kompilatorowi "traktuj ten obiekt jako typ X"
+- wykonywane przez operatora rzutowania:
+    - `(typ) obiekt`
+    - `(int)3.14`
+    - `as`
+
+
+:::
+
+
+```csharp
+using System; // Importowanie biblioteki systemowej
+
+
+class Program // Deklaracja klasy o nazwie Program
+{
+ static void Main(string[] args) // Główna funkcja programu
+ {
+     // Niejawna konwersja int -> double
+     int number = 42;
+     double liczbaZmiennoprzecinkowa = number;
+
+     // Jawna Konwersja string -> int
+     string liczbaJakoTekst = "123";
+     int liczba = Convert.ToInt32(liczbaJakoTekst);
+
+     // Jawne rzutowanie double -> int
+     int myInt;
+     double myDouble = 13.33;
+     myInt = (int)myDouble; // Jawna konwersja
+
+     // Niejawna konwersja int -> long
+     int num = 1234567890;
+     long bigNum = num; // Niejawna konwersja
+
+     // Konwersja liczby do string
+     string myString = myDouble.ToString(); // Zmiennoprzecinkowa do string
+     string myIntString = bigNum.ToString(); // long do string
+
+     // Konwersja bool do string
+     bool a = false;
+     string aString = a.ToString();
+
+
+     Console.WriteLine($"myInt: {myInt}, liczba: {liczba}, bigNum: {bigNum}");
+     Console.WriteLine($"myString: {myString}, myIntString: {myIntString}, aString: {aString}");
+ }
+}
+```
+---
+# Parsowanie
+:::info Parsowanie
+- to analizowanie tekstu i przekształcanie go w strukturę danych lub określony typ
+- w kontekście C# parsowanie najczęściej dotyczy przekształcania łańcuchów znaków (stringów) w inne typy danych
+- parsowanie zakłada, że wejściem jest tekst i próbuje wyciągnąć z niego dane określonego typu
+
+:::
+## Parsowanie liczb
+Gdy masz tekstową reprezentację liczby i chcesz przekształcić ją na typ numeryczny
+```csharp
+string liczbaJakoTekst = "123";
+int liczba = int.Parse(liczbaJakoTekst); // Parsowanie string -> int
+```
+
+## Bezpieczne parsowanie
+Jeśli nie masz pewności, czy tekst jest poprawną liczbą, możesz użyć metody `TryParse()`, która nie wygeneruje wyjątku w przypadku błędu, ale zwróci false.
+```csharp
+using System;
+
+class Program
+{
+     static void Main(string[] args)
+     {
+         string liczbaJakoTekst = "123"; // To nie jest liczba
+
+
+        // `out` metoda TryParse otrzyma adres do zmiennej `liczba`, a nie jej wartość
+        // "utwórz zmienną `liczba` i przekaż ją metodzie jako parametr wyjściowy
+         bool czySukces = int.TryParse(liczbaJakoTekst, out int liczba);
+
+
+        if (czySukces)
+         {
+             Console.WriteLine("Parsowanie się powiodło: " + liczba);
+         }
+         else
+         {
+             Console.WriteLine("Parsowanie nie powiodło się.");
+         }
+    }
+}
+```
+
+

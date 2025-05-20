@@ -1,0 +1,90 @@
+---
+title: MVVM (Model-View-ViewModel)
+---
+
+# MVVM - definicja
+Wzorzec MVVM (*Model–View–ViewModel*) to architektoniczny wzorzec projektowy:
+- stosowany głównie w aplikacjach z interfejsem użytkownika (UI),
+    - szczególnie w technologiach takich jak WPF, UWP, Xamarin czy inne frameworki XAML-owe.
+- jego głównym celem jest rozdzielenie:
+    - logiki prezentacji od
+    - warstwy widoku,
+    - co znacznie ułatwia testowanie, utrzymanie i rozwój aplikacji.
+
+# Elementy *MVVM*
+- **Model**
+    - reprezentuje dane i logikę biznesową aplikacji
+    - nie zawiera żadnej logiki związanej z UI czy interakcjami użytkownika
+
+- **View** (Widok)
+    - odpowiada za prezentację danych – jest to warstwa wizualna (XAML, HTML, CSS itp.)
+    - wiąże się z *ViewModel* przez mechanizmy wiązania danych (*data binding*), dzięki czemu widok automatycznie reaguje na zmiany właściwości w *ViewModelu*.
+
+- **ViewModel**
+    - pośredniczy między Modelem a Widokiem
+    - Eksponuje dane (z Modelu) w formie właściwości (properties) oraz komend (commands), które widok może związać.
+
+# Sposób działania *MVVM*
+- użytkownik wykonuje akcję w UI (np. kliknięcie przycisku),
+- Widok (*View*) wiąże daną akcję do komendy (`ICommand`) lub wywołuje `setter` właściwości w *ViewModelu*
+- *ViewModel* wykonuje odpowiednią logikę (np. przez wywołanie serwisu w Modelu), zmieniając swoje właściwości.
+- mechanizm powiadomień (*INotifyPropertyChanged*) powoduje, że  widok automatycznie odświeża wyświetlane dane.
+
+:::tip Metafora restauracji
+- *Model* to kuchnia:
+    - tu przygotowuje się posiłki według określonych przepisów (dane i logika biznesowa)
+    - kucharze:
+        - nie wiedzą, kto będzie jadł,
+        - nie interesuje ich wyglądem sali restauracyjnej – po prostu zajmują się przygotowaniem jedzenia.
+
+- *ViewModel* to kelner:
+    - odbiera dania z kuchni,
+    - dania odpowiednio układa na talerzu
+    - dania przekazuje gościom.
+    - zna menu i wie, jak serwować posiłki,
+    - nie decyduje o wystroju restauracji
+    - pośredniczy między kuchnią a gośćmi.
+
+- *View* to sala restauracyjna:
+    – stoliki, krzesła, dekoracje
+    - goście widzą
+        - tylko to miejsce;
+        - nie widzą kuchni, ani jak kelner organizuje swoją pracę
+        - widzą jedynie efekt końcowy, czyli elegancko podane potrawy.
+
+
+:::
+
+----------
+# Biblioteki MVVM w Avalonii
+## *CommunityToolkit.Mvvm*
+- Lekkość i prostota: mała liczba zależności (tylko CommunityToolkit.Mvvm), minimalny boilerplate dzięki atrybutom [ObservableProperty] i [RelayCommand].
+- Generowane źródła: kompilator sam tworzy kod obsługi INotifyPropertyChanged oraz implementacje ICommand.
+- Szybki start: krótka krzywa uczenia się – wystarczy dziedziczyć po ObservableObject i oznaczać atrybutami.
+- Scenariusze użycia: idealne dla prostych i średnio zaawansowanych aplikacji, gdzie dominują proste powiązania danych i komendy synchroniczne.
+
+## *ReactiveUI*
+- Model reaktywny: opiera się na bibliotece Rx.NET – cała logika prezentacji może być wyrażona jako strumienie zdarzeń.
+- Bogate API: wbudowane mechanizmy WhenAnyValue, ObservableAsPropertyHelper, ReactiveCommand z obsługą asynchroniczności, walidacji i zarządzania stanem wykonywalności.
+- Elastyczność: świetne do skomplikowanych zależności między stanami, transformacji zdarzeń, łączenia wielu źródeł danych.
+- Krzywa uczenia: wyższa – wymaga znajomości Reactive Extensions, ale za to daje ogromną moc przy sterowaniu przepływem danych.
+
+:::tip Programowanie reaktywne
+- to paradygmat, w którym:
+    - zamiast sekwencyjnie wywoływać funkcje i pobierać zwrotnie wartości,
+    - operujemy na strumieniach zdarzeń (danych)
+    - reagujemy na nie w momencie, gdy się pojawią.
+
+W .NET najpopularniejszą implementacją programowania reaktywnego jest Reactive Extensions (`Rx.NET`),
+na którym opiera się właśnie *ReactiveUI*.
+
+
+:::
+
+
+
+
+
+
+
+

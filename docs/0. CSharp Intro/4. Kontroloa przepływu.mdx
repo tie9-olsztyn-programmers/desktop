@@ -1,0 +1,193 @@
+---
+title: Kontrola przepływu danych
+---
+
+# Instrukcje warunkowe
+## `if`
+:::note `if` i `else`
+- instrukcja `if` pozwala wykonać blok kodu, jeśli warunek jest spełniony (wartość warunku jest true)
+- można do niej dołączyć opcjonalny blok `else`, który zostanie wykonany, gdy warunek będzie fałszywy
+
+:::
+
+```csharp
+using System;
+
+public class Program
+{
+    public static void Main()
+    {
+        int x = 10;
+
+        if (x > 5)
+        {
+            Console.WriteLine("x jest większe niż 5");
+        }
+        else
+        {
+           Console.WriteLine("x jest mniejsze lub równe 5");
+        }
+    }
+}
+```
+
+:::note `else if`
+- możesz sprawdzić kilka warunków w sekwencji, korzystając z `else if`
+- jeśli pierwszy warunek nie jest spełniony, program sprawdza kolejne
+
+:::
+
+```scharp
+using System;
+
+public class Program
+{
+    public static void Main()
+    {
+        int x = 10;
+
+        if (x > 10)
+        {
+            Console.WriteLine("x jest większe niż 10");
+        }
+        else if (x == 10)
+        {
+            Console.WriteLine("x jest równe 10");
+        }
+        else
+        {
+            Console.WriteLine("x jest mniejsze niż 10");
+        }
+    }
+}
+```
+
+## `switch`
+- Instrukcja `switch` służy do porównywania jednej zmiennej z wieloma wartościami.
+- Jest to bardziej elegancka alternatywa dla złożonych konstrukcji `if-else`.
+
+```csharp
+using System;
+
+public class Program
+{
+    public static void Main()
+    {
+        int day = 3;
+
+        switch (day)
+        {
+            case 1:
+                Console.WriteLine("Poniedziałek");
+                break;
+            case 2:
+                Console.WriteLine("Wtorek");
+                break;
+            case 3:
+                Console.WriteLine("Środa");
+                break;
+            default:
+                Console.WriteLine("Inny dzień");
+                break;
+        }
+    }
+}
+```
+
+# Pętle
+## `for`
+- Pętla `for` pozwala na wielokrotne wykonanie bloku kodu określoną liczbę razy.
+- Zazwyczaj używa się jej, gdy wiesz, ile razy pętla powinna zostać wykonana.
+
+```csharp
+using System;
+
+public class Program
+{
+    public static void Main()
+    {
+        for (int i = 0; i < 5; i++)
+        {
+            Console.WriteLine("Iteracja numer " + i);
+        }
+    }
+}
+```
+
+## `while`
+Pętla `while` wykonuje blok kodu tak długo, jak podany warunek jest spełni
+```csharp
+using System;
+
+public class Program
+{
+    public static void Main()
+    {
+        int i = 0;
+
+        while (i < 5)
+        {
+            Console.WriteLine("i wynosi: " + i);
+            i++;
+        }
+    }
+}
+```
+
+## `do-while`
+- Jest to pętla podobna do `while`, z tą różnicą, że kod w pętli wykonuje się przynajmniej raz,
+- nawet jeśli warunek początkowy nie jest spełniony.
+
+```csharp
+using System;
+
+public class Program
+{
+    public static void Main()
+    {
+        int i = 10;
+
+        do
+        {
+            Console.WriteLine("i wynosi: " + i);
+            i--;
+        }while (i > 5);
+    }
+}
+```
+-------
+# Dodatkowe instrukcje sterujące
+- `break` - kończy działanie pętli
+- `continue` - przerywa aktualną iterację i przechodzi do następnej
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
