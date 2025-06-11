@@ -1,14 +1,145 @@
------
+---
 title: ToDoList w ReactiveUI
 ---
 
-# Plan
+# Plan dla ToDoList
 - Dodawanie nowego zadania przez `TextBox` i `Button`.
 - Wyświetlanie listy zadań (`ListBox` lub `ItemsControl`).
 - Oznaczanie zadania jako wykonane (np. `CheckBox`).
 - Usuwanie zadania z listy.
 - Wprowadzenie `ObservableCollection` i powiązania z UI.
 - Pokazanie filtrowania / liczenia zadań.
+
+---
+
+# MaindWindow: `ReactiveWindow<MainWindowViewModel>`
+`MainWindow.axaml.cs`
+```csharp
+public partial class MainWindow : ReactiveWindow<MainWindowViewModel>
+{
+    public MainWindow()
+    {
+        InitializeComponent();
+    }
+}
+```
+# Zmiana w App.cs
+- musimy ustalić, z jakim ViewModelem ma być połączony MainWindow
+- zmienimy zawartość `App.axaml.cs`, w którym występuje `DataContext = new MainWindowViewModel()`
+- dostosowując wygenerowany kod do *ReactiveUI* zamiast `DataContext` użyjemy wbudowanej właściwości `ViewModel`
+```csharp
+public override void OnFrameworkInitializationCompleted()
+    {
+        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        {
+            desktop.MainWindow = new MainWindow
+            {
+                ViewModel= new MainWindowViewModel(), // tu wprowadziliśmy zmianę
+            };
+        }
+
+        base.OnFrameworkInitializationCompleted();
+    }
+```
+Używanie `ViewModel` zamiast `DataContext`:
+- poprawia typowanie i czytelność,
+- integruje się lepiej z *ReactiveUI*,
+- daje lepsze wsparcie dla większych aplikacji,
+- upraszcza kod i eliminuje błędy.
+
+
+
+# Tworzymy *ViewModel* do obsługi zadań
+`ToDoItemViewModel.cs`
+```csharp
+public class ToDoItemViewModel : ViewModelBase
+{
+    [Reactive] public string Description { get; set; }
+    [Reactive] public bool IsDone{get;set;}
+
+    public ToDoItemViewModel(string description)
+    {
+        Description = description;
+    }
+
+}
+
+```
+- właściwość `Description` będzie przechowywała opis zadania
+- właściwość `IsDone` będzie przechowywała informację o zakończeniu zadania
+
+# Definiujemy na nowo główny *ViewModel*
+`MainWindowViewModel.cs`
+```csharp
+public class MainWindowViewModel : ViewModelBase
+{
+    [Reactive] public string? NewTaskText {get; set;} // właściwość podpięta do pola, do którego wprowadzamy opis zadania
+
+    // lista, która śledzi zmiany
+    public ObservableCollection<ToDoItemViewModel> Tasks { get; } = new(); // specjalna lista, której elementami są obiekty ToDoItemViewmodel
+
+    // właściwość połączona z Command Buttona w xml
+    public ReactiveCommand<Unit, Unit> AddTaskCommand { get; } // właściwość, która będzie potrafiła wykonywać zadania
+
+    public MainWindowViewModel()
+    {
+        // Definicja funkcji, która będzie wykonywana po naciśnięciu Buttona
+        AddTaskCommand = ReactiveCommand.Create(() =>
+        {
+            if (!string.IsNullOrWhiteSpace(NewTaskText))
+            {
+
+                Tasks.Add(new ToDoItemViewModel(NewTaskText)); // dodajemy obiekt do kolekcji zadań
+                NewTaskText = string.Empty;
+            }
+        });
+    }
+}
+
+```
+# Definiujemy wygląd aplikacji
+`MainWindow.axaml`
+"Bindingi":
+- `<TextBox Text=` (View) z `NewTaskText` (ViewModel)
+- `<Button Command=` (View) z `AddTaskCommand` (ViewModel)
+- `ListBox ItemSource=` (View) z `Tasks` (ViewModel)
+    - `TextBlock Text=` (View) z `Description` (ViewModel)
+    -  `<CheckBox IsChecked=` (View) z `IsDone` (ViewModel)
+```xml
+    <Design.DataContext>
+        <!-- This only sets the DataContext for the previewer in an IDE,
+             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+        <vm:MainWindowViewModel/>
+    </Design.DataContext>
+<StackPanel Margin="20" HorizontalAlignment="Center">
+   <TextBox Watermark="Wpisz nowe zadanie" Text="{Binding NewTaskText, Mode=TwoWay}"
+            Margin="20"
+            Width="300" Padding="10"
+            />
+   <Button Margin="20" Content="Add a new task" Command="{Binding AddTaskCommand}"
+           Width="300" Padding="20" HorizontalContentAlignment="Center"
+           />
+
+   <ListBox ItemsSource="{Binding Tasks}">
+       <ListBox.ItemTemplate>
+           <DataTemplate>
+               <StackPanel Orientation="Horizontal" Spacing="10" >
+                   <CheckBox IsChecked="{Binding IsDone}" />
+                   <TextBlock Text="{Binding Description}" Margin="10"
+                               />
+
+               </StackPanel>
+           </DataTemplate>
+       </ListBox.ItemTemplate>
+
+   </ListBox>
+
+</StackPanel>
+
+
+```
+
+
 
 
 

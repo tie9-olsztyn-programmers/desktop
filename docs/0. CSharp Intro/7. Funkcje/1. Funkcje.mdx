@@ -1,0 +1,93 @@
+---
+title: Wprowadzenie do funkcji
+---
+
+
+# Definicja
+Funkcja (w C# nazywana "metodą") to
+- blok kodu, który wykonuje określone zadanie.
+- funkcja zdefiniowana wewnątrz klasy to **metoda**
+
+Metody pomagają w organizowaniu kodu w sposób logiczny i pozwalają na wielokrotne wykorzystanie tej samej logiki bez potrzeby jej powielania.
+
+# Struktura funkcji/metody
+```
+[modifiers] [typ_zwracany] [nazwa_metody]([parametry])
+{
+    // ciało metody - kod, który będzie wykonywany, gdy metoda zostanie wywołana
+}
+```
+
+- `modifiers`: Modyfikatory dostępu, na przykład takie jak
+    - *public*,
+    - *private*,
+    - *protected*,
+określają, gdzie metoda może być używana.
+
+- `typ_zwracany`: Typ danych, które metoda zwraca (np. int, string, void).
+- `nazwa_metody`: Unikalna nazwa metody.
+- `parametry`: Lista zmiennych przekazywanych do metody (opcjonalne).
+
+# Przykłady metod
+
+```csharp
+## Funkcja przyjmuje dwa int i zwraca int
+public int Dodaj(int a, int b)
+{
+     return a + b; // Zwraca sumę dwóch liczb
+}
+```
+wywołanie `Dodaj(2,3)`
+
+## Funkcja nic nie zwraca `void`, nic nie przyjmuje
+```csharp
+public void Powitaj()
+{
+     Console.WriteLine("Witaj w świecie C#!");
+}
+```
+wywołanie `Powitaj()`
+
+# Prosty program
+```csharp
+using System;
+
+public class Program
+{
+ // Metoda Dodaj zwraca sumę dwóch liczb całkowitych
+ public int Dodaj(int a, int b)
+ {
+     return a + b;
+ }
+
+ // Metoda Powitaj wypisuje komunikat powitalny
+ public void Powitaj()
+ {
+     Console.WriteLine("Witaj w świecie C#!");
+ }
+
+
+ // Metoda główna programu
+ public static void Main(string[] args)
+ {
+     Program program = new Program(); // Utworzenie instancji klasy Program
+
+     // Wywołanie metody Dodaj i wyświetlenie wyniku
+     int wynik = program.Dodaj(3, 5);
+     Console.WriteLine("Wynik dodawania: " + wynik);
+
+     // Wywołanie metody Powitaj
+     program.Powitaj();
+     }
+
+}
+```
+
+
+
+
+
+
+
+
+

@@ -67,18 +67,112 @@ public class Program
 ```
 ---------
 # Struktury generyczne
+Generyki w C# pozwalają na tworzenie uniwersalnych klas i metod, które mogą operować na różnych typach danych, zapewniając jednocześnie bezpieczeństwo typów i elastyczność.
+Typy generyczne w C# to mechanizm, który pozwala na tworzenie z parametrami typów:
+- klas,
+- metod,
+- interfejsów i
+- delegatów
+- z parametrami typów.
 
+Dzięki generykom można pisać bardziej elastyczny i wielokrotnego użytku kod, ponieważ konkretne typy danych są określane dopiero podczas użycia (instancji) klasy lub metody.
 
+Aby używać typów generycznych, niezbędny jest **DODATKOWY IMPORT** `using System.Collections.Generic`;
 
 ## Słowniki
+- Słownik (`Dictionary<TKey, TValue>`) to struktura danych przechowująca pary klucz-wartość.
+- Każdy element jest identyfikowany przez unikalny klucz, co pozwala na szybki dostęp do danych.
+```csharp
+using System;
+using System.Collections.Generic;
 
 
+public class Program
+{
+    public static void Main()
+    {
+        // TWORZENIE
+        Dictionary<string, int> oceny = new Dictionary<string, int>();
+
+
+        // DODAWANIE
+        oceny.Add("Jan", 90);
+        oceny.Add("Anna", 85);
+        oceny.Add("Piotr", 75);
+
+        // ODCZYT
+        Console.WriteLine($"wynik Jana to {oceny["Jan"]}" );
+
+        // USUWANIE
+        oceny.Remove("Piotr") ;
+
+
+        // Sprawdzanie obecności klucza
+        if(oceny.ContainsKey("Jan"))
+        {
+            Console.WriteLine("Jan siedzi sobie w słowniku");
+        }
+
+        // ITERACJA po słowniku
+        foreach(var para in oceny)
+        {
+            Console.WriteLine(para.Key + ": " + para.Value);
+        }
+    }
+}
+```
 
 
 ## Listy
+`List<T>` to kolekcja
+- generyczna,
+- dynamicznie rozszerzalna
+- implementuje  `IList<T>`.
+- przechowuje elementy w porządku wstawiania,
+- umożliwia dostęp po indeksie,
+- dodawanie,
+- usuwanie oraz
+- automatyczne zarządzanie rozmiarem tablicy wewnętrznej.
+
+```csharp
+using System;
+using System.Collections.Generic;
+
+public class Program
+{
+    public static void Main()
+    {
+        // TWORZENIE listy pizz
+        List<string> listaPizz = new List<string>();
 
 
+        // DODAWANIE pizz do listy
+        listaPizz.Add("Margarita");
+        listaPizz.Add("Capricciosa");
+        listaPizz.Add("Pepperoni");
+        listaPizz.Add("Hawaiian");
+        listaPizz.Add("Vegetarian");
+        listaPizz.Add("Four Seasons");
 
+
+        // WYŚWIETLENIE listy pizz
+        Console.WriteLine("Lista pizz:");
+        foreach (string pizza in listaPizz)
+        {
+            Console.WriteLine(pizza);
+        }
+
+        Console.WriteLine("Wybieram pizzę; " + listaPizz[1]) ;
+        Console.WriteLine(listaPizz);
+        listaPizz.Remove("Pepperoni") ;
+        Console.WriteLine("");
+         foreach (string pizza in listaPizz)
+        {
+            Console.WriteLine(pizza);
+        }
+    }
+}
+```
 
 
 

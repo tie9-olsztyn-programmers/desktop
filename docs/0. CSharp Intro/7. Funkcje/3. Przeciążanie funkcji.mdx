@@ -1,0 +1,26 @@
+---
+title: Przeciążanie funkcji w C# (Method Overloading)
+---
+
+
+# Przeciążanie funkcji (metod) w C# polega na
+- definiowaniu kilku metod o tej samej nazwie
+- w ramach jednej klasy, ale
+- z różną liczbą, typami lub kolejnością parametrów.
+- typ zwracany przez metodę nie ma wpływu na przeciążanie
+
+```csharp
+// Funkcja przyjmująca dwa argumenty
+public void Wyswietl(int liczba)
+{
+     Console.WriteLine($"Podano liczbę: {liczba}");
+}
+
+// Funkcja przyjmująca jeden argument (przeciążenie)
+public void Wyswietl(string tekst)
+{
+     Console.WriteLine($"Podano tekst: {tekst}");
+}
+```
+
+

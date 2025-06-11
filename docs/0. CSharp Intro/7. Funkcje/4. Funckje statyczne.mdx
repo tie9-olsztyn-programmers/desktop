@@ -1,0 +1,37 @@
+---
+title: Funkcje statyczne
+---
+
+# Funkcja statyczne
+- Funkcje mogą być statyczne, co oznacza, że można je wywoływać bez tworzenia instancji klasy.
+- Definiuje się je za pomocą słowa kluczowego `static`
+
+
+```csharp
+using System;
+
+namespace UFOApp
+{
+    public static class UFOTracker
+    {
+        // Metoda statyczna raportująca obserwację UFO
+        public static void ReportSighting(string location, DateTime time)
+        {
+            Console.WriteLine($"[UFO ALERT] Obserwacja na lokalizacji: {location}");
+            Console.WriteLine($"Czas: {time:yyyy-MM-dd HH:mm:ss}");
+        }
+    }
+
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            // Wywołanie metody statycznej bez tworzenia instancji
+            UFOTracker.ReportSighting("Pustkowie Area 51", DateTime.Now);
+        }
+    }
+}
+```
+
+
+
