@@ -28,8 +28,8 @@ W pliku `.csproj` powinieneś mieć m.in.:
 
 
 Mała zmiana w pliku `MainWindow.axaml.cs`
-- zamiast dziedziczenie po `Window`: `public partial class MainWindow : Window`
-- będziemy dziedziczyć po `ReactWindow`: `public partial class MainWindow : ReactiveWindow<MainWindowViewModel>`
+- zamiast dziedziczenia po `Window` (`public partial class MainWindow : Window`)
+- będziemy dziedziczyć po `ReactWindow` (`public partial class MainWindow : ReactiveWindow<MainWindowViewModel>`)
     - nasze okno będzie automatycznie połączone z typem `MainViewModel`
     - *ReactiveUI* będzie wiedział jak automatycznie zainicjalizować *ViewModel*, powiązać właściwości i metody reaktywne
     - daje nam pełną integrację z *ReactiveUI*
