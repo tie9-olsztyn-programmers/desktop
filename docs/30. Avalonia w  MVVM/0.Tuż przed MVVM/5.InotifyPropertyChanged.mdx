@@ -1,0 +1,79 @@
+---
+title: INotifyPropertyChanged
+---
+- W poprzedniej lekcji wprowadziliśmy `DataContext`, do którego można wszystkie bindować kontrolki.
+- Dowiedzieliśmy się, że zmiana wartości we właściwości zbindowanej z kontrolką nie wpływa z UI.
+- Aby przy zmianie takie wartości występowała zmiana w UI potrzebujemy `INotifyPropertyChanged`.
+
+:::important `INotifyPropertyChanged`
+- to interfejs z .NET, który służy do powiadamiania UI (lub innego kodu), że
+właściwość obiektu zmieniła swoją wartość.
+    - bez tego: UI odczytuje wartość tylko raz, przy starcie bindingu.
+    - Z tym interfejsem: UI dostaje „sygnał” za każdym razem, gdy property zmieni wartość → i odświeża widok.
+
+:::
+
+:::note Metafora dla `INotifyPropertyChanged`
+Wyobraź sobie, że UI to ekran telewizora, a `ViewModel` to kamera.
+- Bez `INotifyPropertyChanged`:
+    - kamera zmienia obraz, ale
+    - telewizor tego nie wie – pokazuje pierwszą klatkę.
+- Z `INotifyPropertyChanged`:
+    - za każdym razem, gdy kamera zrobi nową klatkę,
+    - telewizor dostaje sygnał i ją wyświetla.
+
+:::
+
+---
+## Wracamy do aplikacji z porzedniej lekcji
+
+- zmieńmy `MainWindowData.cs`
+    - dodamy do klasy zdarzenie `event PropertyChangedEventHandler? PropertyChanged;`
+        - zdarzenie zadeklarowane w `INotifyPropertyChanged`
+        - jest jak dzwonek alarmowy (`TextBlock` zapisuje się na ten event i nasłuchuje, czy coś się zmieniło)
+    - `.Invoke()` metoda pozwalająca wywołać dane zdarzenie ("Hej, zmieniła się jakaś właściwość")
+    - `new PropertyChangedEventArgs(nameof(Greeting))`:
+        - obiekt klasy, który przechowuje informację o tym, jaka właściwość się zmieniła,
+        - `nameof(Greeting)` zwraca string `"Greeting"`.
+```csharp
+public class MainWindowData : INotifyPropertyChanged
+{
+    public event PropertyChangedEventHandler? PropertyChanged;
+    private string _greeting = "Hello";
+    public string Greeting
+    {
+        get => _greeting;
+        set
+        {
+            if (_greeting == value) return; // sprawdz, czy się zmieniło
+            _greeting = value;              // ustawia nową wartość
+
+            // Powiadom UI o zmianie
+            // „Powiadom wszystkich słuchaczy (np. Binding w Avalonia),
+            // że w tym obiekcie (this) zmieniła się właściwość Greeting”.
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Greeting)));
+        }
+    }
+
+
+    public string Message { get; set; } = "Bindingi almost MVVM";
+
+}
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

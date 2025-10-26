@@ -1,0 +1,513 @@
+---
+title: Wyskakujące okienko
+---
+
+# Wyskakujące okienko
+
+## Podstawowe pojęcia
+- `Interaction<TInput, TOutput>`    kanał komunikacji `ViewModel` -> `View`
+- `ReactiveCommand`                 logika sterująca akcją użytkownika (przycisk)
+- `WhenAnyValue(...)`               obserwuje zmiany właściwości
+- `Select(...)`                     przekształca dane w `bool` dla `canExecute`
+- `canExecute`                      Zasada bezpieczeństwa:
+    - pozwala kliknąć tylko wtedy, gdy
+    - warunek (np. `Name` niepuste) jest spełniony
+- `CreateFromTask(...)`             tworzy komendę asynchroniczną
+- `Handle(this)`                    wysyła prośbę od `ViewModel` do `View`, przekazując dane
+- `RegisterHandler(...)`            `View` definiuje, jak ma zareagować na prośbę
+
+
+## Cel
+Do projeku z poprzedniej lekcji dodamy `Button` podsumowujący wszystkie dane:
+- pobierze wszystkie dane z formularza
+- przekaże je do nowego okna
+- jeżeli pole `TextBox` będzie puste, przycisk będzie dezaktywowany.
+
+## Realizacja celu
+
+### `View` dodajemy przycisk
+- aby wszystko się mieściło w oknie całość formularza zamkniemy w `ScrollViewer`
+- na dole dodamy przycisk
+
+```xml
+<ScrollViewer>
+  <StackPanel Margin="20" Spacing="10">
+      <TextBlock Text="Enter your name:" FontSize="20" FontWeight="Bold"/>
+      <TextBox Text="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+               Width="200" Height="30" Watermark="Type your name here ..."
+               />
+<!-- ... -->
+
+     <Button Content="Show Summary"
+              Command="{Binding ShowSummaryCommand}"
+              Width="150" Height="35"
+              Background="DarkCyan" Foreground="White"
+              HorizontalContentAlignment="Center"
+              VerticalContentAlignment="Center"
+              Padding="10"
+              CornerRadius="8"/>
+
+
+  </StackPanel>
+</ScrollViewer>
+</Window>
+
+```
+
+### Utworzenie nowego okna
+- na folderze `Views` prawy klawisz myszy `Add->Avalonia Window`
+- okno nazywamy `SummaryWindow`
+- powstanie plik `axaml` oraz powiązany z nim plik `.cs`
+
+
+### Konfiguracja `MainWindowViewModel`
+#### Dodajemy dwie nowe właściwości
+```csharp
+    public ReactiveCommand<Unit, Unit> ShowSummaryCommand { get; }
+    public Interaction<MainWindowViewModel, Unit> ShowSummaryWindow { get; }
+```
+- `ReactiveCommand` jak już wiemy służy do definiowania działania
+- `Interaction<TInput, TOutput>` to nowe pojęcie
+
+:::note `Interaction<TInput, TOutput> `
+To reaktywny kanał komunikacji między `ViewModel`’em a `View`, który:
+- pozwala `ViewModelowi` poprosić widok o wykonanie akcji UI-np:
+    - pokazanie okna,
+    - dialogu,
+    - `MessageBoxa`,
+    - wyboru pliku,
+    - ...
+    - widok odpowiada, wykonując tę akcję i opcjonalnie zwracając wynik.
+
+Innymi słowy:
+- To „grzeczna prośba” od `ViewModelu` do `View`, bez łamania separacji warstw.
+
+:::
+
+:::tip W czystym MVVM:
+- `ViewModel` nie powinien
+    - tworzyć okien (`new SummaryWindow()`, `MessageBox`,
+    - ani niczego, co jest częścią widoku.
+
+- jednak czasem musi o coś poprosić użytkownika - np:
+    - o potwierdzenie,
+    - wybór,
+    - dane,
+    - ...
+
+- Jak to zrobić bez zależności od UI?
+    - właśnie przez `Interaction`.
+
+:::
+
+:::tip Metafora dla `Interaction`
+Wyobraź sobie, że
+- `ViewModel` to pracownik biurowy,
+- `View` to sekretarka mająca dostęp do drzwi, telefonu i ekspresu do kawy
+- `ViewModel`: „Hej, poproszę o dwie kawy”
+- `View`: „OK, już przynoszę”
+
+czyli
+`Interaction` to komunikat przekazany
+- z biura (`ViewMmodel`)
+- do sekretariatu (`View`),
+- bez tego komunikatu każdy pracownik musiałby sam wstawać i robić sobię kawę ;)
+
+:::
+
+
+#### Nowym właściwościom przypisujemy dane
+W konstruktorze `MainWindowViewModel` dopiszemy:
+```csharp
+    ShowSummaryWindow = new Interaction<MainWindowViewModel, Unit>();
+    var canShow = this.WhenAnyValue(x => x.Name)
+            .Select(name => !String.IsNullOrWhiteSpace(name));
+
+    ShowSummaryCommand = ReactiveCommand.CreateFromTask(async () =>
+    {
+        Console.WriteLine("Command executed inside VM");
+        await ShowSummaryWindow.Handle(this);
+    }, canShow);
+
+```
+##### `ShowSummaryWindow = new Interaction<MainWindowViewModel, Unit>();`:
+- tworzy kanał komunikacyjny między `ViewModel` a `View`.
+- Typ `Interaction<TInput, TOutput>`:
+     - `TInput = MainWindowViewModel` dane przekazywane do widoku (czyli „co pokazać”),
+     - `TOutput = Unit` wynik z widoku (tu: nic nie zwraca, tylko sygnalizuje „zrobione”).
+
+##### `var canShow`
+```
+    var canShow = this.WhenAnyValue(x => x.Name)
+        .Select(name => !String.IsNullOrWhiteSpace(name))
+```
+- to jest reaktywne wyrażenie, które tworzy obserwowalny warunek `CanExecute` dla przycisku.
+- `this.WhenAnyValue(x => x.Name)`
+    - obserwuje właściwość `Name` `ViewModelu`,
+    - za każdym razem, gdy `Name` się zmieni, ten strumień emituje nową wartość.
+- `.Select(...)` przekształca wartość tekstu na bool:
+    - `true` jeśli `Name` nie jest puste,
+    - `false` jeśli puste lub tylko spacje.
+czyli: `canShow` to `IObservable<bool>` informujące, czy przycisk „Show Summary” powinien być aktywny.
+
+#####  `ShowSummaryCommand`
+```
+ShowSummaryCommand = ReactiveCommand.CreateFromTask(async () =>
+{
+    Console.WriteLine("Command executed inside VM");
+    await ShowSummaryWindow.Handle(this);
+}, canShow);
+```
+Tworzy reaktywną komendę, która:
+- jest asynchroniczna (`CreateFromTask`) — czyli może `await`ować,
+- wykona się tylko wtedy, gdy `canShow` emituje `true` (czyli gdy w polu `Name` coś wpisano),
+- po kliknięciu przycisku uruchomi kod z wnętrza `{ ... }`.
+
+:::tip `await ShowSummaryWindow.Handle(this);`
+- `Handle()` wysyła prośbę do widoku:
+    - „Hej, obsłuż to `Interaction`, przekazuję Ci `this` (czyli siebie — `ViewModel`)”
+    - widok (czyli `MainWindow.axaml.cs`) powinien zarejestrować ten handler.
+
+:::
+
+---
+
+
+:::note Metafory prawie podsumowujące
+Wyobraź sobie biuro programistyczne:
+- `ViewModel` (pracownik)
+    - Chce coś zrobić, ale nie ma dostępu do drzwi ani telefonu.
+    - To nasza klasa `MainWindowViewModel`
+- `View` (sekretarka)
+    - Ma dostęp do sprzętu biurowego, potrafi otwierać drzwi, dzwonić, pokazywać okna.
+    - To nasza klasa `MainWindow`
+- `WhenAnyValue`
+    - Sekretarka obserwuje, czy w formularzu „Imię” coś wpisano.
+    - Reaguje na zmiany `Name`.
+- `Select`
+    - Sekretarka ocenia: „Czy pole nie jest puste?” -> może aktywować przycisk
+    - Transformuje dane.
+- `ReactiveCommand`
+    - Przycisk dzwonka na biurku, który pozwala wysłać prośbę (kliknięcie przycisku w UI)
+    - to nasz `ShowSummaryCommand`
+- `canShow`
+    - Warunek: dzwonek działa tylko, jeśli imię wpisane	`IObservable<bool>`
+- `Interaction`
+    - Linia telefoniczna z sekretarką
+    - To nasz `ShowSummaryWindow`
+- `Handle()`
+    - Pracownik dzwoni i prosi: „Otwórz drzwi (pokaż okno)”
+    - W naszym przypadku to wywołanie `await ShowSummaryWindow.Handle(this)`
+- `RegisterHandler()`
+    - Sekretarka odbiera i wykonuje prośbę: „OK, otwieram drzwi”
+    - Nasz `RegisterHandler(async ctx => ...)`, którego jeszcze nie mamy.
+- `Unit.Default`
+    - Sekretarka odkłada słuchawkę po skończeniu zadania
+    - zakończenie `Interaction`.
+
+
+:::
+
+---
+### Konfiguracje `View`
+
+:::note Co robi `.CreateFromTask` „pod maską”
+ReactiveUI opakowuje Twój Task wewnątrz reaktywnego strumienia:
+- subskrybuje jego wynik,
+- dba o anulowanie,
+- emituje wartości (`OnNext`),
+- pozwala `CanExecute` działać w trakcie jego wykonywania.
+czyli:
+```
+ReactiveUI automatycznie „streamuje”
+asynchroniczne operacje jako obserwowalne sekwencje.
+```
+
+:::
+
+::: tip Metafora
+- `.Create` to zwykły włącznik światła – naciśniesz i od razu włącza/wyłącza.
+- `.CreateFromTask` to przycisk windy – wciskasz, ale
+    - trzeba chwilę poczekać, aż przyjedzie (asynchronicznie).
+
+Oba działają, tylko jedno wymaga „czekania na wynik”.
+
+:::
+
+#### Rejestracja handlera
+
+##### Wersja z automatyką
+W `MainWindow.axaml.cs` w konstrukturze dodamy rejestrację handlera:
+```csharp
+ public MainWindow()
+    {
+        InitializeComponent();
+        ViewModel = new MainWindowViewModel();
+
+       // var vm = new MainWindowViewModel();
+        DataContext = ViewModel;
+
+
+// TU JEST NOWY KOD PIERWSZA REJESTRACJA HANDLERA
+        this.WhenActivated((CompositeDisposable disposables) =>
+        {
+            ViewModel!.ShowSummaryWindow.RegisterHandler(async interaction =>
+                {
+                    var win = new SummaryWindow()
+                    {
+                        DataContext = interaction.Input
+                    };
+
+                    await win.ShowDialog(this);
+                    interaction.SetOutput(Unit.Default);
+                })
+                .DisposeWith(disposables);
+
+        });
+//...
+```
+**WYJAŚNIENIA**
+:::info Co to jest `CompositeDisposable disposables`
+- To pojemnik na rzeczy do wyrzucenia — taki reaktywny kosz na śmieci.
+- ReactiveUI przekazuje Ci w WhenActivated specjalny obiekt `CompositeDisposable`.
+- Każdy obiekt, który implementuje `IDisposable` (np. `RegisterHandler`, `Subscribe`,...)
+możesz „włożyć do kosza” przez `.DisposeWith(disposables)`.
+- Kiedy okno zostanie dezaktywowane (zamknięte), cały ten „kosz” zostanie automatycznie opróżniony.
+
+:::
+
+:::info Co to jest `.DisposeWith(disposables)`
+- „dodaj ten obiekt do listy rzeczy do posprzątania, gdy okno zniknie”.
+- to skrót dla instrukcji `disposables.Add(someSubscription)`
+
+:::
+
+::: note Co to robi `WhenActivated(...)`
+- `WhenActivated` to metoda dostępna w klasach ReactiveUI, takich jak:
+    - `ReactiveWindow`,
+    - `ReactiveUserControl`,
+    - `ReactiveContentControl`.
+
+- Jej zadaniem jest
+    - zareagowanie, gdy widok zostaje aktywowany (otwarty, pokazany)
+    - wykonanie określonego kodu tylko na czas aktywności widoku.
+czyli
+- `this.WhenActivated(disposables => { ... });` - "mówi":
+    - „Kiedy ten widok jest aktywny — wykonaj ten kod"
+    - Kiedy widok zostanie zamknięty — automatycznie wszystko posprzątaj”
+
+
+:::
+
+##### Wersja z ręczną obsługą
+- Chcąc lepiej zrozumieć powyższy kod, napiszemy tę samą funkcjonalność,
+- jednak ręcznie będziemy o wszystko dbali.
+
+- Zakomentujmy kod z `this.WhenActived`.
+- nasze `View`, czyli `MainWindow` potrzebuje pola do zapamiętania subskrypcji `private IDisposable? _disposable`
+- rejestracja handlera w konstruktorze:
+```csharp
+public MainWindow()
+    {
+        InitializeComponent();
+        ViewModel = new MainWindowViewModel();
+
+        // var vm = new MainWindowViewModel();
+        DataContext = ViewModel;
+
+
+// (_,_) - to parametry zdarzenia `Opened`
+// dokładniej (sender, arge)
+        _disposable = null;
+        this.Opened += (_, _) =>
+        {
+            _disposable = ViewModel.ShowSummaryWindow.RegisterHandler(async interaction =>
+            {
+                var win = new SummaryWindow
+                {
+                    DataContext = interaction.Input
+                };
+                await win.ShowDialog(this);
+                interaction.SetOutput(Unit.Default);
+            });
+        };
+    }
+```
+:::tip `this.Opened += `
+- zdarzenie `Opened`:
+    - wywoływane raz, gdy okno zostanie w pełni otwarte, załadowane i pokazane na ekranie;
+    - używamy go, gdy chcemy mieć pewność, że operacje (np. rejestracja handlera `Interaction`) wykonają się po załadowaniu interfejsu użytkownika;
+    - bez tego zdarzenia rejestracja `RegisterHandler(...)` może nastąpić zbyt wcześnie:
+        - zanim `Interaction` z `ViewModelu` będzie gotowe
+        - i pojawi się błąd „Failed to find a registration for an Interaction”.
+- składnia `+=` oznacza subskrypcję na zdarzenie (`Opened`  ),
+    - czyli: „gdy to zdarzenie wystąpi, wykonaj ten blok kodu”.
+- zapis `(_, _) => { ... }` to funkcja lambda:
+    - jej dwa argumenty `(sender, EventArgs)` są nieużywane,
+    - więc oznaczono je znakiem podkreślenia `_`
+
+:::
+
+- handler zarejestrowany, jeszcze czyszczenie pamięci
+```csharap
+ protected override void OnClosed(EventArgs e)
+    {
+        base.OnClosed(e);
+
+        // jeśli subskrypcja istnieje, usuniemy ją z pamięci
+        // podobne działania były w Kotlinie przy fragmentach
+        _disposable?.Dispose();
+        _disposable = null;
+
+    }
+```
+**WNIOSEK TAKI: UŻYWAMY `WhenActivated` :)**
+
+##### Wyświetlanie danych w nowym oknie
+- wracamy do kodu z `WhenActivated`
+
+##### Co kryje się w `interaction.Input`?
+```csharp
+this.WhenActivated((CompositeDisposable disposables) =>
+        {
+            ViewModel!.ShowSummaryWindow.RegisterHandler(async interaction =>
+                {
+                    var win = new SummaryWindow()
+                    {
+                        DataContext = interaction.Input
+                    };
+                    Console.WriteLine(interaction.Input); // UserProfileSetup.ViewModels.MainWindowViewModel
+                    Console.WriteLine(interaction.Input.Name); // tu będzie tekst z TextBoxa
+
+                    await win.ShowDialog(this);
+                    interaction.SetOutput(Unit.Default);
+                })
+                .DisposeWith(disposables);
+
+        });
+```
+- dopisaliśmy dwa `WriteLine`
+- aby zobaczyć co kryje się w `interaction.Input`
+- a przechowywany jest tam obiekt `MainWindowViewModel`
+
+
+##### Nowy model na dane w `Models`
+W folderze `Models` dodajemy plik `SummaryData.cs`
+    - obiekt tej klasy będzie przechowywał informacje, które chcemy wysłać do `View`
+    - nie ma potrzeby, aby cały `MainWindowViewModel` wysyłać do `View`
+```csharp
+public class SummaryData
+{
+    public string? Name { get; set; }
+    public Title Title { get; set; }
+    public string? SelectedCountry { get; set; }
+    public bool AcceptsNewsletter { get; set; }
+    public double Progress { get; set; }
+    public int ScooterAccidents { get; set; }
+}
+```
+
+##### Dostosowanie `ViewModelu`
+`MainWindowViewModel.cs`
+- `Interaction` zmianiamy typ z `<MainWindowViewModel, Unit>` na `<SummaryData, Unit>`
+- w obsłudze kliknięca dodajemy obiekt `SummaryData` i go wysyłamy do widoku
+```csharp
+  public Interaction<SummaryData, Unit> ShowSummaryWindow { get; }
+
+    public MainWindowViewModel()
+    {
+    //...
+
+        ShowSummaryWindow = new Interaction<SummaryData, Unit>();
+
+        //...
+
+        ShowSummaryCommand = ReactiveCommand.CreateFromTask(async () =>
+        {
+            Console.WriteLine("Command executed inside VM");
+
+            var data = new SummaryData
+            {
+                Name = this.Name,
+                Title = this.Title,
+                SelectedCountry = this.SelectedCountry,
+                AcceptsNewsletter = this.AcceptsNewsletter,
+                Progress = this.Progress,
+                ScooterAccidents = this.ScooterAccidents
+            };
+
+
+            await ShowSummaryWindow.Handle(data);
+        }, canShow);
+
+```
+
+##### Utworzymy `ViewModel` dla okna `SummaryWindow`
+- w folderze `ViewModels` tworzymy plik `SummaryWindowViewModel.cs`
+- dodajemy `SummaryData` jako parametr konstruktora
+```csharp
+public class SummaryWindowViewModel : ReactiveObject
+{
+    public SummaryWindowViewModel(SummaryData data)
+    {
+        Name = data.Name;
+        Title = data.Title;
+        SelectedCountry = data.SelectedCountry;
+
+```
+
+##### Zdefiniujemy wygląd danych w `SummaryWindow.axaml`
+```xml
+<!-- ... -->
+  Title="SummaryWindow"
+        x:DataType="vm:SummaryWindowViewModel">
+
+    <StackPanel Margin="20" Spacing="10">
+        <TextBlock Text="{Binding Name}" FontSize="24" FontWeight="Bold"/>
+        <TextBlock Text="{Binding Title}" FontSize="18"/>
+        <TextBlock Text="{Binding SelectedCountry}" />
+        <TextBlock Text="{Binding AcceptsNewsletter, StringFormat=Newsletter: {0}}"/>
+        <TextBlock Text="{Binding Progress, StringFormat=Life Satisfaction: {0:F0}%}" />
+        <TextBlock Text="{Binding ScooterAccidents, StringFormat=Accidents: {0}}" />
+    </StackPanel>
+
+```
+ Zwróć uwagę na `x:DataType="vm:SummaryWindowViewModel"` - to niezbędne podpięcie tego `axaml` do `ViewModelu`.
+
+
+##### Ustawienie `DataCotext` dla `SummaryWindow.cs`
+W pliku `MainWindow.cs`:
+
+```csharp
+  this.WhenActivated((CompositeDisposable disposables) =>
+        {
+            ViewModel!.ShowSummaryWindow.RegisterHandler(async interaction =>
+                {
+                    var win = new SummaryWindow()
+                    {
+                        DataContext = new SummaryWindowViewModel(interaction.Input)
+
+                    };
+
+
+                    await win.ShowDialog(this);
+                    interaction.SetOutput(Unit.Default);
+                })
+                .DisposeWith(disposables);
+```
+
+No i jest :) !!!
+
+
+
+
+
+
+
+
+
+
+
+
+
+

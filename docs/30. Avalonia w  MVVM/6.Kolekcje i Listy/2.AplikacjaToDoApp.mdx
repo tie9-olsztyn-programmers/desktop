@@ -1,0 +1,316 @@
+---
+title: Aplikacja ToDoApp - ListBox
+---
+
+# ToDoApp
+
+## Przygotowanie projektu
+- utwórz projekt:
+    - Rider, Avalonia MVVM,
+    - ReactiveUI
+    - doinstaluj `dotnet add package ReactiveUI.Fody` (automatyczne generowanie kodu)
+    - zmieniamy `class MainWindow : ReactiveWindow<MainWindowViewModel>`
+
+
+## Definicja wyglądu aplikacji
+`MainWindow.axaml`
+```xml
+  <StackPanel Margin="20" Spacing="10">
+        <TextBox Text="{Binding NewItem}" Width="200" />
+        <StackPanel Orientation="Horizontal" Spacing="10" Margin="10">
+            <Button Content="Add" Command="{Binding AddItemCommand}"/>
+            <Button Content="Delete Selected"
+                    Command="{Binding RemoveItemCommand}"
+                    CommandParameter="{Binding SelectedItem, Mode=OneWay}"
+                    />
+        </StackPanel>
+        <ListBox ItemsSource="{Binding Items}"
+                 SelectedItem="{Binding SelectedItem}"
+                 Height="200"/>
+    </StackPanel>
+```
+Pojawią się błędy, ponieważ w `ViewModel` nie zdefiniowaliśmy odpowiednich właściwości.
+
+## Definicje w ViewModel
+`MainWindowViewModel.cs` (zwróć uwagę, że ten plik w folderze `ViewModels` nazywa się prawie tak samo jak klasa
+w `View` `MainWindow.axaml.cs`)
+
+```csharp
+public class MainWindowViewModel : ViewModelBase
+{
+// Definiujemy prywatne pola, w których przechowujemy dane:
+// z pobranego TextBoxa
+    private string _newItem = "";
+// z wybranego elementu ListBoxa
+    private string? _selectedItem;
+
+// Lista przechowująca wszystkie elementy z ListBoxa
+    public ObservableCollection<string> Items { get; } = new();
+
+//publicza właściwość powiązana z prywatnym polem _newItem
+    public string NewItem
+    {
+        get => _newItem;
+        set => this.RaiseAndSetIfChanged(ref _newItem, value);
+    }
+
+//publiczna właściwość powiązana z prywatnym polem _selectedItem
+    public string? SelectedItem
+    {
+        get => _selectedItem;
+        set => this.RaiseAndSetIfChanged(ref _selectedItem, value);
+    }
+
+//deklaracja właściwości do obsługi zdarzeń kliknięcia przycisków
+    public ReactiveCommand<Unit, Unit> AddItemCommand { get; }
+    public ReactiveCommand<string?, Unit> RemoveItemCommand { get; }
+
+    public MainWindowViewModel()
+    {
+    // definiujemy, co ma się stać, gdy klikamy przycisk Add
+        AddItemCommand = ReactiveCommand.Create(() =>
+        {
+            if (string.IsNullOrWhiteSpace(NewItem)) return;
+            Items.Add(NewItem);
+            NewItem = "";
+        });
+
+   // definiujemy, co ma się stać, gdy klikamy przycisk Delete Selected
+        RemoveItemCommand = ReactiveCommand.Create<string?>(item =>
+        {
+            if (item != null && Items.Contains(item))
+            {
+                Items.Remove(item);
+            }
+        });
+    }
+}
+
+```
+
+## Uproszczenie kodu przez użycie ReactiveUI.Fody
+[Reactive]
+- automatycznie wygeneruje właściwości z RaiseAndSetIfChanged.
+- nie trzeba ręcznie pisać `_newItem`, `_selectedItem` ani *getterów*/*setterów*.
+```csharp
+
+public class MainWindowViewModel : ViewModelBase
+{
+    public ObservableCollection<string> Items { get; } = [];
+
+    [Reactive]
+    public string NewItem { get; set; } = string.Empty;
+
+    [Reactive]
+    public string? SelectedItem { get; set; }
+
+    public ReactiveCommand<Unit, Unit> AddItemCommand { get; }
+    public ReactiveCommand<string?, Unit> RemoveItemCommand { get; }
+//...
+```
+
+## Mała stylizacja
+
+`MainWindow.axaml`
+```xml
+        Width="800"
+        Height="450"
+        >
+
+    <Design.DataContext>
+        <!-- This only sets the DataContext for the previewer in an IDE,
+             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+        <vm:MainWindowViewModel/>
+    </Design.DataContext>
+
+    <!--Ustawiamy tło dla całego okna -->
+    <Border Background="#f4f6f9" Padding="30">
+
+    <StackPanel Margin="20" Spacing="10">
+        <!-- twrzymy nagłówek -->
+        <TextBlock Text = "My ToDo App"
+                   FontSize="28" FontWeight="Bold" Foreground="#333"
+                   HorizontalAlignment="Center"
+        />
+
+        <!-- Pole dodawania nowego zadania -->
+        <StackPanel Orientation="Horizontal" Spacing="10" >
+            <TextBox Text="{Binding NewItem}"
+                     Width="400" Height="35"
+                     Watermark="Type a new task ..."
+                     CornerRadius="8" Padding="8"
+                     Background="Wheat" BorderBrush="#ccc"
+                     />
+              <Button Content="Add" Command="{Binding AddItemCommand}"
+                      Width="100" Height="35" Background="#4caf50" Foreground="White"
+                      CornerRadius="8"
+                      HorizontalContentAlignment="Center"
+                      VerticalContentAlignment="Center"
+                      />
+        </StackPanel>
+
+        <!-- Lista zadań -->
+        <ListBox ItemsSource="{Binding Items}"
+                 SelectedItem="{Binding SelectedItem}"
+                 Height="250"
+                 BorderBrush="#ddd" BorderThickness="1" CornerRadius="8"
+                 Background="White" Padding="10"
+                 >
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <Border Background="#fafafa" CornerRadius="6"
+                            Margin="4" Padding="5"
+                            >
+
+                        <!-- Binding . weź string z Items i wyświetl tu -->
+                        <TextBlock Text="{Binding .}"
+                                   FontSize="16" Foreground="#444"
+                        />
+
+                    </Border>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+
+        <!-- Przyciski akcji -->
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="15">
+            <Button Content="Delete Selected"
+                    Command="{Binding RemoveItemCommand}"
+                    CommandParameter="{Binding SelectedItem}"
+                    Width="150" Height="35"
+                    Background="#E53935"
+                    Foreground="White"
+                    CornerRadius="8"
+                    FontWeight="SemiBold"
+                    HorizontalContentAlignment="Center"
+                    VerticalContentAlignment="Center"
+                    />
+            <Button Content="Out of order" Width="150" Height="35"
+                    Background="BlueViolet" Foreground="Bisque"
+                    CornerRadius="8"
+                    FontWeight="SemiBold"
+                    HorizontalContentAlignment="Center"
+                    VerticalContentAlignment="Center"
+                    />
+        </StackPanel>
+
+
+    </StackPanel>
+
+    </Border>
+```
+
+
+## Zapisywanie zadań do pliku JSON
+- dodamy pakiet, który pozwali nam pracować z JSONami w C# `dotnet add package System.Text.Json`
+- do klasy `MainWindowViewModel` dodamy pole `private const string filePath = "tasks.json";`
+- w ViewModelu zdefiniujemy i użyjemy dwóch dodatkowych metod `LoadFromFile` i `SaveToFile`
+- do klasy `MainWindowViewModel` dopiszemy metodę `SaveToFile`:
+```csharp
+   private void SaveToFile()
+    {
+        try
+        {
+            var json = JsonSerializer.Serialize(Items);
+            File.WriteAllText(filePath, json);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Save error: {ex.Message}");
+        }
+    }
+```
+:::tip Serializacja
+to proces zamiany:
+    - obiektu (np. kolekcji w pamięci) na
+    - format (np. jako tekst, bajty), który można
+        - zapisać lub
+        - przesłać
+
+:::
+
+
+- do klasy `MainWindowViewModel` dopiszemy metodą `LoadFromFile`:
+```csharp
+private void LoadFromFile()
+    {
+        try
+        {
+            if (!File.Exists(filePath)) return;
+            var json = File.ReadAllText(filePath);
+            var list = JsonSerializer.Deserialize<ObservableCollection<string>>(json);
+
+            Items.Clear();
+            if(list == null) return;
+            foreach (var item in list)
+            {
+                Items.Add(item);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Load error: {ex.Message}");
+        }
+        Console.WriteLine("loading");
+    }
+```
+
+:::tip Deserializacja
+To proces odtworzenia obiektu w pamięci (np. listy w C#) z danych zapisanych w jakimś formacie (np. JSON, XML, binarnym).
+
+Czyli:
+- Serializacja: obiekt ➝ tekst/binaria (np. Items ➝ "["kup chleb","odrobić zadanie"]")
+- Deserializacja: tekst/binaria ➝ obiekt (np. JSON z pliku ➝ `ObservableCollection<string>`)
+
+
+:::
+
+- użyjemy tych metod w konstruktorze klasu:
+```csharp
+public ReactiveCommand<Unit, Unit> SaveCommand { get; }
+public ReactiveCommand<Unit, Unit> LoadCommand { get; }
+
+ public MainWindowViewModel()
+    {
+        AddItemCommand = ReactiveCommand.Create(() =>
+        {
+            if (string.IsNullOrWhiteSpace(NewItem)) return;
+            Items.Add(NewItem);
+            NewItem = "";
+
+            SaveToFile();
+        });
+
+        RemoveItemCommand = ReactiveCommand.Create<string?>(item =>
+        {
+            if (item == null || !Items.Contains(item)) return;
+            Items.Remove(item);
+            SaveToFile();
+        });
+
+        SaveCommand = ReactiveCommand.Create(SaveToFile);
+        LoadCommand = ReactiveCommand.Create(LoadFromFile);
+
+        LoadFromFile();
+
+    }
+
+```
+- dodaliśmy też dwie właściwości `SaveCommand` oraz `LoadCommand`, gdybyśmy chcieli zaimplementować przycisky Save i Load.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

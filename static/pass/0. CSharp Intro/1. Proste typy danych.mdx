@@ -1,0 +1,78 @@
+---
+title: Proste typy danych
+---
+
+# Typy proste (*primitive types*, *value types*)
+- przechowują swoje wartości bezpośrednio
+- są przechowywane na stosie (*stack*)
+- gdy przypisujesz jedną zmienną typu prostego do drugiej, **kopiujesz** faktyczną wartość.
+
+## Typy liczbowe
+### liczby całkowite
+- `byte`: Liczba całkowita 8-bitowa (bez znaku).
+- `byte bajt = 255;`
+
+<br />
+
+- `sbyte`: Liczba całkowita 8-bitowa (ze znakiem).
+- `sbyte liczbaZeZnakiem = -128;`
+
+<br />
+
+- `short`: Liczba całkowita 16-bitowa.
+- `short malaLiczba = 30000;`
+
+<br />
+- `int`: Liczba całkowita 32-bitowa (najczęściej używany typ liczbowy).
+- `int liczba = 42;`
+
+<br/>
+- `long`: Liczba całkowita 64-bitowa, gdy potrzebujesz większego zakresu.
+- `long duzaLiczba = 9223372036854775807L;`
+
+### Liczby zmiennoprzecinkowe
+- `float`: 32-bitowa liczba zmiennoprzecinkowa. Używaj litery f na końcu liczby.
+- `float pi = 3.14f;`
+
+<br/>
+- `double`: 64-bitowa liczba zmiennoprzecinkowa (domyślny typ dla wartości zmiennoprzecinkowych).
+- `double liczbaPi = 3.14159265358979;`
+
+<br/>
+- `decimal`: 128-bitowa liczba zmiennoprzecinkowa, używana do obliczeń finansowych, które wymagają dużej precyzji.
+- `decimal kwota = 99.99m;`
+
+<br/>
+
+## Typy znakowe
+- `char`: Pojedynczy znak (w Unicode), reprezentowany przez pojedynczy apostrof (').
+- `char znak = 'A';`
+<br/>
+
+## Typy tekstowe
+- `string`: Łańcuch znaków (ciąg znaków), używany do przechowywania tekstu.
+- `string imie = "Anna";`
+<br/>
+
+## Typy logiczne
+- `bool`: Wartość logiczna, która może przyjmować dwie wartości: true (prawda) lub false (fałsz).
+- `bool czyPrawda = true;`
+<br/>
+
+# Charakterystyka typów prostych:
+- Przechowywane są bezpośrednio w zmiennej.
+- Kiedy przypisujesz je do innej zmiennej, tworzona jest kopia wartości.
+- Przechowywane na stosie (stack).
+
+```csharp
+int a = 5;
+int b = a;  // b = 5, kopia wartości
+a = 10;     // Zmieniamy a, ale b nadal wynosi 5
+```
+
+
+
+
+
+
+

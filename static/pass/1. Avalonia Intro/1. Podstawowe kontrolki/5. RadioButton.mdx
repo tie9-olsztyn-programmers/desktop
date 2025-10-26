@@ -1,0 +1,32 @@
+---
+title: Kontrolka RadioButton
+---
+RadioButton w Avalonia UI to kontrolka umożliwiająca użytkownikowi **wybór jednej opcji** spośród kilku dostępnych.
+
+Główne cechy:
+- Działa w grupie – tylko jeden przycisk w grupie może być zaznaczony.
+- Można używać `GroupName` do grupowania opcji.
+- Obsługuje Data Binding (`IsChecked="{Binding SelectedOption}"` w MVVM).
+- Może mieć zdarzenie `Checked`.
+
+```xml
+<StackPanel>
+    <RadioButton Content=" Pączek z marmoladą" GroupName="donuts"/>
+    <RadioButton Content="Pączek z czekoladą" GroupName="donuts"/>
+    <RadioButton Content="Pączek z pistacja" GroupName="donuts"/>
+
+    <StackPanel Orientation="Horizontal" Margin="20" >
+        <RadioButton Content="cola"
+                     GroupName="drinks" Margin="0,0,10,0"/>
+        <RadioButton Content="woda"
+                     GroupName="drinks" Margin="0,0,10,0"/>
+        <RadioButton Content="sok jabłkowy"
+                     GroupName="drinks" Margin="0,0,10,0"/>
+    </StackPanel>
+
+</StackPanel>
+```
+
+
+
+

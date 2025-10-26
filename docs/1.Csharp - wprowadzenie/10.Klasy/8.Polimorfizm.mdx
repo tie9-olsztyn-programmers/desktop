@@ -1,0 +1,195 @@
+---
+title: Polimorfizm
+---
+
+# Polimorfizm
+
+## Definicja
+
+:::note Polimorfizm
+- to mechanizm programowania obiektowego, który umożliwia różnym klasom pochodnym reagowanie na
+to samo wywołanie metod w różny sposób.
+- Inaczej: ta sama metoda (np. `Draw()`) może być zaimplementowana inaczej w każdej klasie dziedziczącej.
+
+
+W C# realizuje się to np. przez:
+- metody wirtualne i `override`
+- interfejsy
+- przeciążanie metod (`overloading`)
+
+
+:::
+
+## Metaforyczne wyjaśnienie polimorfizmu
+- Wyobraź sobie polecenie „graj” w orkiestrze.
+- Dyrygent podnosi batutę i mówi: „graj”.
+    - Skrzypek gra na skrzypcach, perkusista uderza w bębny, flecista dmucha w flet.
+    - Polecenie było to samo, ale każdy instrument zinterpretował je na swój własny sposób.
+To właśnie polimorfizm: jeden komunikat, wiele różnych zachowań zależnych od obiektu.
+
+
+
+## Przykłady - `override`/`virtual`
+- Metoda oznaczona jako `virtual` w klasie bazowej może być nadpisana w klasie pochodnej
+za pomocą słowa kluczowego `override`.
+- Umożliwia to różnym klasom pochodnym dostosowanie zachowania odziedziczonej metody.
+
+:::tip Dlaczego w klasie bazowej jest `virtual`?
+- `virtual` w klasie bazowej mówi:
+    - „Ta metoda może być nadpisana (`override`) w klasach pochodnych”.
+- Gdybyś nie oznaczył metody jako `virtual` (albo `abstract`),
+to w klasie pochodnej nie mógłbyś użyć `override` — kompilator zgłosiłby błąd.
+
+:::
+
+:::tip Co robi `override`?
+- `override` w klasie pochodnej oznacza:
+    - „Nadpisuję zachowanie metody z klasy bazowej,
+  która została oznaczona jako `virtual` (lub `abstract`)”.
+
+
+:::
+
+### Przykład - `Animal`
+```csharp
+public class Animal
+{
+    public virtual void MakeSound()
+    {
+        Console.WriteLine("Animal makes a sound.");
+    }
+}
+
+public class Cat : Animal
+{
+    public override void MakeSound()
+    {
+        Console.WriteLine("Cat meows.");
+    }
+}
+
+public class Dog : Animal
+{
+    public override void MakeSound()
+    {
+        Console.WriteLine("Dog barks.");
+    }
+}
+
+
+
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            Animal myAnimal = new Animal();
+            Animal myCat = new Cat();
+            Animal myDog = new Dog();
+
+            myAnimal.MakeSound(); // Animal makes a sound.
+            myCat.MakeSound();    // Cat meows.
+            myDog.MakeSound();    // Dog barks.
+
+
+        }
+    }
+
+```
+
+### Przykład - `Vehicle`
+```csharp
+public class Vehicule
+{
+    public virtual void Drive()
+    {
+        Console.WriteLine("Pojazd jedzie");
+    }
+}
+
+public class Car : Vehicule
+{
+    public override void Drive()
+    {
+        Console.WriteLine("Samochód jedzie szybko");
+    }
+}
+    class Program
+    {
+        static void Main(string[] args)
+        {
+           Vehicule vehicule = new Vehicule();
+           Car car = new Car();
+           vehicule.Drive();
+           car.Drive();
+        }
+    }
+```
+
+## Przykłady - przeciążanie metod / *method overloading*
+W C# przeciążanie metod (method overloading) oznacza,że:
+- w tej samej klasie możesz mieć
+- wiele metod o tej samej nazwie,
+- ale różniących się listą parametrów (typem albo liczbą).
+
+### Dodawanie
+```csharp
+public class Calculator
+{
+    // dodawanie dwóch intów
+    public int Add(int a, int b)
+    {
+        return a + b;
+    }
+
+    // dodawanie trzech intów
+    public int Add(int a, int b, int c)
+    {
+        return a + b + c;
+    }
+
+    // dodawanie dwóch liczb zmiennoprzecinkowych
+    public double Add(double a, double b)
+    {
+        return a + b;
+    }
+}
+
+// ---
+Calculator calc = new Calculator();
+Console.WriteLine(calc.Add(2, 3));       // 5
+Console.WriteLine(calc.Add(2, 3, 4));    // 9
+Console.WriteLine(calc.Add(2.5, 3.7));   // 6.2
+```
+
+
+### Logger
+```csharp
+public class Logger
+{
+    public void Log(string message)
+    {
+        Console.WriteLine($"[INFO] {message}");
+    }
+
+    public void Log(string message, int code)
+    {
+        Console.WriteLine($"[ERROR {code}] {message}");
+    }
+
+    public void Log(string message, DateTime time)
+    {
+        Console.WriteLine($"[{time}] {message}");
+    }
+}
+
+// ---
+Logger log = new Logger();
+log.Log("Program wystartował");
+log.Log("Błąd krytyczny", 404);
+log.Log("Użytkownik zalogował się", DateTime.Now);
+```
+
+
+
+
+

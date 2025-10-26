@@ -1,0 +1,86 @@
+---
+title: Klasy abstrakcyjne (`Abstract class`)
+---
+
+# Klasy abstrakcyjne
+
+## Definicja
+- oznaczamy ją słowem kluczowym `abstract`, czyli `abstract class`
+- może zawierać:
+    - metody abstrakcyjne (bez implementacji, ale muszą być nadpisane w klasach pochodnych),
+    - metody zwykłe (z implementacją, więc mogą, ale nie muszą być nadpisane),
+    - właściwości, pola, konstruktory.
+    - nie można stworzyć instancji klasy abstrakcyjnej (`new` jest niedozwolone),
+  służy ona tylko jako baza.
+
+
+:::tip Metafora
+Klasa abstrakcyjna to projekt architektoniczny:
+- nie możesz „zamieszkać w projekcie domu”,
+- ale możesz na jego podstawie zbudować dom (klasę pochodną),
+który będzie miał wszystkie wymagane elementy (np. drzwi, dach).
+
+:::
+
+```csharp
+public abstract class Animal
+{
+    public string Name { get; set; }
+
+    // Metoda abstrakcyjna – nie ma implementacji
+    public abstract void Speak();
+
+    // Metoda zwykła – może być odziedziczona bez zmian
+    public void Eat()
+    {
+        Console.WriteLine($"{Name} je.");
+    }
+}
+
+public class Dog : Animal
+{
+    public override void Speak()
+    {
+        Console.WriteLine("Hau hau!");
+    }
+}
+
+public class Cat : Animal
+{
+    public override void Speak()
+    {
+        Console.WriteLine("Miau!");
+    }
+}
+
+```
+
+użycie
+```csharp
+// Animal a = new Animal(); //  Błąd – nie można utworzyć klasy abstrakcyjnej
+
+Dog d = new Dog { Name = "Burek" };
+Cat c = new Cat { Name = "Mruczek" };
+
+d.Speak(); // Hau hau!
+c.Speak(); // Miau!
+
+d.Eat();   // Burek je jedzenie.
+```
+
+----
+:::important Kiedy używać klas abstrakcyjnych?
+Używaj, gdy:
+- kilka klas ma wspólne zachowania i dane,
+które chcesz zaimplementować raz, a potem dziedziczyć (np. pola, właściwości, metody z kodem).
+- chcesz mieć częściowo gotową bazę (np. metoda `Eat()`
+wspólna dla wszystkich zwierząt, ale metoda `Speak()` abstrakcyjna – do nadpisania).
+- chcesz kontrolować hierarchię (bo klasa może dziedziczyć tylko po jednej klasie abstrakcyjnej).
+- obiekty są ze sobą blisko spokrewnione (np. `Animal`, `Shape`).
+
+:::
+
+
+
+
+

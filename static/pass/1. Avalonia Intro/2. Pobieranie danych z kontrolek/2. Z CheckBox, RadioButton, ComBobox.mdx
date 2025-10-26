@@ -1,0 +1,121 @@
+---
+title: Dane z CheckBox, RadioButton, ComboBox
+----
+### `MainWindow.xaml`
+```xml
+<StackPanel Margin="20" HorizontalAlignment="Center">
+    <CheckBox x:Name="CheckBox" Content="Check me" />
+    <StackPanel Orientation="Horizontal" Margin="10,20,0,0">
+        <!-- Grupa 1 -->
+        <RadioButton x:Name="Radiobutton1" Content="Opt 1" IsChecked="True" GroupName="Group1"/>
+        <RadioButton x:Name="Radiobutton2" Content="Opt 2" Margin="20,0,0,0" GroupName="Group1"/>
+    </StackPanel>
+
+    <StackPanel Orientation="Vertical" Margin="10,20,0,0">
+        <!-- Grupa 2 -->
+        <RadioButton x:Name="Radiobutton3" Content="Opt 3" Margin="20,0,0,0" IsChecked="True" GroupName="Group2"/>
+        <RadioButton x:Name="Radiobutton4" Content="Opt 4" Margin="20,0,0,0" GroupName="Group2"/>
+        <RadioButton x:Name="Radiobutton5" Content="Opt 5" Margin="20,0,0,0" IsChecked="False" GroupName="Group2"/>
+        <RadioButton x:Name="Radiobutton6" Content="Opt 6" Margin="20,0,0,0" GroupName="Group2"/>
+    </StackPanel>
+
+    <ComboBox x:Name="ComboBox" SelectedIndex="0" Width="200" Margin="0,20,0,0">
+        <ComboBoxItem Content="Item 1" />
+        <ComboBoxItem Content="Item 2" />
+        <ComboBoxItem Content="Item 3" />
+    </ComboBox>
+
+    <Button x:Name="SubmitButton" Content="Submit" Width="100"
+            Margin="10,20,0,0" HorizontalAlignment="Center"/>
+
+    <Label x:Name="infolabel" Content="-" />
+</StackPanel>
+```
+`IsCheched` - przechowuje informacje o tym, czy kontrolka została zaznaczona
+
+`GroupName` - grupowanie kontrolek
+
+`ComboBox` - jest to kontener wewnątrz, którego mogę być elementy różnego typu
+
+`Label` - to najprostsza kontrolka do wyświetlania tekstu
+
+
+### `MainWindow.xaml.cs`
+```csharp
+public partial class MainWindow : Window
+{
+
+ private List<RadioButton> group2RadioButtons;
+
+ public MainWindow()
+ {
+    InitializeComponent();
+
+    // GDY RĘCZNIE TWORZYMY LISTĘ
+    // group2RadioButtons = new List<RadioButton>
+    // {
+    //     Radiobutton3,
+    //     Radiobutton4,
+    //     Radiobutton5,
+    //     Radiobutton6
+    // };
+
+    SubmitButton.Click += SubmitButton_Click; // przypisanie funkcji do Button w kodzie C#
+ }
+
+ private void SubmitButton_Click(object sender, RoutedEventArgs e)
+ {
+    try
+    {
+        // określenie, czy checkbox został zaznaczony
+        var checkBoxValue = MyCheckBox.IsChecked == true ? "Checked" : "Unchecked";
+
+        // Znalezienie zaznaczonego RadioButton z Group1
+        var radioButtonValue = Radiobutton1.IsChecked == true ? "Op 1" : "Op 2" ;
+
+        // Znalezienie zaznaczonego RadioButton z Group2
+        // // Gdy ręcznie stworzyliśmy listę kontrolek RadioButtons
+        // var selectedGroup2RadioButton = group2RadioButtons.FirstOrDefault(rb => rb.IsChecked == true);
+        // var group2RadioButtonValue = selectedGroup2RadioButton?.Content?.ToString() ?? "No selection";
+
+        // Dynamiczne znajdowanie radiobuttona z grupy 2
+        var selectedGroup2RadioButton = this.GetLogicalDescendants()
+            .OfType<RadioButton>()
+            .FirstOrDefault(rb => rb.GroupName == "Group2" && rb.IsChecked == true) ;
+        var group2RadioButtonValue = selectedGroup2RadioButton?.Content?.ToString() ?? "No selection";
+
+        // Rzutowanie SelectedItem na ComboBoxItem i uzyskanie Content
+        var comboBoxValue = (MyComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "No selection";
+
+        var content = $"CheckBox: {checkBoxValue}\n" +
+                      $"Group 1 RadioButton: {radioButtonValue}\n" +
+                      $"Group 2 RadioButton: {group2RadioButtonValue}\n" +
+                      $"ComboBox: {comboBoxValue}";
+
+        //File.WriteAllText("output.txt", content); // zapisanie w ścieżce YourProject/bin/Debug/net8.0/output.txt
+        var desktopPath = Environment.GetFolderPath((Environment.SpecialFolder.Desktop));
+        var filePath = Path.Combine(desktopPath, "dane z aplikacji");
+        File.WriteAllText(filePath, content);
+
+        infolabel.Content = "Zapisano" ;
+
+
+    } catch (Exception ex)
+    {
+        infolabel.Content = $"Błąd: {ex.Message}";
+    }
+ }
+}
+```
+
+
+
+
+
+
+
+
+
+
+
+

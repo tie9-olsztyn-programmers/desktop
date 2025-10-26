@@ -1,0 +1,45 @@
+---
+title: Aplikacja z trzema obrazkami
+---
+
+import useBaseUrl from '@docusaurus/useBaseUrl';
+
+## Zasoby
+<a href={useBaseUrl('/myFiles/threeImages_firstExample.zip')} download>Pobierz ZIP (trzy obrazki do aplikacji)</a>
+
+
+## Przygotowanie
+- utwórz projekt w Rider (Avalonia .Net App)
+- w aplikacji utwórz folder `Assets/Images`
+- skopiuj do folderu `Assets` jeden obrazek,
+- do folderu `Images` dwa kolejne obrazki
+- dodaj obrazki jako zasób aplikacji (*Build Action* = `AvaloniaResource`)
+
+## `MainWIndow.axaml`
+```xml
+<StackPanel Margin="10">
+    <TextBlock Text="Apka z obrazkami"/>
+    <Image Source="avares://ImagesInImage/Assets/olsztyn.jpg"
+           Width="100" Height="100" Margin="20"
+    />
+    <StackPanel Margin="20" Height="200" Orientation="Horizontal">
+        <Image Source="avares://ImagesInImage/Assets/Images/domek.jpg"
+               Stretch="Uniform" Margin="10" />
+        <Image Source="avares://ImagesInImage/Assets/Images/olimp.jpg"
+               Margin="10" Stretch="None"
+        />
+    </StackPanel>
+
+</StackPanel>
+```
+
+**Wyjaśnienie**
+- Prefix `avares://` jest używany w Avalonia, aby odwoływać się do zasobów osadzonych w aplikacji,
+- `avares://<PrzestrzeńNazw>` (zajrzyj do pliku `MainWindow.axaml.cs` - tam znajdziesz namespace)
+- `Stretch`:
+    - `None` – obraz nie jest skalowany, wyświetlany w oryginalnych wymiarach.
+    - `Fill` – obraz rozciągnięty, może zostać zniekształcony.
+    - `Uniform` – obraz skalowany, aby zachować proporcje, bez wychodzenia poza kontrolkę.
+    - `UniformToFill` – obraz skalowany, aby wypełnić kontrolkę, ale może być przycięty.
+
+

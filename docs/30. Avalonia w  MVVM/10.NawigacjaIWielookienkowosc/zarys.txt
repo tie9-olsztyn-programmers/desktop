@@ -1,0 +1,6 @@
+Jak tworzyć nowe okna (Window) i UserControls.
+
+Jak przekazywać dane między ViewModelami.
+
+Mini-projekt: aplikacja z kilkoma widokami (np. lista → szczegóły).
+

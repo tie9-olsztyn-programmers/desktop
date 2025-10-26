@@ -1,0 +1,129 @@
+---
+title: Co to jest C#?
+---
+
+
+
+:::tip Co to jest C#?
+- C# (czyt. „C sharp”) to nowoczesny, wieloparadygmatowy język programowania stworzony przez Microsoft
+- działa w ramach platformy .NET.
+
+:::
+
+:::tip Cechy języka C#:
+– C# jest językiem silnie typowanym, co pomaga wychwytywać wiele błędów już na etapie kompilacji.
+– wyposażony w mechanizm *garbage collection* (*.NET CLR*):
+- programista nie musi ręcznie zarządzać pamięcią
+– nie ma typowych dla C/C++ problemów z przeciekami pamięci czy wskaźnikami.
+– wspiera:
+- programowanie obiektowe (klasy, dziedziczenie, polimorfizm, abstrakcja),
+- programowanie funkcyjne (lambdy, LINQ)
+- imperatywne
+
+:::
+
+:::note Ekosystem .NET
+- Common Language Runtime (CLR) - silnik wykonawczy, który zarządza uruchamianiem programów .NET:
+    - *garbage collection*,
+    - bezpieczeństwo typów,
+    - JIT-kompilacja (Just-In-Time)
+    - izolacja kodu.
+- Biblioteki klas podstawowych (Base Class Library, BCL)
+    - ogromny zestaw gotowych do użycia klas i API do operacji wejścia-wyjścia,
+    - praca z kolekcjami,
+    - obsługa plików, sieci, bezpieczeństwa, tekstu, XML/JSON, itp.
+- SDK i narzędzia linii komend (.NET SDK / CLI) - pakiet narzędziowy (dotnet CLI) umożliwiający
+    - tworzenie,
+    - kompilację,
+    - testowanie
+    - publikowanie aplikacji na różnych platformach (Windows, macOS, Linux).
+- menadżer pakietów NuGet — ekosystem dystrybucji bibliotek:
+    - tysiące gotowych pakietów (od ORM-ów, przez biblioteki UI, po narzędzia analityczne),
+    - łatwe dodawanie zależności w projekcie
+    - łatwe aktualizowanie zależności w projekcie.
+- wieloplatformowość (.NET 5+ / .NET Core) - wsparcie dla
+    - Windows,
+    - macOS
+    - Linux w ramach jednolitego runtime’u
+    - umożliwia budowę aplikacji serwerowych, konsolowych, desktopowych, mobilnych i kontenerowych.
+
+:::
+
+:::important Zastosowania
+
+- Aplikacje desktopowe (WinForms, WPF, Avalonia MAUI)
+- Serwisy i mikroserwisy (ASP.NET Core)
+- Strony internetowe i API (Blazor, ASP.NET MVC/Web API)
+- Rozwój gier (Unity)
+- Aplikacje mobilne (Xamarin, .NET MAUI)
+- Chmura i IoT (Azure SDK, .NET IoT)
+
+:::
+
+----
+# Przykładowy program
+
+```csharp
+
+using System; // Importowanie biblioteki systemowej
+
+class Program // Deklaracja klasy o nazwie Program
+{
+     static void Main(string[] args) // Główna funkcja programu
+    {
+        Console.WriteLine("Witaj w C#!"); // Wyświetla tekst na ekranie
+    }
+}
+```
+
+w y j a ś n i e n i e
+- `using System` Dołączamy przestrzeń nazw `System`, która zawiera klasy, takie jak `Console`, umożliwiające korzystanie z wbudowanych funkcji.
+- `class Program` Wszystko w C# jest umieszczone w klasach. Ten fragment kodu definiuje klasę o nazwie Program.
+- `static void Main(string[] args)` Główna metoda programu, od której wszystko się zaczyna. Każdy program w C# musi mieć punkt startowy w postaci metody Main.
+- `Console.WriteLine()` Funkcja służąca do wyświetlania tekstu w konsoli.
+
+# Gdzie napisać ten program?
+- można w kompilatorze online https://dotnetfiddle.net/
+
+- w VS Code
+
+- w Rider
+
+- Visual Studio
+
+- ...
+
+# Jak uruchomić taki program
+
+:::tip Instalacja .Net
+Zainstaluj środowisko .NET na komputerze:
+
+https://dotnet.microsoft.com/download
+
+Wybierz pakiet pasujący do twojego systemu operacyjnego.
+
+:::
+
+:::info Tworzenie projektu
+- w konsoli wydaj polecenie `dotnet new consol -n <nazwaProjektu>` - tworzymy nowy projekt konsolowy
+- `cd <nazwaProjektu>` - przejdziesz do folderu projektu
+- `dotnet run` - uruchomisz program
+   - jeśli trzeba, najpierw zrobi `build`
+    - szybko uruchamia program
+- `dotnet build` - kompilujemy projekt
+    - generuje kod wynikowy,
+    - nie zbiera wszystkich plików do jednego katalogu publikacyjnego
+    - nie uruchamia programu
+- `dotnet publish` - publikujemy projekt
+    - wykonuje `build`
+    - tworzy katalog publikacyjny (np. `bin/Release/net9.0/publish`)
+    - zawiera wszystkie pliki potrzebne do uruchomienia aplikacji
+
+:::
+
+
+
+
+
+
+

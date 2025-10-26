@@ -1,0 +1,469 @@
+---
+title: Podstawowe kontrolki z MVVM (ReactiveUI)
+---
+
+# User Profile Setup - podstawowe kontrolki z MVVM (ReactiveUI)
+
+# Przygotowanie środowiska
+- Rider,
+- Template **Avalonia.Net MVVM**
+- Advanced Settings: MVVM Toolkit: ReactiveUI
+- nazwa projektu: UserProfileSet
+- `MainWindowViewModel.cs` - klasa będzie dziedziczyła po `ReactiveWindow<MainWindowViewModel>`
+czyli
+```csharp
+public partial class MainWindow : ReactiveWindow<MainWindowViewModel>
+{
+    public MainWindow()
+    {
+        InitializeComponent();
+    }
+}
+//...
+```
+- doinstalujemy pakiet `ReactiveUI.Fody`: `dotnet add package ReactiveUI.Fody`
+(pamiętaj, aby być w folderze aplikacji, a nie solucji!!)
+- uruchom i sprawdź, czy wszystko działa
+
+# `TextBox` i `TextBlock`
+## Praca w `View`
+- w `MainWindow.axaml` dodamy dwie kontrolki
+    - `TextBox` do wprowadzania imienia
+    - `TextBlock` jako etykietę do `TextBox`
+```xml
+  <StackPanel Margin="20" Spacing="10">
+      <TextBlock Text="Enter your name:" FontSize="20" FontWeight="Bold"/>
+      <TextBox Text="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+               Width="200" Height="30" Watermark="Type your name here ..."
+               />
+
+  </StackPanel>
+
+```
+
+:::tip Małe wyjaśnienie
+- `Binding Name` wiążemy właściwość `.Text` (`View`) z właściwością `Name` (`ViewModel`)
+- `Mode=TwoWay` Określa kierunek przepływu danych:
+    - `OneWay` tylko z `ViewModelu` do `View`,
+    - `TwoWay` w obie strony:
+        - jak wpiszesz w `TextBox`, to zmienia się `Name` w VM,
+        - jak zmienisz `Name` w VM, to odświeży się `TextBox`.
+- `UpdateSourceTrigger=PropertyChanged` mówi, kiedy aktualizować ViewModel:
+    - domyślnie w `TextBox` aktualizacja dopiero po wyjściu z pola (po utracie fokusu).
+    - `PropertyChanged`  aktualizacja na bieżąco, przy każdym znaku.
+
+:::
+
+:::danger Aplikacja nie działa poprawnie
+- aplikacja powinna w `TextBlock`u wyświetlać to, co wpiszemy w `TextBox`a
+- jedna nic się nie wyświetla,
+- dlaczego i jak to naprawić?
+
+
+:::
+
+## Praca w `ViewModel`
+- potrzebujemy właściwości `Name`, która ma być połączona z `TextBox`
+- dodajemy do `ViewModel`
+```csharp
+public class MainWindowViewModel : ViewModelBase
+{
+    private string _name = string.Empty;
+
+    public string Name
+    {
+        get => _name;
+        set => this.RaiseAndSetIfChanged(ref _name, value);
+    }
+}
+```
+:::tip Gdyby
+- gdyby nie metoda `RaiseAndSetIfChanged`, to UI by się nie odświeżało
+- gdyby `set => _name = value;`:
+    - pole `_name` się zmieni,
+    - ale UI nie dowie się o zmianie,
+    - `TextBlock Text="{Binding Name}"` nie odświeży się.
+
+:::
+
+**Ponieważ mamy paczkę `Fody`** kod możemy uprościć:
+```csharp
+public class MainWindowViewModel : ViewModelBase
+{
+    [Reactive] public string Name { get; set; } = String.Empty;
+
+}
+```
+
+# `RadioButton` - wybór tytułu grzecznościowego
+## Praca w `Models`
+- utworzymy w folderze `Models` plik, który będzie modelował tytuły grzecznościowe
+```csharp
+public enum Title
+{
+    None,
+    Mr,
+    Mrs,
+    Miss,
+    Bachelor
+}
+```
+:::note `Enum` (od enumeration)
+- to specjalny typ w C#, w którym definiujemy z góry ustalony zestaw nazwanych wartości.
+
+- przykład
+```csharp
+public enum Pizza
+{
+    Margherita,
+    Pepperoni,
+    Capricciosa,
+    Hawaiian,
+    Veggie
+}
+
+Pizza todayPizza = Pizza.Pepperoni;
+Console.WriteLine($"Today's pizza is: {todayPizza}");
+```
+
+:::
+
+:::tip MVVM
+- **Model** to taka skrzynka z kartotekami w bibliotece.
+    - W środku są same informacje (np. imię, nazwisko, tytuł, data).
+    - Skrzynka nie mówi sama z siebie, jak wygląda książka ani jak ją wyświetlić na półce.
+- **ViewModel** jest jak bibliotekarz:
+    - patrzy do skrzynki (Modelu),
+    - pilnuje porządku,
+    - daje odpowiednie kartki dalej,
+    - decyduje, co można zrobić (np. czy można wypożyczyć książkę).
+- **View** to półka w bibliotece widoczna dla czytelnika:
+    - na niej widać efekt pracy bibliotekarza,
+    - książki są ułożone w określony sposób,
+    - czytelnik nie ma pojęcia, jak działa zaplecze – widzi tylko efekt.
+
+:::
+
+## Praca w `ViewModels`
+- do pliku `MainViewModels.cs` dodamy właściwość, która będzie przechowywała informację o tym, który z
+tytułów grzecznościowych został wybrany
+```csharp
+public class MainWindowViewModel : ViewModelBase
+{
+
+    private Title _title = Models.Title.None;
+
+    public Title Title
+    {
+        get => _title;
+        set => this.RaiseAndSetIfChanged(ref _title, value);
+    }
+
+    [Reactive] public string Name { get; set; } = String.Empty;
+
+}
+```
+
+- używamy paczki `Fody`, więc kod możemy uprościć:
+```csharp
+public class MainWindowViewModel : ViewModelBase
+{
+
+    [Reactive]  public Title Title { get; set; } = Title.None;
+
+    [Reactive] public string Name { get; set; } = String.Empty;
+
+}
+```
+
+
+## Praca w `View`
+- przechodzimy do pliku `MainWindow.axaml`
+- problem:
+    - właściwość `Radiobuttona` `IsChecked` zwraca booleana,
+    - my chcemy mieć informację o tym,
+        - który tytuł został wybrany (*Mr*, *Mrs*, *Miss*, *Bachelor*)
+        - a nie, że coś zostało zaznaczone lub nie (`true` lub `false`)
+- rozwiązanie:
+    - napisać `if` dla każdego `Radiobutton`a
+    - lub użyć konwertera z wartości typu `bool` na typ `string` lub wartości z `enum` (nasz przypadek)
+- użyjemy wbudowany konwerter
+- w kontrolce `<Window ` dodamy import przestrzeni nazw z aliasem `conv`:
+    - `xmlns:conv="using:Avalonia.Controls.Converters"`
+    - Ten zapis w `Window` to jak `using` w C#:
+        - pozwala nam używać konwerterów z tej przestrzeni nazw w XAML,
+        - potem w `Resources` tworzymy instancję konwertera, żeby móc jej używać w bindingach.
+- tworzymy instancję konwertera wewnątrz głównego okna:
+```xml
+<Window.Resources>
+    <conv:EnumToBoolConverter x:Key="EnumToBoolConverter"/>
+</Window.Resources>
+```
+- `Window.Resources`
+    - To kolekcja zasobów (`ResourceDictionary`) przypisana do okna.
+    - Wszystko, co tam wstawisz, staje się dostępne w całym drzewie wizualnym tego okna.
+- `<conv:EnumToBoolConverter.. >`
+    - tworzenie instancji klasy `EnumToBoolConverter` (pełna nazwa: `Avalonia.Controls.Converters.EnumToBoolConverter`),
+    - to jest obiekt w pamięci, tak jakbyś w C# zrobił: `var converter = new EnumToBoolConverter();`
+- `x:Key="EnumToBoolConverter"`
+    - rejestrujesz tę instancję w słowniku zasobów pod kluczem `EnumToBoolConverter`.
+    - klucz działa jak unikalna nazwa w `ResourceDictionary`, której potem możesz użyć,
+  by odwołać się do obiektu.
+
+
+- teraz dodamy `RadioButton`y:
+```xml
+<StackPanel Margin="20" Orientation="Horizontal" Spacing="10">
+      <RadioButton Content="Mr" GroupName="Title"
+               IsChecked="{Binding Title, Mode=TwoWay,
+                             Converter={StaticResource EnumToBoolConverter},
+                             ConverterParameter={x:Static models:Title.Mr}}"/>
+      <RadioButton Content="Mrs" GroupName="Title"
+               IsChecked="{Binding Title, Mode=TwoWay,
+                             Converter={StaticResource EnumToBoolConverter},
+                             ConverterParameter={x:Static models:Title.Mrs}}"/>
+      <RadioButton Content="Miss" GroupName="Title"
+               IsChecked="{Binding Title, Mode=TwoWay,
+                             Converter={StaticResource EnumToBoolConverter},
+                             ConverterParameter={x:Static models:Title.Miss}}"/>
+      <RadioButton Content="Bachelor" GroupName="Title"
+               IsChecked="{Binding Title, Mode=TwoWay,
+                             Converter={StaticResource EnumToBoolConverter},
+                             ConverterParameter={x:Static models:Title.Bachelor}}"/>
+</StackPanel>
+<TextBlock Text="Wybrano:" FontStyle="Italic" Margin="0,10,0,0"/>
+<TextBlock Text="{Binding Title}" FontSize="18" Foreground="DarkOrange"/>
+```
+- bindowanie na `IsChecked` (typ `bool`) w `RadioButton`.
+- source (źródło): `Title` w `ViewModelu` (typ `enum`, `models:Title`).
+- Problem: typy się różnią (`enum ↔ bool`), więc używamy konwertera.
+- `Converter` to obiekt implementujący `IValueConverter`
+    - „Weź obiekt o kluczu `EnumToBoolConverter` z Resources i użyj go jako konwertera”.
+    - `StaticResource` szuka raz przy tworzeniu drzewa wizualnego.
+    - Binding od `ViewModel` do `View`:
+- `ConverterParameter`
+    - dodatkowa wartość przekazywana do konwertera
+    - „Ten `Radiobutton` reprezentuje konkretną wartość `enum`a (np. `Title.Bachelor`).”
+- `{x:Static models:Title.Bachelor}`
+    - `x:Static`  specjalny markup extension w XAML, który pozwala odwołać się do
+        - statycznego pola,
+        - właściwości albo
+        - członu `enuma`.
+    - `models:` przestrzeń nazw, gdzie masz zdefiniowany `enum Title`.
+    - `Title.Bachelor`  konkretny człon `enum`a (np. `enum Title { Mr, Mrs, Bachelor }`).
+
+:::tip Jak działa konwerter
+- *Convert* (VM ➜ UI):
+    - Sprawdza: `Title == ConverterParameter`
+    - Jeśli np. `Title == Title.Bachelor`, to `IsChecked = true`.
+- *ConvertBack* (UI ➜ VM):
+    - Jeśli użytkownik kliknie ten `RadioButton`, `IsChecked = true`
+    - Konwerter zwróci `ConverterParameter`, czyli `Title.Bachelor` i ustawi to w `ViewModelu`.
+
+:::note w skrócie
+- `Converter={StaticResource EnumToBoolConverter}` znaczy tyle, co
+    - „użyj tego konwertera zdefiniowanego w Resources”.
+- `ConverterParameter={x:Static models:Title.Bachelor}` znaczy tyle, co
+    - „dla tego radiobuttona przekazuj do konwertera wartość enuma Title.Bachelor”.
+
+:::
+
+:::
+
+
+## `CheckBox` - czy zaprenumerować newletter?
+- dodajemy do `MainWindow.axaml`
+```xml
+<Separator Margin="10"/>
+
+  <CheckBox Content="Subscribe to newsletter"
+            IsChecked="{Binding AcceptsNewsletter, Mode=TwoWay}"/>
+
+  <TextBlock Text="{Binding AcceptsNewsletter, StringFormat=Newsletter accepted: {0}}"
+             Foreground="Gray"/>
+```
+
+```csharp
+  public class MainWindowViewModel : ViewModelBase
+{
+
+    [Reactive]  public Title Title { get; set; } = Title.None;
+
+    [Reactive] public string Name { get; set; } = String.Empty;
+    [Reactive] public bool AcceptsNewsletter { get; set; } = false;
+
+}
+```
+
+## `Slider` / `ProgressBar` - jaki jest twój poziom satysfakcji z życia?
+- w `ViewModelu` dodajemy nową właściwość
+```csharp
+ [Reactive] public double Progress { get; set; } = 0;
+```
+
+- w `MainWindow.axaml` dodajemy `ProgressBar` i `Slider`
+```xml
+<Separator Margin="10"/>
+      <TextBlock Text="How satisfied are you with your life? " FontWeight="Bold"/>
+
+      <Slider Minimum="0" Maximum="100" Value="{Binding Progress, Mode=TwoWay}"/>
+      <ProgressBar Minimum="0" Maximum="100" Value="{Binding Progress}"
+                   Width="200" Height="20"/>
+      <TextBlock Text="{Binding Progress, StringFormat=Progress: {0:F0}%}"
+                 Foreground="Gray"
+                 />
+
+```
+
+
+## `Combobox` - z jakiego jesteś kraju?
+- w naszym `ViewModel`u dodajemy:
+```csharp
+// źródło danych dla comboboxa
+  public ObservableCollection<string> Countries { get; } =
+    [
+        "Poland",
+        "Germany",
+        "United Kingdom",
+        "United States",
+        "Other"
+    ];
+
+//właściwość przechowująca  nazwę kraju wybranego
+    [Reactive] public string? SelectedCountry { get; set; }
+
+```
+
+- w naszym `View` dodajemy
+```xml
+ <Separator Margin="10"/>
+      <TextBlock Text="Select your country:" FontWeight="Bold"/>
+
+      <ComboBox ItemsSource="{Binding Countries}"
+                SelectedItem="{Binding SelectedCountry, Mode=TwoWay}"
+                Width="200" />
+
+      <TextBlock Text="{Binding SelectedCountry, StringFormat=You selected: {0}}"
+                 Foreground="Gray"/>
+
+```
+
+## `Button`/`ReactiveCommand` - ile wypadków na hulajnodze miałeś?
+### W `View` dodajemy `Button`
+```xml
+<Separator Margin="10"/>
+      <StackPanel Margin="20" Spacing="10">
+          <TextBlock Text="Scooter accidents:" FontWeight="Bold"/>
+          <StackPanel Orientation="Horizontal" Spacing="10">
+              <Button Content="Add accident"
+                      HorizontalContentAlignment="Center"
+                      VerticalContentAlignment="Center"
+                      Command="{Binding AddAccidentCommand}"
+                      Width="150" Height="35"
+                      Background="Tomato" Foreground="White"
+                      CornerRadius="8"/>
+
+              <TextBlock Text="{Binding ScooterAccidents}"
+                         FontSize="18"
+                         VerticalAlignment="Center"/>
+          </StackPanel>
+
+          <TextBlock Text="(Max 10 accidents allowed!)"
+                     FontStyle="Italic" Foreground="Gray"/>
+      </StackPanel>
+```
+**WAŻNE**:
+- `Button`:
+    - ma specjalną właściwość `Command`
+    - właściwość `Command` łączymy (*binding*) z właściwością `AddAccidentCommand`,
+    która będzie zdefiniowana w `ViewModelu`
+- `TextBlock` - jego właściwość `Text` łączymy z właściwością `ScooterAccidents`,
+która będzie zdefiniowana w `ViewModelu`
+
+
+### W `ViewModel` dodajemy logikę działania przycisku
+- dodajemy właściwości `AddAccidentCommand` i `ScooterAccidents`
+```csharp
+public class MainWindowViewModel : ViewModelBase
+{
+//...
+    [Reactive] public int ScooterAccidents { get; set; } = 0;
+    public ReactiveCommand<Unit, Unit> AddAccidentCommand { get; }
+
+//...
+```
+**wyjaśnienie** Co oznacza `<Unit, Unit>` w `ReactiveCommand<Unit, Unit>`?
+- Pierwszy `Unit` (`TInput`)
+    - komenda nie przyjmuje żadnych parametrów.
+    - Gdybyś miał np. `ReactiveCommand<string, Unit>`, mógłbyś w XAML przekazać `CommandParameter="Hello"`
+  i w metodzie odebrać `string`a.
+- Drugi `Unit` (`TOutput`)
+    - komenda nic nie zwraca.
+    - Zamiast `void`, używamy `Unit`.
+
+Gdybyś chciał, żeby komenda zwracała np. nową wartość licznika,
+mógłbyś zrobić `ReactiveCommand<Unit, int>`.
+
+
+
+
+
+##### W konstruktorze dodajemy logikę działania przycisku:
+```csharp
+public class MainWindowViewModel : ViewModelBase
+{
+//...
+     public MainWindowViewModel()
+    {
+        var canAddAccident = this.WhenAnyValue(x => x.ScooterAccidents)
+            .Select(acc => acc < 10);
+        AddAccidentCommand = ReactiveCommand.Create(
+            () => { ScooterAccidents++; },
+            canAddAccident
+        );
+    }
+//...
+```
+**wyjaśnienie**
+- `WhenAnyValue(x => x.ScooterAccidents)`
+    - `x` to `this`, czyli instancja klasy `MainWindowViewModel` w naszym przypadku, czyli to tak,
+  jakbyśmy powiedzieli („Obserwuj właściwość `ScooterAccidents` w obiekcie `this`”),
+    - tworzy obserwowalny strumień zdarzeń (`IObservable`),
+    - ten strumień emituje wartość za każdym razem, gdy zmienia się właściwość `ScooterAccidents`.
+    - zwraca obiekt `IObservable<int>`
+:::tip IObservable
+- `WhenAnyValue` nie zwraca listy ani tablicy.
+- Zwraca `IObservable<T>`, czyli obiekt, który dostarcza wartości w czasie
+(w tym przypadku jest to `IObservable<int>`).
+- Dzięki temu możesz te wartości dalej przekształcać (`Select`, `Where`, ...)
+albo podpiąć do `ReactiveCommand` jako warunek `CanExecute`.
+- metafory:
+    - Lista / Tablica-Wyobraź sobie pudełko z piłeczkami:
+        - Wszystkie piłeczki (wartości) są już w środku.
+        - Możesz w dowolnym momencie otworzyć pudełko i wyjąć wszystkie na raz.
+        - Tak działa `List<int>` czy `int[]`.
+        - Masz gotowy zbiór elementów w pamięci.
+    - `Observable` Wyobraź sobie rurkę z wodą:
+        - Woda (wartości) płynie stopniowo w czasie – kropla po kropli.
+        - Ty możesz podstawić kubek (Subscribe), żeby każdą nową kroplę złapać, ale nie masz od razu całej wody.
+        - Tak działa `IObservable<T>`.
+        - To strumień zdarzeń – wartości pojawiają się, gdy coś się zmienia.
+
+:::
+
+
+
+- `Select(acc => acc < 10)`
+    - `Select` działa jak `map` w JavaScript: przekształca dane ze strumienia.
+    - każdą wartość `acc` (liczbę wypadków) zamieniasz na `bool` – `true` jeśli `< 10`, `false` jeśli `>= 10`.
+    - generuje obiekt `IObservable<bool>`
+    - zmienia `IObservable<int>` na `IObservable<bool>`, czyli w uproszczeniu mapuje `int`y na `boolean`y.
+- `var canAddAccident = ...`
+    - to obserwowalny warunek (`IObservable<bool>`),
+    - warunek ten informuje, czy przycisk ma być aktywny
+- `ReactiveCommand.Create(..., canAddAccident)`
+    - pierwszy argument to akcja do wykonania (`() => { ScooterAccidents++; }`)
+    - drugi argument to  obserwowalny warunek (`canAddAccident`), kiedy komenda może być wykonana (`canExecute`):
+        - Gdy `ScooterAccidents < 10`, to `canAddAccident = true`, więc przycisk aktywny.
+        - Gdy `ScooterAccidents == 10`, to `canAddAccident = false`, więc przycisk automatycznie się dezaktywuje.
+

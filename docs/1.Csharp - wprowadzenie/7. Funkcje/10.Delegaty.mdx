@@ -1,0 +1,231 @@
+---
+title: Delegates/Delegaty
+---
+
+# Delegates/Delegaty
+
+
+## Delegaty
+Czym są delegaty?
+- Delegaty to obiekty, które reprezentują referencje do metod.
+- Można je traktować jako wskaźniki na funkcje (podobnie jak wskaźniki na funkcje w językach takich jak C++).
+- Delegat określa podpis (czyli sygnaturę) metody, którą można przypisać do danego delegatu.
+- Dzięki delegatom można przekazywać funkcje jako argumenty do innych metod, wywoływać funkcje dynamicznie oraz przechowywać kolekcje funkcji.
+
+
+:::note Podstawowe cechy delegatów:
+- Sygnatura delegata: Delegat definiuje typy argumentów i typ zwracany metody, którą można przypisać do tego delegata.
+- Bezpośrednie przypisanie metody: Delegaty pozwalają przypisać metody do zmiennych, a następnie wywołać te metody przy użyciu zmiennej delegatu.
+- Delegaty wbudowane: C# posiada kilka wbudowanych delegatów, takich jak Action i Func.
+
+
+:::
+
+### Przykłady
+```csharp
+class Program
+{
+    // definicja delegata, który przyjmuje dwa argumentu typu int
+    // zwraca int
+    public delegate int Operacja(int a, int b);
+
+    public static void Main(string[] args)
+    {
+        Operacja operacja = Dodaj;
+
+        //Wywołanie delegata
+        int wynik = operacja(55, 43);
+        Console.WriteLine(wynik.ToString());
+
+    }
+
+    private static int Dodaj(int a, int b)
+    {
+        return a + b;
+    }
+}
+```
+
+
+```csharp
+class Program
+{
+    public delegate void ShowMessage(string message);
+
+    public static void Main(string[] args)
+    {
+        ShowMessage msgDelegate = Greetings;
+        msgDelegate("Witaj świecie");
+
+        //przypisanie do delegata innej metody
+        msgDelegate = Goodbye;
+        msgDelegate("DO zobaczenia!");
+
+    }
+
+    public static void Greetings(string message)
+    {
+        Console.WriteLine($"Powitanie :)  {message}");
+    }
+
+    public static void Goodbye(string message)
+    {
+        Console.WriteLine($"Pożegnanie :( {message}");
+    }
+
+}
+```
+#### Główne zalety użycia delegatów w tym przykładzie:
+- Elastyczność: Delegat msgDelegate może być przypisany do różnych metod, które mają taki sam typ zwracany (void) i przyjmują taki sam argument (string). Dzięki temu możemy dynamicznie zmieniać metodę, którą chcemy wywołać.
+- Polimorfizm: Używając tego samego delegata, możemy wywoływać różne metody zależnie od kontekstu, bez konieczności pisania osobnych instrukcji if/switch do sprawdzania, którą metodę wywołać.
+- Modulvarność: Metody Greetings i Goodbye są niezależne od siebie, ale mogą być wywoływane przez ten sam delegat.
+
+
+#### Delegat jako parametr metody
+Możemy także przekazywać delegaty jako parametry do metod, aby zwiększyć elastyczność kodu.
+```csharp
+public class Program
+{
+
+    public delegate void DisplayMessage(string message);
+
+    public static void Main()
+    {
+        Display("Hello!", DisplayGreeting);  // Greeting: Hello!
+        Display("Goodbye!", DisplayFarewell);  // Farewell: Goodbye!
+    }
+
+    public static void Display(string text, DisplayMessage display)
+    {
+        display(text);
+    }
+
+    public static void DisplayGreeting(string message)
+    {
+        Console.WriteLine($"Greeting: {message}");
+    }
+
+    public static void DisplayFarewell(string message)
+    {
+        Console.WriteLine($"Farewell: {message}");
+    }
+}
+```
+
+### Delegaty wbudowane
+- Wbudowane delegaty w C# to specjalne typy delegatów, które upraszczają i przyspieszają pracę z delegatami, unikając konieczności ich ręcznego definiowania.
+- Najpopularniejsze wbudowane delegaty to:
+  - `Action`
+  - `Func`
+  - `Predicat`
+
+**Każdy z tych delegatów jest zdefiniowany w przestrzeni nazw  System i ma swoje specyficzne zastosowania.**
+
+
+#### Delegat `Action`
+- reprezentuje metody, które nie zwracają **żadnej wartości** (`void`).
+- Może przyjmować od 0 do 16 parametrów.
+- Służy do wywoływania metod, które wykonują pewne operacje, ale nie zwracają wyniku.
+```csharp
+public class Program
+{
+
+    public static void Main()
+    {
+        // `Action` bez parametrów
+        Action powitanie = () => Console.WriteLine("Hello, world!");
+        powitanie(); // Wyświetli: Hello, world!
+
+        // `Action` z jednym parametrem
+        Action<string> wyswietlTekst = tekst => Console.WriteLine(tekst);
+        wyswietlTekst("Welcome to C#!"); // Wyświetli: Welcome to C#!
+
+        // `Action` z dwoma parametrami
+        Action<int, int> wyswietlSume = (a, b) => Console.WriteLine($"Suma: {a + b}");
+        wyswietlSume(3, 5); // Wyświetli: Suma: 8
+
+    }
+}
+```
+:::tip Kiedy używać Action?
+- Kiedy potrzebujesz wywołać metodę, która nie zwraca żadnej wartości (void), ale może przyjmować jeden lub więcej parametrów.
+- Do operacji takich jak foreach, wywołanie funkcji wewnątrz pętli czy wykonywanie operacji w tle, które nie zwracają wyniku.
+
+
+:::
+
+
+
+#### Delegat `Func`
+- reprezentuje metody, które zwracają wartość.
+- Może przyjmować od 0 do 16 parametrów, przy czym ostatni parametr definiuje typ zwracany przez metodę.
+
+```csharp
+
+public class Program
+{
+
+    public static void Main()
+    {
+        // `Func` bez parametrów, zwraca `int`
+        Func<int> podajLiczbe = () => 42;
+        Console.WriteLine(podajLiczbe()); // Wyświetli: 42
+
+       // `Func` z jednym parametrem `string`, zwraca `int` (długość tekstu)
+       Func<string, int> dlugoscTekstu = tekst => tekst.Length;
+       Console.WriteLine(dlugoscTekstu("Hello!")); // Wyświetli: 6
+
+       // `Func` z dwoma parametrami `int`, zwraca `int` (iloczyn dwóch liczb)
+       Func<int, int, int> pomnoz = (a, b) => a * b;
+       Console.WriteLine(pomnoz(3, 4)); // Wyświetli: 12
+    }
+}
+```
+:::note Kiedy używać `Func`?
+- Kiedy chcesz wywołać metodę, która zwraca wynik, ale jednocześnie przyjmuje określoną liczbę parametrów.
+- Do przetwarzania i manipulacji danymi, gdzie wynik operacji jest istotny.
+
+:::
+
+
+
+
+
+#### Delegate `Predicat`
+- reprezentuje metody, które zwracają wartość bool i przyjmują jeden parametr.
+- Służy głównie do określania warunków, na podstawie których elementy kolekcji są wybierane, filtrowane lub testowane.
+
+```csharp
+public class Program
+{
+
+    public static void Main()
+    {
+        // `Predicate<int>` - sprawdza, czy liczba jest parzysta
+        Predicate<int> czyParzysta = liczba => liczba % 2 == 0;
+
+        Console.WriteLine(czyParzysta(4)); // Wyświetli: True (bo 4 jest parzysta)
+        Console.WriteLine(czyParzysta(7)); // Wyświetli: False (bo 7 nie jest parzysta)
+
+        // `Predicate<string>` - sprawdza, czy tekst ma więcej niż 5 znaków
+        Predicate<string> czyDlugie = tekst => tekst.Length > 5;
+
+        Console.WriteLine(czyDlugie("Hello")); // Wyświetli: False
+        Console.WriteLine(czyDlugie("Welcome!")); // Wyświetli: True
+    }
+}
+```
+
+:::note Kiedy używać `Predicat`?
+- Gdy chcesz przekazać warunek logiczny jako parametr do metody, np. `List<T>.FindAll, List<T>.Exists, Array.FindAll`, itp.
+- Gdy pracujesz z metodami, które wymagają wyrażenia warunkowego (takiego jak if) do przetwarzania kolekcji.
+
+:::
+
+
+
+
+
+
+
+

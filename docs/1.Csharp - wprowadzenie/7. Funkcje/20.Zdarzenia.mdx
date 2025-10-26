@@ -1,0 +1,393 @@
+---
+title: Events/Zdarzenia
+---
+
+# Events/Zdarzenia
+
+## Teoria metaforyczna
+
+:::important Syntaktyka zdarzenia (`event`)
+```
+[modyfikator_dostępu] event [typ_delegata] [nazwa_zdarzenia];
+```
+
+:::
+
+:::tip Metafora wstępna
+Wyobraź sobie konferencję.
+- Jest organizator, który mówi: „Wystąpienie się zaczęło!”.
+- W sali siedzą uczestnicy, którzy słuchają i reagują, gdy to się wydarzy.
+
+To właśnie model zdarzeń:
+- *organizator* to nadawca zdarzenia (`publisher`)
+- *uczestnicy* to subskrybenci (`subscribers`)
+- *wiadomość o zdarzeniu* to `event` oparty na delegacie
+
+
+:::
+
+:::note Zdarzenie (`events`)
+- to mechanizm w programowaniu, który pozwala:
+    - żeby jedna część programu poinformowała inne, że coś się właśnie stało.
+- to taki system powiadomień wewnątrz programu
+    - zamiast ciągle pytać:
+        - „Czy coś się zmieniło?”,
+    - program sam zgłasza, że
+        - coś się wydarzyło.
+
+---
+Najprostsza definicja:
+Zdarzenie to sposób komunikacji między obiektami:
+  - jeden mówi „coś się stało”,
+  - a inni reagują na to automatycznie.
+:::
+
+:::info Po co są zdarzenia?
+- aby reagować na **działania użytkownika**-np:
+    - kliknięcie przycisku,
+    - wpisanie tekstu,
+    - przesunięcie myszy
+    - ...
+
+- aby reagować na **zmiany w systemie lub danych**-np:
+    - czujnik wykrywa nową temperaturę,
+    - serwer odebrał wiadomość,
+    - licznik osiągnął określoną wartość,
+    - ...
+- aby **rozdzielić odpowiedzialność* (luźne powiązanie)-np:
+    - klasa, która „wysyła” zdarzenie, nie musi wiedzieć, kto go obsługuje,
+    - to inni decydują, czy i jak zareagują.
+
+
+:::
+
+---
+
+## Praktyka konkretna
+
+### Przykład - konferencja
+#### Klasa `ConferenceOrganizer`
+```cs
+
+class ConferenceOrganizer
+{
+    public event Action ConferenceStarted; //tu będzie lista subskrybentów
+
+    public void StartCOnference()
+    {
+        Console.WriteLine("Starting Conference Organizer");
+        ConferenceStarted?.Invoke();
+    }
+}
+
+```
+
+#### Klas uczestników konferencji `Participant`
+```cs
+class Participant
+{
+    public string Name { get; }
+
+    public Participant(string name)
+    {
+        Name = name;
+    }
+
+    public void OnConferenceStarted()
+    {
+        Console.WriteLine($"Już jestem na sali [{Name}]!");
+    }
+}
+
+```
+
+#### Program główny
+```cs
+internal class Program
+{
+    public static void Main(string[] args)
+    {
+        var organizer = new ConferenceOrganizer();
+
+
+        var jan = new Participant("Jan");
+        var asia = new Participant("Asia");
+        var wojtek = new Participant("Wojtek");
+
+
+        // Jana i Asię zapisujemy na wydarzenie
+        organizer.ConferenceStarted += jan.OnConferenceStarted;
+        organizer.ConferenceStarted += asia.OnConferenceStarted;
+        organizer.StartCOnference();
+
+        Console.WriteLine(" ---- nowa konferencja ----");
+
+        // wypisujemy Jana a zapisujemy Wojtka
+        organizer.ConferenceStarted -= jan.OnConferenceStarted;
+        organizer.ConferenceStarted += wojtek.OnConferenceStarted;
+        organizer.StartCOnference();
+    }
+}
+```
+Wynik w konsoli
+```bash
+Starting Conference Organizer
+Już jestem na sali [Jan]!
+Już jestem na sali [Asia]!
+ ---- nowa konferencja ----
+Starting Conference Organizer
+Już jestem na sali [Asia]!
+Już jestem na sali [Wojtek]!
+```
+
+
+## Przykład - Alarm (sami definiujemy typ zdarzenia (`delegate`))
+```cs
+
+internal class Program
+{
+    public static void Main(string[] args)
+    {
+        var szymon = new Student("Szymon");
+        var marysia = new Student("Marysia");
+        var jarek = new Teacher("Jarek");
+
+        var alarm = new Alarm();
+        alarm.OnRing += szymon.OnRingWakeUp;
+        alarm.OnRing += marysia.OnRingWakeUp;
+        alarm.OnRing += jarek.SleepWhenRing;
+
+        alarm.StartRinging();
+
+        // Wypisujemy Marysię
+        alarm.OnRing -= marysia.OnRingWakeUp;
+
+        Console.WriteLine(" --- nowe dzwonienie ---");
+        alarm.StartRinging();
+
+    }
+}
+
+
+public delegate void AlarmHandler();
+
+public class Alarm
+{
+    public event AlarmHandler OnRing;
+
+    public void StartRinging()
+    {
+        Console.WriteLine("Ring, ringing...");
+        OnRing?.Invoke();
+    }
+}
+
+class Student(string name)
+{
+    public string Name { get; set; } = name;
+
+    public void OnRingWakeUp()
+    {
+        Console.WriteLine($"Waking up...{Name}");
+    }
+}
+
+class Teacher(string name)
+{
+    public string Name { get; set; } = name;
+
+    public void SleepWhenRing()
+    {
+        Console.WriteLine($"Ring, ring, I'm sleeping ...{Name}");
+    }
+
+}
+
+```
+
+## Przykład z parametrami (Konferencja plus data i godzina)
+
+### Klasa do przekazywania danych
+```cs
+public class ConferenceEventArgs : EventArgs
+{
+    public string Topic {get; set;}
+    public DateTime StartTime {get; set;}
+
+}
+```
+- `EventArgs` klasa wbudowana dla wszystkich argumentów zdarzeń
+
+### Organizator konferencji
+```cs
+public class ConferenceOrganizer
+{
+    public event EventHandler<ConferenceEventArgs>? OnConferenceStarted;
+
+    public void StartConference(string topic)
+    {
+        Console.WriteLine($"Starting conference topic {topic}");
+
+        //Dane o zdarzeniu
+        var args = new ConferenceEventArgs
+        {
+            Topic = topic,
+            StartTime = DateTime.Now
+        };
+
+        OnConferenceStarted?.Invoke(this, args);
+    }
+
+}
+```
+- `EventHandler`
+    - to typ z biblioteki .NET
+    - dokładniej delegat o definicji:
+```cs
+public delegate void EventHandler<TEventArgs>(object? sender, TEventArgs e)
+    where TEventArgs : EventArgs;
+```
+- `<ConferenceEventArgs>?`
+    - znak `?` pozwala na *nullable reference types*
+    - zabezpiecza przed wysyłaniem zdarzenia, gdy nie ma subskrybentów
+    - inaczej: zanim wywołasz zdarzenie, musisz się upewnić, że ktoś je subskrybował,
+
+
+### Uczestnicy konferencji
+```cs
+public class Participant
+{
+    public string Name {get; set;}
+
+    public Participant(string name)
+    {
+        Name = name;
+    }
+
+    public void OnConferenceStarted(object? sender, ConferenceEventArgs e)
+    {
+        Console.WriteLine($"{Name}: Słucham z zaciekawieniem tematu '{e.Topic}', który zaczął się o {e.StartTime:T}");
+    }
+}
+
+```
+
+
+### Program główny
+
+```cs
+ public static void Main(string[] args)
+    {
+        var organizer = new ConferenceOrganizer();
+
+        var igor = new Participant("Igor");
+        var genowefa = new Participant("Genowefa");
+
+        //subskrypcja
+        organizer.OnConferenceStarted += igor.OnConferenceStarted;
+        organizer.OnConferenceStarted += genowefa.OnConferenceStarted;
+
+        organizer.StartConference("Nowości w dotnet 10!");
+
+    }
+```
+
+## Program Czujnik temperatury
+```cs
+// See https://aka.ms/new-console-template for more information
+
+
+class TemperatureEventArgs : EventArgs
+{
+    public double Value {get; set;}
+    public DateTime Time {get; set;}
+
+}
+
+class TemperatureSensor
+{
+    public event EventHandler<TemperatureEventArgs>? TemperatureExceeded;
+
+    private double _threshold;
+
+    public TemperatureSensor(double value)
+    {
+        _threshold = value;
+    }
+
+
+    public void UpdateTemperature(double value)
+    {
+        Console.WriteLine($"Aktualna temperatura: {value} Celsius");
+
+        if (!(value > _threshold)) return;
+        var args = new TemperatureEventArgs
+        {
+            Value = value,
+            Time = DateTime.Now
+        };
+
+        TemperatureExceeded?.Invoke(this, args);
+    }
+}
+
+class AlarmSystem
+{
+    public void OnTemperatureExceeded(object? sender, TemperatureEventArgs e)
+    {
+        Console.ForegroundColor = ConsoleColor.Red;
+        Console.WriteLine($"Alarm system temperatura: {e.Value} Celsius o {e.Time:T}");
+
+        Console.ResetColor();
+    }
+}
+
+class CoolingSystem
+{
+    public void OnTemperatureExceeded(object? sender, TemperatureEventArgs e)
+    {
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.WriteLine($"Włączono chłodzenie (temp {e.Value} Celcjusza, {e.Time:T}");
+
+        Console.ResetColor();
+    }
+}
+
+class Program
+{
+    public static void Main(string[] args)
+    {
+        var sensor = new TemperatureSensor(30.0);
+
+        var alarm = new AlarmSystem();
+        var cooler = new CoolingSystem();
+
+        sensor.TemperatureExceeded += alarm.OnTemperatureExceeded;
+        sensor.TemperatureExceeded += cooler.OnTemperatureExceeded;
+
+        //symulacja pomiarów temperatury
+        double[] readings = { 25.4, 29.9, 30.1, 31.5, 28.7 };
+
+        foreach (var temp in readings)
+        {
+            sensor.UpdateTemperature(temp);
+            System.Threading.Thread.Sleep(500);
+
+        }
+
+    }
+}
+
+
+```
+
+
+
+
+
+
+
+
+
+
+

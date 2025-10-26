@@ -1,0 +1,96 @@
+---
+title: Proste Bindingi
+----
+
+# Proste Bindingi
+
+Avalonia pozwala „związać” jedną kontrolkę z drugą bezpośrednio w XAML,
+czyli np. żeby `TextBlock` zawsze pokazywał tekst wpisany w `TextBox`.
+
+
+## Połączenie TextBox z TextBlock
+```xml
+    <StackPanel Margin="20">
+        <TextBox Name="MyInputBox" Width="200"/>
+        <TextBlock Text="{Binding Text, ElementName=MyInputBox}" FontSize="20" />
+
+    </StackPanel>
+```
+- `Name="InputBox"` nadajemy nazwę pierwszej kontrolce.
+- `Text="{Binding Text, ElementName=InputBox}"` - `TextBlock.Text` jest związany z `TextBox.Text`.
+
+
+## Połączenie TextBlock z CheckBox
+```xml
+<StackPanel Margin="20" HorizontalAlignment="Stretch">
+            <CheckBox x:Name="OptionCheckBox" Content="Zgadam się na warunki umowy" Margin="10"/>
+            <TextBlock Text="{Binding IsChecked,
+                       ElementName=OptionCheckBox}" FontSize="20" Margin="10"/>
+</StackPanel>
+```
+
+## TextBlock z Slider
+### z dokładnością do drugiego miejsca po przecinku
+```xml
+<StackPanel Margin="20" HorizontalAlignment="Stretch">
+    <Slider x:Name="VolumeSlider" Minimum="0" Maximum="100" Value="50" Margin="10"/>
+    <TextBlock  Text="{Binding Value, ElementName=VolumeSlider, StringFormat={}{0:F2}}"
+                FontSize="20" Margin="10"/>
+</StackPanel>
+```
+-`{}{}` ten zapis oznacza: „nie traktuj tego jako XAML, tylko jako zwykły format .NET”.
+- `{}` na początku ucieka składnię XAML.
+- `{0}` oznacza pierwszą (i w tym przypadku jedyną) wartość wstawioną do formatu, czyli Value.
+- `:F2` to specyfikator formatu: fixed-point z dwoma miejscami po przecinku.
+- `{}{0:F0}` liczba całkowita (bez przecinków).
+- `{}{0:P0}` procent (np. `0.42` → `42 %`).
+
+
+### tylko liczby całkowite
+```xml
+<StackPanel Margin="20" HorizontalAlignment="Stretch">
+        <Slider x:Name="VolumeSlider" Minimum="0" Maximum="100"
+                Value="50" Margin="10" TickFrequency="1" IsSnapToTickEnabled="True"/>
+        <TextBlock Text="{Binding Value, ElementName=VolumeSlider}"
+                   FontSize="20" Margin="10"/>
+
+</StackPanel>
+```
+
+### TextBlock z ComboBox
+```xml
+<StackPanel Margin="20" HorizontalAlignment="Stretch">
+    <ComboBox x:Name="OptionsComboBox" SelectedIndex="0" Margin="10">
+        <ComboBox.Items>
+            <x:String>Option 1</x:String>
+            <x:String>Option 2</x:String>
+            <x:String>Option 3</x:String>
+        </ComboBox.Items>
+    </ComboBox>
+
+    <TextBlock  Text="{Binding SelectedItem, ElementName=OptionsComboBox}"
+                FontSize="16" Margin="10"/>
+
+</StackPanel>
+```
+
+### DataPicker z TextBlock
+#### Wyświetlanie całej informacji
+```xml
+<StackPanel Margin="20">
+    <DatePicker x:Name="DateSelector" Margin="10"/>
+    <TextBlock  Text="{Binding SelectedDate, ElementName=DateSelector}"
+                FontSize="16" Margin="10"/>
+</StackPanel>
+```
+#### Wyświetlanie tylko daty
+```xml
+ <StackPanel Margin="20">
+        <DatePicker x:Name="DateSelector" Margin="10"/>
+        <TextBlock
+            Text="{Binding SelectedDate,
+                    ElementName=DateSelector, StringFormat={}{0:dd-MM-yyyy}}"
+                    FontSize="16" Margin="10"/>
+    </StackPanel>
+```
+

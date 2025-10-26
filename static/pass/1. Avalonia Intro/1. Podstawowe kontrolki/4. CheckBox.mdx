@@ -1,0 +1,28 @@
+---
+title: Kontrolka CheckBox
+---
+CheckBox w Avalonia UI to kontrolka umożliwiająca użytkownikowi włączenie lub wyłączenie opcji poprzez zaznaczenie lub odznaczenie pola.
+
+Główne cechy:
+- Może mieć trzy stany:
+    -zaznaczony (true),
+    - niezaznaczony (false)
+    - pośredni (`null`, jeśli `IsThreeState="True"`).
+- Obsługuje zdarzenie `Checked` i `Unchecked` oraz `binding` do wartości bool w MVVM.
+- Można zmieniać wygląd, np. czcionkę, kolor, rozmiar.
+
+```xml
+<StackPanel>
+    <CheckBox Content="Akceptuję regulamin"/>
+    <CheckBox Content="Akceptuję warunki"
+              FontSize="26"
+              FontWeight="Medium"
+              Foreground="#123abc"
+              Padding="15,0,0,0"
+              Margin="10"
+              HorizontalAlignment="Center"
+              VerticalAlignment="Center"/>
+</StackPanel>
+```
+
+

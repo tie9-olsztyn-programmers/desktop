@@ -1,0 +1,299 @@
+---
+title: Interfejs / *Interface*
+---
+
+# Interfejs /  *Interface*
+
+## Definicja Interfejs
+- w C# to **kontrakt** (umowa), który określa zestaw
+    - metod, właściwości,
+    - zdarzeń lub
+    - indeksatorów, jakie klasa musi zaimplementować, jeśli deklaruje, że ten interfejs „obsługuje”,
+        - Indeksator to
+            - specjalny element klasy lub struktury w C#,
+            - który pozwala traktować obiekt tak jak tablicę
+            - czyli odwoływać się do jego elementów za pomocą nawiasów kwadratowych [].
+
+- definiuje co obiekt potrafi robić, ale nie mówi, jak ma to robić,
+- sama w sobie nie zawiera danych (pól), tylko sygnatury członów,
+- jedna klasa może implementować wiele interfejsów (a tylko jedną klasę bazową).
+
+
+
+## Metafora interfejsu
+Wyobraź sobie prawo jazdy:
+- Samo w sobie prawo jazdy nie jest samochodem i nie mówi, jak działa auto.
+- Posiadanie prawa jazdy oznacza, że kierowca potrafi prowadzić.
+- Jeden kierowca może mieć prawo jazdy na
+    - samochód,
+    - motocykl i
+    - autobus (tak jak klasa może implementować wiele interfejsów).
+
+
+:::tip
+- Interfejs jest jak lista umiejętności, które trzeba wdrożyć.
+- Sam interfejs nic nie robi — działa dopiero wtedy,
+gdy klasa (np. `Car` albo `Person`) powie: „Ja to potrafię” i zaimplementuje metodę.
+
+
+:::
+
+
+## Tworzenie i Implementacja Interfejsu
+
+- Interfejsy są tworzone przy użyciu słowa kluczowego `interface`.
+- Nazwy interfejsów w C# z reguły zaczynają się od litery `I` (np. `IDriveable`),
+aby łatwo odróżnić je od klas.
+
+## Prosty przykład - `IDriveable`
+```csharp
+public interface IDriveable
+{
+    void Drive();
+    int Speed { get; set; }
+}
+
+public class Car : IDriveable
+{
+    public int Speed { get; set; }
+
+    public void Drive()
+    {
+        Console.WriteLine("Car is driving at " + Speed + " km/h.");
+    }
+}
+
+public class Bicycle : IDriveable
+{
+    public int Speed { get; set; }
+
+    public void Drive()
+    {
+        Console.WriteLine("Bicycle is riding at " + Speed + " km/h.");
+    }
+}
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        Car car = new Car{Speed = 102};
+        car.Drive();
+
+        Bicycle bicycle = new Bicycle{Speed=66};
+        bicycle.Drive();
+    }
+}
+```
+
+## Bardziej rozbudowany przykład - `IPlayable`
+```csharp
+using System;
+using System.Collections.Generic;
+
+// Interfejs - coś uruchamialnego
+public interface IPlayable
+{
+    void Play();
+}
+
+
+public class ToyCar : IPlayable
+{
+    public void Play()
+    {
+        Console.WriteLine("The toy car zooms around with a vroom-vroom sound!");
+    }
+}
+
+public class Robot : IPlayable
+{
+    public void Play()
+    {
+        Console.WriteLine("The robot waves and says, 'Beep boop! Ready to serve!'");
+    }
+}
+
+// Klasa reprezentująca lalkę
+public class Doll : IPlayable
+{
+    public void Play()
+    {
+        Console.WriteLine("The doll giggles and says, 'Let's have a tea party!'");
+    }
+}
+
+// Klasa reprezentująca zabawkowy instrument muzyczny
+public class MusicalToy : IPlayable
+{
+    public void Play()
+    {
+        Console.WriteLine("The musical toy plays a cheerful tune. Do-re-mi!");
+    }
+}
+
+// Klasa symulująca pokój zabaw
+public class PlayRoom
+{
+    private readonly List<IPlayable> _toys;
+
+    public PlayRoom()
+    {
+        _toys = new List<IPlayable>();
+    }
+
+    public void AddToy(IPlayable toy)
+    {
+        _toys.Add(toy);
+    }
+
+    public void StartPlaytime()
+    {
+        Console.WriteLine("Playtime begins! All toys start playing:");
+        foreach (var toy in _toys)
+        {
+            toy.Play();
+        }
+    }
+}
+
+public class Program
+{
+    public static void Main()
+    {
+        IPlayable car = new ToyCar();
+        IPlayable robot = new Robot();
+        IPlayable doll = new Doll();
+        IPlayable musicalToy = new MusicalToy();
+
+        PlayRoom playRoom = new PlayRoom();
+        playRoom.AddToy(car);
+        playRoom.AddToy(robot);
+        playRoom.AddToy(doll);
+        playRoom.AddToy(musicalToy);
+
+        playRoom.StartPlaytime();
+    }
+}
+```
+
+## Implemantacja wielokrotna
+```csharp
+public interface IFlyable
+{
+    void Fly();
+}
+
+public interface ISwimmable
+{
+    void Swim();
+}
+
+public class Duck : IFlyable, ISwimmable
+{
+    public void Fly()
+    {
+        Console.WriteLine("Duck is flying.");
+    }
+
+    public void Swim()
+    {
+        Console.WriteLine("Duck is swimming.");
+    }
+}
+
+public class Program
+{
+    public static void Main()
+    {
+      Duck duck = new Duck();
+      duck.Fly();
+      duck.Swim();
+    }
+}
+```
+
+
+## Domyślne implementacje metod w interfejsach (od C# 8.0)
+```csharp
+public interface IGreetable
+{
+    void Greet();
+
+    void SayGoodbye()
+    {
+        Console.WriteLine("Goodbye!");
+    }
+}
+
+public class FriendlyPerson : IGreetable
+{
+    public void Greet()
+    {
+        Console.WriteLine("Hello!");
+    }
+
+    public void SayGoodbye()
+    {
+        Console.WriteLine("See you soon!");
+    }
+}
+
+
+
+public class Program
+{
+    public static void Main()
+    {
+        IGreetable person = new FriendlyPerson();
+        person.Greet();         // Output: Hello!
+        person.SayGoodbye();    // Output: See you soon!
+    }
+}
+```
+
+
+
+
+
+
+
+
+----
+:::important Kiedy używać interfejsów?
+Używaj, gdy:
+- potrzebujesz tylko kontraktu (`API`) – bez żadnej logiki ani pól.
+- różne klasy (nawet zupełnie niespokrewnione) muszą implementować te same metody.
+- chcesz umożliwić klasie implementację wielu różnych zachowań (bo w C# można implementować
+wiele interfejsów).
+- projektujesz coś, co ma być bardziej elastyczne i niezależne od hierarchii.
+
+```csharp
+public interface IMovable
+{
+    void Move();
+}
+
+public interface ISpeakable
+{
+    void Speak();
+}
+
+public class Robot : IMovable, ISpeakable
+{
+    public void Move() => Console.WriteLine("Robot przesuwa się.");
+    public void Speak() => Console.WriteLine("Beep boop!");
+}
+
+public class Cat : IMovable, ISpeakable
+{
+    public void Move() => Console.WriteLine("Kot chodzi cicho.");
+    public void Speak() => Console.WriteLine("Miau!");
+}
+
+```
+
+:::
+
+
+

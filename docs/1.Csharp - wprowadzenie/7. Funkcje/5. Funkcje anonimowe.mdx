@@ -1,0 +1,110 @@
+---
+title: Funkcje anonimowe
+---
+
+# Funkcje anonimowe
+- Funkcje anonimowe to bloki kodu, które mogą być definiowane bez podawania ich nazwy.
+- Funkcje anonimowe są przydatne, gdy chcesz przekazać kod do wykonania jako argument do innej metody, bez potrzeby tworzenia pełnej definicji metody.
+
+
+Możesz zdefiniować funkcję anonimową przy pomocy:
+- Operatora delegate.
+- Wyrażenia lambda.
+
+## Czym są funkcje lambda?
+- Wyrażenie lambda to nowocześniejszy i bardziej zwięzły sposób definiowania funkcji anonimowych w C#.
+- Lambda wykorzystuje składnię `=>` i jest syntaktycznie bardziej czytelna niż tradycyjna funkcja anonimowa.
+
+### Syntaktyka
+```
+(parametry) => wyrażenie
+
+
+(parametry) => {
+      blok kodu
+}
+```
+### Przykład
+```csharp
+List<int> numbers = new List<int> { 1, 2, 3, 4, 5, 6 };
+var evenNumbers = numbers.Where(n => n % 2 == 0).ToList();
+Console.WriteLine(string.Join(", ", evenNumbers));
+```
+
+### Metody z funkcjami lambda
+
+#### `Where` - filtrowanie danych
+```csharp
+List<int> numbers = new List<int> { 1, 2, 3, 4, 5, 6 };
+var evenNumbers = numbers.Where(n => n % 2 == 0);
+Console.WriteLine(string.Join(", ", evenNumbers)); // Wynik: 2, 4, 6
+```
+
+
+#### `Select` - przekształcanie danych
+```csharp
+List<int> nums = new List<int>{1,2,3,4,5,6,7,8,9,10};
+var squares = nums.Select(n => n * n);
+Console.WriteLine(string.Join(", ", squares));
+```
+#### `OrderBy` / `OrderByDescending`
+```csharp
+List<string> names  = new List<string>{"Anna", "Jaśko", "Morris", "Tx-21"};
+var sortedNames = names.OrderBy(name => name);
+Console.WriteLine(string.Join(", ", sortedNames));
+
+var sortedNamesDesc = names.OrderByDescending(name => name);
+Console.WriteLine(string.Join(", ", sortedNamesDesc));
+```
+
+#### `First` / `FirstOrDefault`
+```csharp
+List<int> numbers = new List<int> { 1, 2, 3, 4, 5 };
+int firstEven = numbers.First(n => n % 2 == 0); // Wynik: 2
+int firstOrDefault1 = numbers.FirstOrDefault(n => n > 10, -100);
+int firstOrDefault2 = numbers.FirstOrDefault(n => n <= 3, 111);
+Console.WriteLine(firstEven);
+Console.WriteLine(firstOrDefault1);
+Console.WriteLine(firstOrDefault2);
+```
+
+#### `Any` / `All`
+- `Any` sprawdza, czy co najmniej jeden element spełnia dany warunek.
+- `All` sprawdza, czy wszystkie elementy spełniają dany warunek.
+```csharp
+List<int> numbers = new List<int> { 1, 2, 3, 4, 5 };
+bool hasEven = numbers.Any(n => n % 2 == 0);
+bool allPositive = numbers.All(n => n > 0);
+
+Console.WriteLine(hasEven);
+Console.WriteLine(allPositive);
+```
+
+#### `Aggregate` redukcja kolekcji do pojedynczej wartości
+Metoda stosowana do zredukowania kolekcji do pojedynczej wartości poprzez iteracyjne zastosowanie operacji do kolejnych elementów kolekcji.
+
+
+`Aggregate(initialValue, (accumulator, element) => /* operacja */);`
+
+```csharp
+List<int> numbers = new List<int> { 1, 2, 3, 4 };
+int product = numbers.Aggregate((acc, number) => acc * number); // Wynik: 24
+Console.WriteLine(string.Join(", ", numbers));
+Console.WriteLine(product);
+
+List<int> numbers2 = new List<int> { 1, 2, 3, 4 };
+int suma = numbers2.Aggregate(100, (acc, number) => acc + number);
+Console.WriteLine(string.Join(", ", numbers2));
+Console.WriteLine(suma);
+```
+
+
+
+
+
+
+
+
+
+
+

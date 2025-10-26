@@ -1,0 +1,181 @@
+---
+title: ICommand i ReactiveCommand
+---
+
+# ICommand
+
+:::important Definicja
+- `ICommand` to interfejs .NET (czyli „umowa”), który pozwala `ViewModelowi`
+udostępnić logikę akcji (np. kliknięcie przycisku).
+- UI (np. `Button`) może zbindować się do `ICommand`
+i wywołać logikę bez znajomości szczegółów implementacji.
+:::
+
+
+# Właściwość `Click` vs właściwość `Command`
+## `Click`
+- `<Button Content="Kliknij mnie" Click="OnClick"/>`
+- Logika obsługi (np. `OnClick`) znajduje się w *code-behind* (`MainWindow.axaml.cs`).
+- Widok (XAML + *code-behind*) i logika biznesowa są mocno połączone.
+- Trudno testować (żeby przetestować przycisk, trzeba uruchomić całe UI).
+- Nie zgodne z MVVM
+
+## `Command`
+- `<Button Content="Kliknij mnie" Command="{Binding MyCommand}"/>`
+- `MyCommand` to właściwość w `ViewModelu`, która implementuje `ICommand`.
+- Gdy klikniesz przycisk, Avalonia wywołuje `MyCommand.Execute()`.
+- Możesz też kontrolować, czy przycisk ma być aktywny (`CanExecute`).
+- Zgodne z MVVM: UI(`View`) tylko wiąże się z logiką w `ViewModel`.
+- Łatwo testować, bo `MyCommand.Execute()` można wywołać w testach jednostkowych bez UI.
+
+
+## Dodajemy `Button`, który zmieni napis
+### Przygotowanie aplikacji
+- `dotnet add package Avalonia.ReactiveUI` - musimy doinstalować pakiet ReactiveUI (MVVM)
+- poinformujemy aplikację, że chcemy używać *ReactiveUI* - `Program.cs`
+```csharp
+// ...
+      .UsePlatformDetect()
+            .WithInterFont()
+            .LogToTrace()
+            .UseReactiveUI(); // dodaj ten fragment
+}
+```
+
+### Dodanie kontrolki `Button`
+- w pliku `MainWindow.axaml` dodajemy kontrolkę `Button`
+- do kontrolki `Button` dodajemy właściwość `Command` połączoną z przyszłą właściwością `ChangeMessageCommand`
+zdefiniowaną w `MainWindowData.cs`
+```xml
+  <StackPanel Margin="20">
+       <TextBlock Text="{Binding Greeting}" FontSize="20"/>
+       <TextBlock Text="{Binding Message}"/>
+
+       <Button Content="Change Greeting" Margin="50"
+               Command="{Binding ChangeMessageCommand}"/>
+    </StackPanel>
+
+```
+
+### Zmiany w pliku `MainWindowData.cs`
+**Nie przejmuj się, jeżeli podczas refaktoryzacji pojawią się błędy lub ostrzeżenia.**
+
+- dodamy nowe prywatne pole `_message`
+- dodamy właściwość `ChangeMessageCommand` typu `ReactiveCommand` (ten typ to gotowa implementacja `ICommand`)
+- zmienimy istniejącą właściwość `Message`
+- nie przejmuj się, jeżeli podczas refaktoryzacji pojawią się błędy lub ostrzeżenia:
+```csharp
+public class MainWindowData : INotifyPropertyChanged
+{
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    //<Unit, Unit> - <brak parametru, brak wyniku>
+    public ReactiveCommand<Unit, Unit> ChangeMessageCommand { get; } //nowy kod
+
+    private string _greeting = string.Empty;
+    private string _message = "Bindingi almost MVVM"; //nowy kod
+
+     public string Message
+    {
+        get => _message;
+        set => this.RaiseAndSetIfChanged(ref _message, value);
+
+    }
+
+//...
+```
+:::note Co robi  ` set => this.RaiseAndSetIfChanged(ref _message, value);`?
+- sprawdza, czy nwa wartość różni się od starej,
+- ustawia pole `_message`,
+- wysyła sygnał `PropertyChanged`, żeby Binding w UI się odświeżył
+- mała metafora:
+    - Klasyczny *setter* to sam piszesz list z informacją („zmieniła się właściwość Message”).
+    - `RaiseAndSetIfChanged` to automat pocztowy – wrzucasz nową wartość, a on sam sprawdza:
+        - czy się zmieniła i
+        - wysyła odpowiednie powiadomienie do wszystkich subskrybentów (UI).
+
+:::
+
+
+- przypiszemy logikę działania do właściwości `ChangeMessageCommand`, która jest zbindowana z kontrolką `Button` w naszej aplikacji
+- dopiszemy do naszego pliku własny konstruktor
+```csharp
+//...
+ public MainWindowData()
+    {
+        ChangeMessageCommand = ReactiveCommand.Create( () =>
+        {
+            Message = $"Message changed at {DateTime.Now.ToLongTimeString()}";
+        });
+    }
+```
+:::important Co to jest `ReactiveCommand`?
+- to serce `ReactiveUI` ;)
+- Zwykłe `ICommand` to tylko przycisk dzwonka: ktoś naciska → wykonaj akcję.
+- `ReactiveCommand` to inteligentny przycisk:
+    - wykonuje akcję,
+    - może sprawdzać, czy jest w ogóle „aktywny” (`CanExecute`),
+    - może działać asynchronicznie (np. pobieranie danych z internetu),
+    - może zwracać wynik (nie tylko `void`),
+    - możesz się na niego zasubskrybować i obserwować, co robi.
+    - `ReactiveCommand.Create(...)` to najprostszy sposób stworzenia takiego „inteligentnego przycisku”.
+
+:::
+
+- jeszcze zmiana dziedziczenia z `INotifyPropertyChanged` na `ReactiveObject`
+```csharp
+public class MainWindowData : ReactiveObject
+{
+    public event PropertyChangedEventHandler? PropertyChanged;
+    public ReactiveCommand<Unit, Unit> ChangeMessageCommand { get; } //nowy kod
+
+    private string _greeting = string.Empty;
+    private string _message = "Bindingi almost MVVM"; //nowy kod
+//...
+
+```
+:::note `INotifyPropertyChanged` vs `ReactiveObject`
+- `INotify...` to interfejs .NET, który daje `event PropertyChanged`.
+    - `ViewModel` musi sam go zaimplementować, czyli:
+        - stworzyć `event PropertyChanged`,
+        - w każdym *setterze* wywoływać `PropertyChanged?.Invoke(...)`.
+
+- `ReactiveObject` to klasa bazowa w ReactiveUI, która już implementuje `INotifyPropertyChanged`.
+    - Daje gotowe narzędzia:
+        - `RaiseAndSetIfChanged(ref field, value)` automatyczne ustawienie wartości i wywołanie `PropertyChanged`.
+        - `WhenAnyValue(x => x.Property)` reagowanie na zmiany właściwości.
+        - Integrację z `ReactiveCommand` i całym modelem reaktywnym.
+
+:::
+
+
+- teraz możemy uprościć obsługę właściwości `Greeting`:
+    - usuwamy `public event PropertyChangedEventHandler? PropertyChanged;`
+    - upraszczamy implementację właściwości do postaci:
+```csharp
+public string Greeting
+{
+   get => _greeting;
+   set => this.RaiseAndSetIfChanged(ref _greeting, value);
+}
+```
+
+---
+:::tip Gdyby był podobny błąd
+```bash
+Error NU1605 : Warning As Error: Detected package downgrade:
+Avalonia from 11.3.6 to 11.3.4.
+Reference the package directly from the project to select a different version. Bindingi ->
+Avalonia.ReactiveUI 11.3.6 ->
+Avalonia (>= 11.3.6)
+Bindingi -> Avalonia (>= 11.3.4)
+```
+
+Należy dopasować wersje - w tym przypadku:
+```bash
+dotnet add package Avalonia --version 11.3.6
+dotnet add package Avalonia.Desktop --version 11.3.6
+dotnet add package Avalonia.ReactiveUI --version 11.3.6
+```
+
+:::

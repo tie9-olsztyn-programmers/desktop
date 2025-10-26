@@ -1,0 +1,68 @@
+---
+title: Funkcja z parametrami
+---
+
+# Parametr i argument
+
+## Parametr
+- Parametr to zmienna zadeklarowana w nagłówku metody, która określa, jakiego rodzaju dane metoda może przyjmować.
+- Parametry są definiowane wewnątrz nawiasów w deklaracji metody.
+- Parametry działają jak zmienne lokalne, które otrzymują wartości przekazywane podczas wywołania metody.
+
+```csharp
+public void Powitaj(string imie)
+{
+     Console.WriteLine($"Witaj, {imie}!");
+}
+
+```
+
+## Argument
+- Argument to rzeczywista wartość lub referencja przekazana do metody podczas jej wywołania.
+- Argumenty są przekazywane podczas wywołania metody.
+- Argumenty muszą odpowiadać typem i kolejnością parametrom zdefiniowanym w metodzie.
+```csharp
+    Powitaj("Jan");
+```
+
+# Parametry opcjonalne
+- W C# można tworzyć metody z parametrami opcjonalnymi.
+- Jeśli nie przekażemy argumentu do takiego parametru, metoda użyje wartości domyślnej.
+
+```csharp
+public void Powitaj(string imie = "Nieznajomy")
+{
+     Console.WriteLine($"Witaj, {imie}!");
+}
+```
+
+# Named Arguments
+- W przypadku wywołania metody z nazwanymi argumentami, możesz jawnie określić, do którego parametru przypisujesz daną wartość.
+- Daje to większą czytelność kodu, a także umożliwia przekazywanie argumentów w innej kolejności niż zdefiniowana w metodzie.
+```csharp
+using System;
+
+public class Program
+{
+     public void WyswietlInformacje(string imie, string nazwisko, int wiek)
+     {
+         Console.WriteLine($"Imię: {imie}, Nazwisko: {nazwisko}, Wiek: {wiek}");
+     }
+
+
+     public static void Main()
+     {
+         Program program = new Program();
+
+
+         // Wywołanie metody z nazwanymi argumentami
+         program.WyswietlInformacje(imie: "Anna", nazwisko: "Nowak", wiek: 25);
+
+
+         // Wywołanie z częściowo nazwanymi argumentami
+         program.WyswietlInformacje("Piotr", wiek: 40, nazwisko: "Zielinski");
+     }
+
+}
+
+```

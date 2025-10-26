@@ -1,0 +1,115 @@
+---
+title: Konstruktory
+---
+
+
+# Konstruktory
+
+## Definicja konstruktora
+- Konstruktory w C# to specjalne metody używane do inicjowania obiektów.
+- Ich zadaniem jest przypisanie wartości do pól lub właściwości obiektu w momencie jego tworzenia, a także przygotowanie obiektu do użycia.
+- Konstruktor w C# to metoda publiczna, której nazwa jest taka sama jak nazwa klasy.
+- Jeżeli nie zdefiniujemy własnego konstruktora, zostanie użyty konstrukor domyślny z klasy bazowej (`object`).
+```csharp
+public class Car
+{
+    public string Brand;
+    public string Model;
+    public int YearOfProduction;
+
+    // Konstruktor
+    public Car()
+    {
+        Brand = "Unknown";
+        Model = "Unknown";
+        YearOfProduction = 2000;
+    }
+}
+
+Car myCar = new Car();
+Console.WriteLine($"{myCar.Brand}, {myCar.Model}, {myCar.YearOfProduction}");
+// Output: Unknown, Unknown, 2000
+
+```
+
+## Konstruktor z parametrami
+Możemy zdefiniować konstruktor, który przyjmuje parametry,
+co pozwala na przekazanie wartości dla pól lub właściwości w momencie tworzenia obiektu:
+```csharp
+
+
+public class Car
+{
+    public string Brand;
+    public string Model;
+    public int YearOfProduction;
+
+    // Konstruktor z parametrami
+    public Car(string brand, string model, int yearOfProduction)
+    {
+        Brand = brand;
+        Model = model;
+        YearOfProduction = yearOfProduction;
+    }
+}
+
+Car myCar = new Car("Toyota", "Corolla", 2020);
+Console.WriteLine($"{myCar.Brand}, {myCar.Model}, {myCar.YearOfProduction}");
+// Output: Toyota, Corolla, 2020
+
+```
+
+## Konstruktor przeciążony (Overloaded Constructor)
+- C# pozwala na definiowanie wielu konstruktorów w tej samej klasie, co nazywamy przeciążeniem konstruktora.
+- Oznacza to, że możemy mieć różne wersje konstruktora przyjmujące różne zestawy parametrów.
+```csharp
+
+
+public class Car
+{
+    public string Brand;
+    public string Model;
+    public int YearOfProduction;
+
+    // Konstruktor bez parametrów
+    public Car()
+    {
+        Brand = "Unknown";
+        Model = "Unknown";
+        YearOfProduction = 2000;
+    }
+
+    // Konstruktor z parametrami
+    public Car(string brand, string model, int yearOfProduction)
+    {
+        Brand = brand;
+        Model = model;
+        YearOfProduction = yearOfProduction;
+    }
+}
+
+Car car1 = new Car(); // użycie konstruktora bezparametrowego
+Car car2 = new Car("Honda", "Civic", 2022); // użycie konstruktora z parametrami
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
