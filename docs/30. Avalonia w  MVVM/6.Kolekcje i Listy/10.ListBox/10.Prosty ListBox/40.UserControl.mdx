@@ -1,0 +1,118 @@
+---
+title: UserControl
+---
+
+
+# UserControl
+
+:::note Co to jest `UserControl` w Avalonia?
+- to własna, złożona kontrolka, którą tworzysz sam,
+- dzięki niej możesz:
+  - uporządkować kod XAML
+  - podzielić duże okna na mniejsze części
+  - wielokrotnie wykorzystywać tę samą część UI
+- to po prostu własny, wielokrotnego użytku kawałek interfejsu, który tworzysz raz,
+a potem możesz go wstawiać w wiele miejsc – tak jak klocek LEGO.
+
+
+To trochę tak, jak fragment w Androidzie, komponent w React,
+
+:::
+
+Przykładowe *Hello Word* w `UserControl`erze:
+`HelloControl.xaml`:
+```xml
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="SimpleApp.Views.HelloControl">
+
+    <StackPanel>
+        <TextBlock Text="Hello from UserControl!"
+                   FontSize="20"
+                   Foreground="Blue"/>
+    </StackPanel>
+
+</UserControl>
+
+```
+użycie go w `MainWindow`:
+```xml
+<StackPanel>
+        <TextBlock Text="To jest okno główne!" Margin="0,0,0,10"/>
+
+        <!-- TU UMIESZCZAMY USERCONTROL -->
+        <views:HelloControl />
+
+    </StackPanel>
+```
+
+## Nasza aplikacja z `UserControl`
+### Definicja `UserControl`
+Do naszej aplikacji dodamy `UserControl`.
+- na folderze `Views` prawy klawisz myszy `Add`>`Avalonia UserControl`
+- nazwijmy plik `BoardGameItemView`
+- powstaną dwa pliki:
+  - `BoardGameItemView.xaml`
+  - `BoardGameItemView.xaml.cs`
+
+Przekopiujmy kod z `ListBox`, w którym wyświetlaliśmy nasze gry.
+```
+<UserControl <!-- ... -->
+    >
+    <StackPanel Orientation="Horizontal" Spacing="10">
+        <TextBlock Text="{Binding Model.Title}"  />
+        <TextBlock Text="("/>
+        <TextBlock Text="{Binding Genre}"/>
+        <TextBlock Text=")"/>
+        <Button Command="{Binding DeleteCommand}"
+                Content="Usuń" />
+    </StackPanel>
+</UserControl>
+```
+### Przywrócenie `DataContext`
+Straciliśmy `DataContex`.
+
+Aby nasza kontrolka znała `DataContex` w czasie kompilacji:
+- albo wyłączymy Compilebinding w `UserControl`
+```xml
+<UserControl
+    <!-- ... --->
+             x:CompileBindings="False"
+>
+```
+
+- albo dodamy `DataContext` do naszego `UserControler`
+```xml
+<UserControl
+        xmlns:vm="clr-namespace:ListBoxMVVM.ViewModels"
+        x:DataType="vm:BoardGameViewModel"
+>
+```
+- `xmlns:vm="clr-namespace:ListBoxMVVM.ViewModels"`
+    - "Alias `vm` ma wskazywać na namespace `ListBoxMVVM.ViewModels` w kodzie C#"
+- `x:DataType="vm:BoardGameViewModel"`
+    - "`BoardGameViewModel` znajduje się w namespace `ListBoxMVVM.ViewModels`"
+
+### Wstawienie `UserControl`
+
+Do głównej kontrolki `<Window ... ` dodajmy przestrzeń nazw
+- ` xmlns:views="clr-namespace:ListBoxMVVM.Views">
+  - `ListBoxMVVM` to nazwa naszego projektu
+  - jeżeli twój projekt inaczej się nazywa, to wstaw swoją nazwę projektu
+
+- Dodajmy nasz `UserControl` do `MainWindowView`:
+```axaml
+<ListBox
+     ItemsSource="{Binding Games}"
+     SelectedItem="{Binding SelectedGame}"
+     Height="200">
+        <ListBox.ItemTemplate>
+            <DataTemplate>
+
+                <views:BoardGameItemView />
+
+            </DataTemplate>
+        </ListBox.ItemTemplate>
+</ListBox>
+```
+
