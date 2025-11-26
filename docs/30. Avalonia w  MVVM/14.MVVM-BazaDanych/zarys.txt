@@ -1,9 +1,0 @@
-MVVM + baza danych
-
-Połączenie MVVM z PostgreSQL / SQLite.
-
-Model = klasa odpowiadająca tabeli.
-
-ViewModel = logika CRUD (Create, Read, Update, Delete).
-
-Mini-projekt: menedżer użytkowników.

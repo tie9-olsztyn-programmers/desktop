@@ -1,7 +1,0 @@
-ObservableCollection<T>
-
-Bindowanie do ListBox i DataGrid.
-
-Dodawanie/usuwanie elementów przy pomocy ReactiveCommand.
-
-Mini-projekt: ToDo lista.
