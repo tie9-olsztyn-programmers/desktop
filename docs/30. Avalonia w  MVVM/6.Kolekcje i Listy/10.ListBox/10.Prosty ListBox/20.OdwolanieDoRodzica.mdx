@@ -1,0 +1,137 @@
+---
+title: Odwołanie do rodzica
+---
+
+
+
+# Odwolanie do rodzica - rozwiązanie brzydkie
+
+
+## Definicja `command`
+
+W pliku `MainWindowVIewModel.cs` dodajmy:
+- `public ReactiveCommand<BoardGameModel, Unit> PrintOk { get; }`
+- oraz definicję tej właściwości w konstruktorze:
+```cs
+PrintOk = ReactiveCommand.Create<BoardGameModel>((game) => {
+    Console.WriteLine($"oki ok {game.Title}"}
+));
+```
+## Definiujemy `axaml`
+
+- w naszym `ListBox` a dokładniej `DataTemplate` mieliśmy trzy `TextBlock`i,
+- dopiszmy jako ostatni element kontrolkę `Button`,
+która po naciśnięciu wyświetli w konsoli odpowiedni komunikat
+
+```xml
+<DataTemplate>
+    <StackPanel Orientation="Horizontal" Spacing="10">
+        <TextBlock Text="{Binding Title}"  />
+        <TextBlock Text="("/>
+        <TextBlock Text="{Binding Genre}"/>
+        <TextBlock Text=")"/>
+        <Button Content="Wypisz coś"
+                Command="{Binding DataContext.PrintOk,
+                        RelativeSource={RelativeSource AncestorType=Window}}"
+                CommandParameter="{Binding}" />
+    </StackPanel>
+</DataTemplate>
+```
+### Wyjaśnienie
+- `Command={"Binding ...}`:
+  - W tym miejscu znajdujemy się wewnątrz `DataTemplate` `ListBox`a.
+  - `DataContext` każdego elementu to pojedynczy `BoardGameModel`
+  - tu nie ma dostępu do komend z `MainWindowViewModel`
+  - komenda, którą chcemy wywołać (`PrintOk`) znajduje się wyżej, w `DataContext`
+całego okna
+
+- `RelativeSource={RelativeSource AncestorType=Window}`:
+  - "Idź w górę drzewa wizualnego i znajdź pierwszego przodka, który jest typu Window"
+  - `Button → StackPanel → DataTemplate → ListBox → Panel → Window`
+
+- `CommandParameter="{Binding}"`:
+  - przekazanie do `command` `PrintOk` elementu, który został kliknięty
+  - Co się dzieje w momencie kliknięcia?
+  - Użytkownik klika przycisk
+  - `CommandParameter="{Binding}`" Avalonia:
+  - pakuje cały obiekt `BoardGameNidek`
+  - Wykonuje komendę `PrintOk(selectedBoardGameModel)`
+
+:::tip
+- `Command` mówi „jaką akcję wykonać” (z głównego `ViewModelu`)
+- `CommandParameter` mówi „na czym tę akcję wykonać” (który obiekt z listy)
+
+:::
+
+### Ostatnia modyfikacja
+W głównej kontrolce `<Window ...` w `MainWindow.axaml` musimy wyłączyć `CompileBindings`:
+```xml
+<Window
+<!-- ... -->
+    Title="ListBoxMVVM"
+
+    x:CompileBindings="False"
+
+    >
+```
+
+
+Avalonia ma dwa tryby obsługi Bindingów:
+
+
+1. *Compile-time bindings* sprawdzanie w czasie kompilacji
+ - analizują wszystkie bindingi podczas kompilacji projektu.
+ - Sprawdzają:
+  - czy właściwość istnieje,
+  - czy nazwa jest poprawna,
+  - czy typy są zgodne,
+  - czy `DataContext` jest znany.
+ - Kiedy działają?
+  - Podczas kompilowania projektu (przed uruchomieniem aplikacji).
+ - Wynik
+  - Jeśli coś jest niepoprawne, zwracają błąd `AVLNxxx`x (np. AVLN2000).
+  - Lepsze IntelliSense w XAML.
+  - Mniej błędów w runtime, ale…
+Mogą wyskakiwać fałszywe błędy w `DataTemplate`, bo
+`DataContext` nie jest znany przy kompilacji.
+
+**Krótko**:
+- sprawdzają poprawność `binding`ów na etapie kompilacji
+- a zatem więcej kontroli, więcej błędów.
+
+**Włączanie**
+```xml
+<Window
+    <!-- ... -->
+    x:CompileBindings="True">
+```
+
+
+2. *Runtime bindings*
+ - Bindingi są rozwiązywane dopiero podczas działania aplikacji.
+  - "rozwiązywanie" `bindingu` (*binding resolution*, *resolve a bidning*) Avalonia w czasie działania aplikacji sprawdza,
+skąd ma wziąć wartość i jak ją powiązać z UI.
+ - Avalonia nie sprawdza typów ani istnienia właściwości podczas kompilacji.
+ - Kiedy działają?
+  - W momencie uruchomienia aplikacji i później, gdy UI się aktualizuje.
+ - Wynik
+  - Zero błędów AVLN podczas kompilacji.
+= Bindingi działają dynamicznie – jak w klasycznym WPF.
+
+Łatwiejsze bindowanie w `DataTemplate` i w przypadku przodków.
+
+Błędy wychodzą dopiero podczas działania (np. w logach).
+
+**Krótko**:
+- sprawdzają bindingi dopiero w czasie działania aplikacji
+- więc mniej kontroli, a za to większa elastyczność.
+
+Włączanie:
+```xml
+<Window
+    x:CompileBindings="false">
+```
+
+
+
+

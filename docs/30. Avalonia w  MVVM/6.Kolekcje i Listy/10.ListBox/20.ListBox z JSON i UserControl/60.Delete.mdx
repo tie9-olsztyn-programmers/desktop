@@ -1,0 +1,90 @@
+---
+title: Delete - implementacja
+---
+
+# Delete - implementacja
+Kontynuułjemy projekt z poprzedniej lekcji.
+Mamy już zaimplementowane metody:
+- GET
+- CREATE
+- UPDATE
+
+Została metoda DELETE.
+
+## Dodajmy przycisk `Usuń` w `MainWindow.xaml`
+```xml
+ <StackPanel Orientation="Horizontal" Spacing="10">
+    <Button Content="Edytuj"
+        HorizontalAlignment="Left"
+        Command="{Binding $parent[Window].DataContext.EditCommand}"
+        CommandParameter="{Binding}"
+    />
+    <Button Content="Usuń"
+        HorizontalAlignment="Left"
+        Command="{Binding DataContext.DeleteCommand,
+                 RelativeSource={RelativeSource AncestorType=Window}}"
+        CommandParameter="{Binding}"
+    />
+</StackPanel>
+```
+
+## Piszemy logikę działania w `MainWindowViewModel.cs`
+- dodamy nową właściwość `DeleteCommand`
+- zainciajlizujemy tę właściwość w konstruktorze
+- napiszemy metodę kasującą elementy z nasze listy
+
+```cs
+//...
+  public ReactiveCommand<Character, Unit> EditCommand { get; }
+
+  public ReactiveCommand<Character, Unit> DeleteCommand { get; }
+
+  public MainWindowViewModel()
+    {
+        LoadCharacters();
+
+        AddCommand = ReactiveCommand.Create(AddCharacters);
+        SaveCommand = ReactiveCommand.Create(SaveToJson);
+        EditCommand = ReactiveCommand.Create<Character>(OpenEditWindowAsync);
+
+        DeleteCommand = ReactiveCommand.Create<Character>(DeleteCharacter);
+
+    }
+
+    private void DeleteCharacter(Character? character)
+    {
+        if (character == null) return;
+
+        Characters.Remove(character);
+
+        // Jeżeli chcemy, żeby kasowanie łączyło się z zapisywaniem
+       // SaveToJson();
+    }
+```
+
+## Tworzymy `IDialogService`
+Zanim zapiszemy zmiany w pliku `.json`, zapytamy użytkownika,
+czy na pewno chce te zmiany zapisać.
+
+Do folderu `Services` dodajemy pliki
+- `IDialogService.cs`
+- `DialogService.cs` (implemenacja interfejsu)
+
+`IDialogService.cs`
+```cs
+
+```
+
+
+`DialogService.cs`
+```cs
+
+
+```
+
+
+
+
+
+
+

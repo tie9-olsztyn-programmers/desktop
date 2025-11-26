@@ -1,0 +1,159 @@
+---
+title: OpenFileDialog
+---
+
+# `OpenFileDialog` (*deprecated*)
+
+## Definicja
+:::info Co to jest `OpenFileDialog`?
+- to wbudowane w Avalonia okno dialogowe, które pozwala użytkownikowi wybrać plik z dysku.
+- po wybraniu pliku aplikacja dostaje jego pełną ścieżkę, dzięki czemu może go wczytać (np. tekst, JSON, obraz, itp.).
+
+Okno wygląda jak klasyczne okienko otwierania plików w Windows/Linux/macOS.
+
+:::
+
+
+## Przykład - wczytywanie wiersza (`.txt`)
+### Stworzenie pliku tekstowego
+Utwórz plik `PanCogitoHerbert.txt` z tekstem:
+```
+Przesłanie Pana Cogito
+
+Idź dokąd poszli tamci do ciemnego kresu
+po złote runo nicości twoją ostatnią nagrodę
+
+idź wyprostowany wśród tych co na kolanach
+wśród odwróconych plecami i obalonych w proch
+
+ocalałeś nie po to aby żyć
+masz mało czasu trzeba dać świadectwo
+```
+
+### Utworzenie projektu
+- utwórz projekt Avalonia `.NET`
+- w `.axaml`:
+```xml
+<StackPanel Spacing="10" Margin="20">
+        <Button Content="Wczytaj plik" Click="OnOpenFileClick"/>
+         <TextBox Name="OutputBox"
+                 AcceptsReturn="True"
+                 IsReadOnly="True"
+                 TextWrapping="Wrap"
+                 Height="200"/>
+    </StackPanel>
+```
+
+:::tip `AcceptsReturn="True"`
+naciśnięcie klawisza `Enter` wstawia nową linię w `TextBox` (jak w edytorze tekstu).
+
+:::
+
+- `MainWindow.axaml.cs` dodajemy metodę obsługującą kliknięcie przycisku:
+```cs
+ private async void OnOpenFileClick(object? sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var dialog = new OpenFileDialog
+            {
+                Title = "Wybierz plik tekstowy",
+                AllowMultiple = false,
+                Filters =
+                {
+                    new FileDialogFilter { Name = "Pliki tekstowe", Extensions = {"txt"} },
+                    new FileDialogFilter { Name = "Wszystkie pliki", Extensions = {"*"} }
+                }
+
+            };
+            var result = await dialog.ShowAsync(this);
+            Console.WriteLine(result);
+            if (result is not { Length: > 0 }) return;
+            string path = result[0];
+            string content = await File.ReadAllTextAsync(path);
+            OutputBox.Text=content;
+        }
+        catch (Exception exception)
+        {
+            Console.WriteLine(exception);
+        }
+    }
+```
+
+`if (result is not { Length: > 0 }) return;`
+- zapis z C# 9
+- „Jeśli `result` NIE jest obiektem, który ma właściwość `Length` większą niż 0 – to wyjdź z metody (return)”
+
+## Wczytywanie pliku JSON
+Do naszego `.axaml` dodamy przycisk i miejsce do wyświetlenia zawartości pliku JSON:
+```xml
+     <StackPanel Spacing="10" Margin="20">
+            <Button Content="Wczytaj JSON" Click="OnLoadJsonClick" />
+            <TextBlock Name="JsonViewer"
+                       TextWrapping="Wrap"
+                       Margin="0,10,0,0" />
+    </StackPanel>
+```
+
+Dopisujemy odpowiednią metodę `.cs`
+```cs
+  private async void OnLoadJsonClick(object? sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var dialog = new OpenFileDialog
+            {
+                Title = "Wybierz plik JSON",
+                AllowMultiple = false,
+                Filters =
+                {
+                    new FileDialogFilter
+                    {
+                        Name = "JSON",
+                        Extensions = { "json" }
+                    }
+                }
+            };
+
+            var files = await dialog.ShowAsync(this);
+            if (files == null || files.Length == 0)
+                return;
+
+            string path = files[0];
+
+
+            string content = await File.ReadAllTextAsync(path);
+
+            try
+            {
+                // Walidacja JSON
+                using var doc = JsonDocument.Parse(content);
+
+                // Formatowanie JSON (pretty print + polskie znaki)
+                var formatted = JsonSerializer.Serialize(
+                    doc,
+                    new JsonSerializerOptions
+                    {
+                        WriteIndented = true,
+                        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+                    }
+                );
+
+                JsonViewer.Text = formatted;
+            }
+            catch (JsonException ex)
+            {
+                // Obsługa błędu – plik nie jest poprawnym JSON-em
+                JsonViewer.Text = $"BŁĄD: Plik nie jest poprawnym JSON-em.\n\nSzczegóły:\n{ex.Message}";
+            }
+        }
+        catch (Exception exception)
+        {
+            Console.WriteLine(exception.Message);
+        }
+    }
+```
+
+
+
+

@@ -1,0 +1,17 @@
+---
+title: Kłopoty z kontekstem w liście
+---
+
+# Kłopoty z kontekst w liście
+Co by się stało, gdybyśmy chcieli wewnątrz `ListBox` dopisać `Button`?
+
+Niestety `DataContext` dla zawartości listy jest ustawiony dla elementów listy.
+
+W naszym przypadku jest to `BoardGameModel`, a nie `MainWindowViewModel`.
+
+Modele nie mogą mieć metod, więc nie możemy do `Button`a podpiąć obsługi zdarzenia.
+
+Są dwa rozwiązania:
+- nieładne — odwołamy się do kontekstu rodzica,
+- ładne rozwiązanie - zbudujemy `ViewModel`
+

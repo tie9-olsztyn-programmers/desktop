@@ -1,0 +1,272 @@
+---
+title: Quiz - praca ze strukturami
+---
+
+
+
+# Jak zrobić quiz?
+
+## Tworzymy słowniki
+
+Słownik dla pytań i odpowiedzi:
+- klucz w słowniku to pytanie
+- wartość klucza to 4 możliwe odpowiedzi
+
+
+Słownik dla poprawnych odpowiedzi:
+- klucz to pytanie
+- wartość klucza to index poprawnej odpowiedzi
+
+```csharp
+internal class Program
+{
+    static public Dictionary<string, string[]> pytaniIOdpowiedzi = new()
+    {
+        { "Ile skrzydeł ma prak", ["10", "20", "2", "0"] },
+        { "Jak długo spać", ["100", "8", "300", "1"] },
+        { "Gdzie kupujemy chleb?", ["W aptece", "W piekarni", "W kinie", "W muzeum"] },
+        { "Który miesiąc ma najmniej dni?", new[] { "Luty", "Maj", "Listopad", "Sierpień" } },
+        { "Co robimy parasolem?", ["Jemy", "Piszemy", "Chronimy się przed deszczem", "Siedzimy"] },
+        { "Jakim środkiem transportu porusza się po torach?", new[] { "Samochód", "Pociąg", "Rower", "Motor" } },
+        { "Jakie zwierzę daje mleko?", new[] { "Krowa", "Koń", "Owca", "Pies" } },
+        { "Co świeci na niebie w dzień?", new[] { "Księżyc", "Słońce", "Gwiazdy", "Samoloty" } },
+        { "Gdzie mieszkają ryby?", new[] { "Na pustyni", "W lesie", "Na drzewie", "W wodzie", } },
+        { "Czym piszemy po papierze?", ["Łyżką", "Nożem", "Długopisem", "Patykiem"] }
+
+    };
+
+
+    static public Dictionary<string, int> pytaniaIPoprawneOdpowiedzi = new()
+    {
+        { "Ile skrzydeł ma prak", 2 },
+        { "Jak długo spać", 1 },
+        { "Gdzie kupujemy chleb?", 1 },
+        { "Który miesiąc ma najmniej dni?", 0 },
+        { "Co robimy parasolem?", 2 },
+        { "Jakim środkiem transportu porusza się po torach?", 1 },
+        { "Jakie zwierzę daje mleko?", 0 },
+        { "Co świeci na niebie w dzień?", 1 },
+        { "Gdzie mieszkają ryby?", 3 },
+        { "Czym piszemy po papierze?", 2 }
+
+    };
+
+
+    public static void Main(string[] args)
+    {
+```
+
+## Losujemy 5 pytań
+### Surowy kod w `Main`
+```csharp
+    var wszystkiePytania = pytaniIOdpowiedzi.Keys.ToList();
+    var wylosowanePytania = new List<string>();
+
+    var random = new Random();
+    while (wylosowanePytania.Count < 5)
+    {
+        int index = random.Next(0, wszystkiePytania.Count);
+        string pytanie = wszystkiePytania[index];
+
+        if (!wylosowanePytania.Contains(pytanie))
+        {
+            wylosowanePytania.Add(pytanie);
+        }
+    }
+
+    Console.WriteLine(string.Join(", ", wylosowanePytania));
+
+```
+
+### Przekształcamy kod na funkcję
+Poza `Main`, ale w klasie `Program`
+```csharp
+     public static List<string> WylosujPytania(Dictionary<string, string[]> slownikPytan)
+    {
+        var wszystkiePytania = slownikPytan.Keys.ToList();
+        var wylosowanePytania = new List<string>();
+        var random = new Random();
+        while (wylosowanePytania.Count < 5)
+        {
+            int index = random.Next(0, wszystkiePytania.Count);
+            string pytanie = wszystkiePytania[index];
+
+            if (!wylosowanePytania.Contains(pytanie))
+            {
+                wylosowanePytania.Add(pytanie);
+            }
+        }
+
+        return wylosowanePytania;
+    }
+
+```
+
+W `Main` dodajemy wywołanie tej funkcji:
+```csharp
+//...
+    { "Co świeci na niebie w dzień?", 1 },
+            { "Gdzie mieszkają ryby?", 3 },
+            { "Czym piszemy po papierze?", 2 }
+
+        };
+
+        var wylosowanePytania = WylosujPytania(pytaniIOdpowiedzi);
+        Console.WriteLine(string.Join(", ", wylosowanePytania));
+
+
+```
+
+## Pobieramy dane od użytkownika
+### Funkcja PokazPytanie
+Definiujemy nową funkcję statyczną (w klasie `Program`, ale poza funkcją `Main`)
+```csharp
+    public static void PokazOdpowiedzi(string pytanie, string[] odpowiedzi)
+    {
+        Console.WriteLine("Pytanie: " + pytanie);
+        Console.WriteLine("Odpowiedzi: ");
+        var numerPytania = 1;
+        foreach (var odpowiedz in odpowiedzi)
+        {
+            Console.WriteLine($"{numerPytania}) {odpowiedz}");
+            numerPytania++;
+        }
+    }
+```
+
+I używamy jej w `Main`:
+```csharap
+//...
+    var wylosowanePytania = WylosujPytania(pytaniIOdpowiedzi);
+
+    PokazOdpowiedzi(wylosowanePytania[0],pytaniIOdpowiedzi[wylosowanePytania[0]] );
+
+}
+```
+:::tip Przesteń nazw
+- ciągle piszemy `Console.WriteLine`
+- jeżeli wskażemy odpowiednią przestrzeń nazw:
+    - na początki pliku `using static System.Console;`
+    - to możemy pisać tylko `WriteLine`
+
+:::
+
+### Funkcja SprawdzOdpowiedz
+Poza `Main`, ale w klasie `Program`
+```csharp
+      private static bool SprawdzOdpowiedz(string pytanie, int wyborGracza)
+    {
+        var poprawnaOdpowiedz = pytaniaIPoprawneOdpowiedzi[pytanie]+1;
+        return poprawnaOdpowiedz == wyborGracza;
+    }
+```
+
+Użyjemy tej funkcji w `Main`:
+```csharp
+//...
+     var wylosowanePytania = WylosujPytania(pytaniIOdpowiedzi);
+        PokazOdpowiedzi(wylosowanePytania[0],pytaniIOdpowiedzi[wylosowanePytania[0]] );
+        bool czyPoprawneDane = int.TryParse(ReadLine(), out var wyborGracza);
+
+        if (!czyPoprawneDane)
+        {
+            WriteLine("Musisz wpisać liczbę od 1 do 4");
+        }
+        else
+        {
+            var czyPoprawna = SprawdzOdpowiedz(wylosowanePytania[0], wyborGracza);
+            WriteLine("Twoja odpowiedz: ", wyborGracza);
+            if (czyPoprawna)
+            {
+                WriteLine("Dobrze!");
+            }
+            else
+            {
+                WriteLine("Źle! Poprawna odpowiedź to ", pytaniaIPoprawneOdpowiedzi[wylosowanePytania[0]]);
+            }
+        }
+```
+
+### Zamknięcie w pętli
+- na razie nasz kod wykonuje się tylko raz
+- ale całość, która napisaliśmy, powinna wykonywać się 5 razy
+- więc tę część kodu zamknięmy w pętli
+```csharp
+ public static void Main(string[] args)
+    {
+
+
+        var wylosowanePytania = WylosujPytania(pytaniIOdpowiedzi);
+
+        var iloscPytan = 5;
+        while (iloscPytan > 0)
+        {
+            var numerPytania = 5-iloscPytan;
+            PokazOdpowiedzi(wylosowanePytania[numerPytania],pytaniIOdpowiedzi[wylosowanePytania[numerPytania]] );
+            bool czyPoprawneDane = int.TryParse(ReadLine(), out var wyborGracza);
+
+            if (!czyPoprawneDane)
+            {
+                WriteLine("Musisz wpisać liczbę od 1 do 4");
+            }
+            else
+            {
+                var czyPoprawna = SprawdzOdpowiedz(wylosowanePytania[0], wyborGracza);
+                WriteLine("Twoja odpowiedz: ", wyborGracza);
+                if (czyPoprawna)
+                {
+                    WriteLine("Dobrze!");
+                }
+                else
+                {
+                    WriteLine("Źle! Poprawna odpowiedź to ", pytaniaIPoprawneOdpowiedzi[wylosowanePytania[numerPytania]]);
+                }
+            }
+            iloscPytan--;
+        }
+
+
+```
+
+### Dodajemy zliczanie punktów
+```csharp
+ public static void Main(string[] args)
+    {
+//...
+
+        var wylosowanePytania = WylosujPytania(pytaniIOdpowiedzi);
+        var iloscPoprawnychOdpowiedzi = 0; // NOWY KOD!!!
+        var iloscPytan = 5;
+        while (iloscPytan > 0)
+        {
+
+//...
+               else
+            {
+                var czyPoprawna = SprawdzOdpowiedz(wylosowanePytania[numerPytania], wyborGracza);
+                WriteLine("Twoja odpowiedz: ", wyborGracza);
+                if (czyPoprawna)
+                {
+                    WriteLine("Dobrze!");
+                    iloscPoprawnychOdpowiedzi++; // NOWY KOD
+                }
+                else
+                {
+                    WriteLine("Źle! Poprawna odpowiedź to ", pytaniaIPoprawneOdpowiedzi[wylosowanePytania[0]]);
+                }
+            }
+            iloscPytan--;
+        }
+
+        var wynikWProcentach = (iloscPoprawnychOdpowiedzi / 5.0) * 100; // NODY KOD
+        WriteLine($"$Twój wynik to {iloscPoprawnychOdpowiedzi}/5 ({wynikWProcentach}%)"); // NOWY KOD
+
+
+
+
+
+
+
+
+
+

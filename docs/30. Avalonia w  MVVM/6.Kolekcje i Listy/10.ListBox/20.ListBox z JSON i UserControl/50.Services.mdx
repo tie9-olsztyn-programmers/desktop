@@ -1,0 +1,138 @@
+---
+title: Serwisy w MVVM
+---
+
+# Serwisy w MVVM
+Kontynuacja lekcji poprzedniej.
+
+Nasz kod możemy zmienić na bardziej `MVVM-owy`.
+Utworzymy pierwszy `service`:
+- dodajmy do projektu nowy folder `Services`
+- umieścimy w nim pliki:
+  - `IWindowService.cs`
+  - `WindowService.cs`
+
+## Co to jest  `service`?
+
+:::note `service`
+- to bezstanowy lub lekkostanowy obiekt,
+- obiekt ten wykonuje działania, których `ViewModel`:
+  - nie może lub
+  - nie powinien wykonywać samodzielnie,
+
+bo nie należą do jego odpowiedzialności.
+
+- to zewnętrzny „fachowiec”, do którego `ViewModel` wysyła zlecenie, zamiast wykonywać je sam.
+
+:::
+
+:::tip Metafora `service`
+- to narzędzie zewnętrzne, które `ViewModel` tylko wykorzystuje
+- Tak jak:
+  - drukarka (`Service`) drukuje,
+  - a Word (`ViewModel`) tylko mówi: „wydrukuj ten dokument”
+
+:::
+
+## Implementacja `service`
+
+`IWindowService.cs`
+```cs
+public interface IWindowService
+{
+    void CloseWindow(object viewModel);
+}
+```
+
+`WindowService.cs`
+```cs
+public class WindowService : IWindowService
+{
+    public void CloseWindow(object viewModel)
+    {
+        if (App.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop) return;
+        desktop.Windows.FirstOrDefault(w => w.DataContext == viewModel)?.Close();
+    }
+}
+
+```
+
+**Rejestrujemy `WindowService`** w `App.cs`
+- utworzymy statyczną właściwość typu `IWindowService`
+- w konstruktorze przypiszemy do tej właściwości obiekt `WindowService`
+```cs
+
+public partial class App : Application
+{
+    public static IWindowService? WindowService { get; private set; }
+
+    public override void Initialize()
+//...
+
+    public override void OnFrameworkInitializationCompleted()
+    {
+        // rejestrujemy nasz serwis!!!!!
+        WindowService = new WindowService();
+
+        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+      //...
+```
+
+I teraz w naszym `EditViewModel.cs` możemy napisać nową definicję zamykania okna:
+```cs
+    private void CloseWindow()
+    {
+        App.WindowService!.CloseWindow(this);
+    }
+```
+
+## Wzorce projektowe
+Dlaczego użyliśmy interfejsu `IWindowService` jako typu naszego `service` a nie od razu `WindowService`?
+Nasza implementacja spełnia kilka wzorców projektowych:
+- *Dependency Injection Principle*
+    - jej praktyczne wykonanie *Program to an interface, not an implementation*
+- *Service Locator*
+
+:::note Dependency Injection Principle
+
+Moduły wysokiego poziomu nie powinny zależeć od modułów niskiego poziomu.
+Oba powinny zależeć od abstrakcji (interfejsów).
+
+Co to znaczy u nas?
+- `ViewModel` to moduł wysokiego poziomu (logika aplikacji)
+- `WindowService` to moduł niskiego poziomu (konkretne API Avalonia)
+- `IWindowService` to abstrakcja między nimi
+
+ViewModel:
+- zależy tylko od interfejsu
+- nie zależy od `Avalonia.Window`
+- nie zależy od konkretnej klasy `WindowService`
+
+:::
+
+
+:::info Program to an interface, not an implementation
+- "Używaj interfejsów zamiast klas"
+- "Koduj do I, nie do C"
+- "Zależ od tego, co obiecuje, nie od tego, jak to robi"
+
+:::
+
+
+:::danger Service Locator
+- to wzorzec projektowy, w którym istnieje centralny obiekt (tzw. lokator),
+- z tego obiektu inne części aplikacji pobierają potrzebne im usługi ("serwisy").
+
+Metaforycznie:
+i -`Service Locator` to magiczna wieża gildii.
+- `ViewModel` wzywa: "Potrzebuję maga od portali!"
+- Wieża (`Service Locator`) wysyła odpowiedniego czarodzieja (`WindowService`).
+- `ViewModel` nie trzyma maga przy sobie, tylko wzywa go, kiedy chce.
+
+
+:::
+
+
+
+
+

@@ -1,0 +1,47 @@
+---
+title: Okna dialogowe
+---
+
+# Okna dialogowe
+
+:::note Okna dialogowe (*dialog windows*)
+- to dodatkowe, mniejsze okna,
+- pojawiają się nad główną aplikacją
+- mają jedno konkretne zadanie:
+    - uzyskać od użytkownika jakąś informację-albo
+    - pokazać komunikat.
+
+:::
+
+Okna dialogowe:
+- zasłaniają aplikację (częściowo lub całkowicie),
+- zwykle blokują działanie reszty programu, dopóki nie zostaną zamknięte,
+- mają przyciski typu `OK`, `Cancel`, `Yes`/`No`, `Save`, `Open`.
+
+Przykłady, które każdy zna:
+- “Zapisz jako…”
+- “Wybierz plik do otwarcia”
+- “Czy na pewno chcesz usunąć?”
+- “Wystąpił błąd”
+
+
+| Rodzaj okna dialogowego            | Opis                                                                          | Przykłady użycia                                                  | Wsparcie w Avalonia                                                 |
+| ---------------------------------- | ----------------------------------------------------------------------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------- |
+| **OpenFileDialog**                 | Okno pozwalające użytkownikowi wybrać jeden lub wiele plików z dysku.         | Wczytanie obrazu, otwarcie pliku tekstowego, załadowanie JSON.    | Wbudowane                                                        |
+| **SaveFileDialog**                 | Okno umożliwiające wybranie miejsca i nazwy pliku do zapisu.                  | Eksport danych, zapis ustawień, generowanie pliku JSON.           | Wbudowane                                                        |
+| **MessageBox** (komunikat)         | Wyświetlenie krótkiej informacji, ostrzeżenia lub pytania „Tak/Nie”.          | Błąd, potwierdzenie usuwania, informacja o powodzeniu operacji.   | ⚠️ Brak wbudowanego — potrzebna własna implementacja lub biblioteka |
+| **Custom Dialog** (własne okienko) | Okno stworzone przez programistę, dowolna zawartość i kontrolki.              | Formularz dodawania elementu, okno ustawień, panel edycji danych. | Tworzy się z klasy `Window`                                      |
+| **Modal Window**                   | Okno blokujące działanie reszty aplikacji, dopóki użytkownik go nie zamknie.  | Dialog zapisu, potwierdzenia, ważne komunikaty.                   | Każde okno może być modalne (`ShowDialogAsync`)                  |
+| **Non-Modal Window**               | Okno pomocnicze, które można przesuwać i używać równocześnie z głównym oknem. | Podgląd obrazu, panel narzędzi, logi aplikacji.                   | `Show()`                                                         |
+
+
+
+
+
+
+
+
+
+
+
+

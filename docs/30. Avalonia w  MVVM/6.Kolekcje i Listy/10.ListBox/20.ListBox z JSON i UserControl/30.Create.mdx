@@ -1,0 +1,139 @@
+---
+title: Dodawanie danych - CREATE
+---
+
+# Dodawanie danych - CREATE
+
+## Dodawanie nowego bohatera do pliku `.json` - *CREATE*
+
+### Modufikujemy `MainWindowViewModel`
+Nasz `ViewModel` potrzebuje, aby móc dane zapisać do pliku, trzech nowych właściwości:
+- `NewName`,
+- `NewRole`,
+- `NewDescription`
+
+Niezbędne są dwie nowe komendy:
+- `AddCommand`
+- `SaveCommand`
+
+```cs
+public class MainWindowViewModel : ViewModelBase
+{
+    private const string FilePath = "Data/characters.json";
+
+    // obiekt definiujący sposob formatowania danych zapisywanych w .json
+    private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
+
+    public ObservableCollection<Character> Characters { get; } = [];
+
+    // nowe właściwości przy wykorzystaniu pakietu `Fody`
+    [Reactive] public string NewName { get; set; } = string.Empty;
+    [Reactive] public string NewRole { get; set; } = string.Empty;
+    [Reactive] public string NewDescription { get; set; } = string.Empty;
+
+    // właściwości do obsługi kliknięć
+    public ReactiveCommand<Unit, Unit> AddCommand { get; }
+    public ReactiveCommand<Unit, Unit> SaveCommand { get; }
+
+public MainWindowViewModel()
+    {
+        LoadCharacters();
+
+        // w uproszczeniu, do właściwości Command przypisujemy odpowiednie metody
+        AddCommand = ReactiveCommand.Create(AddCharacters);
+        SaveCommand = ReactiveCommand.Create(SaveToJson);
+    }
+
+
+  private void AddCharacters()
+    {
+        if ( new List<string> {NewName, NewRole, NewDescription}.Any(string.IsNullOrWhiteSpace))
+        {
+            Console.WriteLine("All fields have to be filled");
+            return;
+        }
+
+        Characters.Add(new Character
+        {
+            Name = NewName,
+            Role = NewRole,
+            Description = NewDescription
+        });
+        NewName = NewRole = NewDescription = string.Empty;
+    }
+
+
+  private void SaveToJson()
+    {
+        try
+        {
+            File.WriteAllText(FilePath, JsonSerializer
+                .Serialize(Characters, JsonOptions));
+            Console.WriteLine("JSON file saved successfully");
+        }
+        catch (Exception exception) when (exception is
+                                              IOException or
+                                              UnauthorizedAccessException or
+                                              JsonException)
+            // IOException dysk pełny, plik zablokowany, ścieżka nie istnieje
+            // UnauthorizedAccessException brak uprawnień do zapisu w folderze
+            /// JsonException coś nie tak z serializacją
+
+        {
+            Console.WriteLine($"Save File Error {exception.Message}");
+        }
+        catch (Exception exception)
+        {
+            Console.WriteLine($"Unexpected error (report this!): {exception.Message}");
+        }
+    }
+//..
+```
+
+### Budujemy `axaml`, aby wpisać nowe dane
+```xml
+
+    <StackPanel Margin="20" Spacing="12">
+        <TextBlock Text="Zbrodnia i kara" FontSize="35"/>
+
+        <!-- Formularz dodawania bohatera -->
+        <TextBlock Text="Dodaj nowego bohatera" FontWeight="Bold" Margin="0,0,0,8"/>
+
+        <TextBox Watermark="Imię i nazwisko"
+                 Text="{Binding NewName}" />
+
+        <TextBox Watermark="Rola (np. student)"
+                 Text="{Binding NewRole}" />
+
+        <TextBox Watermark="Opis postaci"
+                 Text="{Binding NewDescription}"
+                 AcceptsReturn="True"
+                 Height="60"
+                 TextWrapping="Wrap" />
+
+        <Button Content="Dodaj bohatera"
+                Command="{Binding AddCommand}"
+                Margin="0,0,0,20"/>
+
+        <ListBox ItemsSource="{Binding ...
+   <!-- Zapis JSON -->
+        <Button Content="Zapisz zmiany do JSON"
+                Command="{Binding SaveCommand}"
+                Margin="0,12,0,0"/>
+    </StackPanel>
+
+</Window>
+```
+Co powinieneś zaobserwować:
+- można dodać nowego bohatera do wyświetlanej listy
+- zapisanie do pliku powinno się powieść
+- plik `characters.json` w solucji nie uległ zmianie
+- plik `characters.json` w folderze `output` (`bin/Debug/net9.0/Data`) uległ zmiania
+- ponowne uruchomienie aplikacji przywraca pli `.json` z folderu `output` do stanu początkowego,
+czyli tak, jakby zmiany się nie zapisały
+
+**Jak naprawić ten "błąd"?**
+- wcześniej w `properties` naszego pliku `.json` `Copy to output directory` ustawiliśmy `copy always`
+- takie ustawienie powoduje, że plik `.json` z solucji zawsze nadpisuje plik w `output`
+- wystarczy zmienić tę właściwość na `Copy if newer`, czyli kopiuj z solucji do `output`, o ile w solucji jest nowszy plik
+

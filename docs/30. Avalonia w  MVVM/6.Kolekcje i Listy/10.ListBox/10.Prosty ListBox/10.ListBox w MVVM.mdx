@@ -1,0 +1,201 @@
+---
+title: "ListBox w MVVM"
+---
+
+# ListBox w MVVM Kolekcja gier planszowych
+- Rider
+- MVVM
+- ustawieniem *ReactiveUI*
+
+## Definicja Modelu
+
+`BoardGameModel.cs`
+```csharp
+public class BoardGame
+{
+    public string Title { get; set; } = "";
+    public string Genre { get; set; } = "";
+    public int MinPlayers { get; set; } = 1;
+    public int MaxPlayers { get; set; } = 1;
+    public double Rating { get; set; } = 0;
+
+}
+```
+
+## Definicja ViewModelu
+`NainWindowViewModel.cs`
+```csharp
+
+public class MainWindowViewModel : ViewModelBase
+{
+    public ObservableCollection<BoardGameModel> Games { get; } = new()
+    {
+        new BoardGameModel
+        {
+            Title = "Eurobiznes", Genre = "Ekonomiczna",
+            MinPlayers = 2, MaxPlayers = 6, Rating = 7.0
+        },
+        new BoardGameModel
+        {
+            Title = "Senet", Genre = "Historyczna",
+            MinPlayers = 2, MaxPlayers = 2, Rating = 0.0
+        },
+        new BoardGameModel()
+        {
+            Title = "Tryktrak", Genre = "Strategiczna",
+            MinPlayers = 2, MaxPlayers = 2, Rating = 4.5
+        },
+        new BoardGameModel()
+        {
+            Title = "Grzybobranie", Genre = "Rodzinna",
+            MinPlayers = 2, MaxPlayers = 4, Rating = 6.0
+        }
+    };
+
+
+    private BoardGameModel? _selectedGame;
+
+    public BoardGameModel? SelectedGame
+    {
+        get => _selectedGame;
+        set => this.RaiseAndSetIfChanged(ref _selectedGame, value);
+    }
+
+    public ReactiveCommand<Unit, Unit> ShowDetailsCommand { get; }
+
+    public MainWindowViewModel()
+    {
+        var canShow = this.WhenAnyValue(vm => vm.SelectedGame)
+            .Select(game => game != null);
+        ShowDetailsCommand = ReactiveCommand.Create(ShowDetails, canShow);
+
+    }
+
+    private void ShowDetails()
+    {
+        if (SelectedGame is not null)
+        {
+            Console.WriteLine($"Gra: {SelectedGame.Title} ({SelectedGame.Genre}), " +
+                              $"{SelectedGame.MinPlayers}-{SelectedGame.MaxPlayers}, " +
+                              $"ocena: {SelectedGame.Rating}"
+                              );
+        }
+    }
+
+}
+
+```
+
+
+## Definicja View
+
+---
+### Wyjaśnienie `ItemTemplate` i `DataTemplate`
+
+Wzorzec MVVM w Avalonia pozwala zbudować listę obiektów, które **automatycznie wyświetlają się** w interfejsie.
+Do tego służy `ListBox` i jego właściwość `ItemTemplate`.
+
+
+
+#### 1. Porównanie ogólne
+
+| Koncepcja | JavaScript (`map`) | Avalonia + MVVM |
+|------------|--------------------|-----------------|
+| Dane wejściowe | Tablica elementów | `ObservableCollection` (`ItemsSource`) |
+| Przekształcanie każdego elementu | `map()` | `ItemTemplate` |
+| Przepis | Funkcja strzałkowa `(x) => ...` | `DataTemplate` |
+| Wynik | Nowa tablica | Wizualna lista (`ListBoxItem`) |
+
+
+
+#### 2. Kod w JavaScript
+
+```js
+const games = [
+  { title: "Catan", genre: "Strategiczna" },
+  { title: "Dixit", genre: "Rodzinna" }
+];
+
+// map() – każdy element zamieniamy w napis
+const gameDescriptions = games.map(
+  g => `${g.title} (${g.genre})`
+);
+
+console.log(gameDescriptions);
+// ["Catan (Strategiczna)", "Dixit (Rodzinna)"]
+
+```
+#### 3. Kod w Avalonia
+```xml
+<ListBox ItemsSource="{Binding Games}">
+    <ListBox.ItemTemplate>
+        <DataTemplate>
+            <StackPanel Orientation="Horizontal" Spacing="10">
+                <TextBlock Text="{Binding Title}" FontWeight="Bold"/>
+                <TextBlock Text="(" />
+                <TextBlock Text="{Binding Genre}" />
+                <TextBlock Text=")" />
+            </StackPanel>
+        </DataTemplate>
+    </ListBox.ItemTemplate>
+</ListBox>
+```
+
+
+---
+
+
+
+
+
+
+### `MainWindow.axaml`
+```xml
+
+<StackPanel Margin="20" Spacing="20" Orientation="Vertical">
+    <TextBlock Text="Moje gry planszowe" FontSize="20" Margin="0,0,0,10"/>
+    <Grid ColumnDefinitions="*,*" RowDefinitions="Auto, Auto">
+         <ListBox ItemsSource="{Binding Games}" SelectedItem="{Binding SelectedGame}"
+                     Height="200">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <TextBlock Text="{Binding Title}"  />
+                                    <TextBlock Text="("/>
+                                    <TextBlock Text="{Binding Genre}"/>
+                                    <TextBlock Text=")"/>
+                                </StackPanel>
+                            </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+
+            <Button Grid.Row="1" Margin="0,10,0,0" Content="Pokaż szczegóły"
+                    Command="{Binding ShowDetailsCommand}"
+                    HorizontalAlignment="Left"
+                    />
+
+            <StackPanel Grid.Column="1" Grid.Row="0" Margin="10" Spacing="10">
+                <TextBlock Text="Szczegóły: " FontWeight="Bold"
+                           Foreground="Brown" FontSize="20"/>
+                <TextBlock Text="{Binding SelectedGame.Title}" />
+                <TextBlock Text="{Binding SelectedGame.Genre}" />
+                <TextBlock Text="{Binding SelectedGame.MinPlayers}" />
+                <TextBlock Text="{Binding SelectedGame.MaxPlayers}" />
+                <ProgressBar Minimum="0" Maximum="10"
+                             Value="{Binding SelectedGame.Rating}"
+                             Height="20"
+                             Foreground="Brown"
+                             />
+            </StackPanel>
+    </Grid>
+</StackPanel>
+</Window>
+
+```
+
+
+
+
+
+
+
