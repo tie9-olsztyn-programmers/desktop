@@ -1,0 +1,187 @@
+---
+title: Zoo Simulator
+---
+
+
+# Zbuduj symulator zoologiczny OOP
+
+## Struktura projektu
+```
+ZooSimulator/
+│
+├── Program.cs
+│
+├── Animals/
+│   ├── Animal.cs
+│   ├── Lion.cs
+│   ├── Penguin.cs
+│   └── Eagle.cs
+│
+├── Interfaces/
+│   ├── IAnimal.cs
+│   ├── IWalker.cs
+│   ├── ISwimmer.cs
+│   └── IFlyer.cs
+│
+└── Services/
+    └── Zoo.cs
+```
+
+## Interfaces
+### `IAnimal`
+```csharp
+public interface IAnimal
+{
+    string Name { get; }
+    string MakeSound();
+}
+```
+
+### `IWalker`
+```csharp
+public interface IWalker
+{
+    void Walk();
+}
+```
+
+
+### `ISwimmer`
+```csharp
+public interface ISwimmer
+{
+    void Swim();
+}
+```
+
+### `IFlyer`
+```csharp
+public interface IFlyer
+{
+    void Fly();
+}
+```
+
+
+## Animals
+### `Animal`
+```csharp
+public abstract class Animal(string name, int age) : IAnimal
+{
+    public string Name { get; } = name;
+    public int Age { get; protected set; } = age;
+
+    public abstract string MakeSound();
+
+    public override string ToString()
+    {
+        return $"{GetType().Name}: {Name}, Age {Age}";
+    }
+}
+
+```
+
+
+### `Eagle`
+```csharp
+public class Eagle : Animal, IFlyer
+{
+    public Eagle(string name, int age) : base(name, age) { }
+
+    public override string MakeSound() => "Screeeee!";
+
+    public void Fly() => Console.WriteLine($"{Name} soars high!");
+}
+
+```
+
+### `Lion`
+```csharp
+public class Lion: Animal, IWalker
+{
+    public Lion(string name, int age) : base(name, age) { }
+
+    public override string MakeSound() => "ROAR!";
+
+    public void Walk() => Console.WriteLine($"{Name} walks proudly.");
+}
+```
+
+### `Penguin`
+```csharp
+public class Penguin : Animal, IWalker, ISwimmer
+{
+    public Penguin(string name, int age) : base(name, age) { }
+
+    public override string MakeSound() => "Honk honk!";
+
+    public void Walk() => Console.WriteLine($"{Name} waddles cutely.");
+    public void Swim() => Console.WriteLine($"{Name} swims fast!");
+}
+```
+
+
+## Services
+:::tip Co to jest `service`?
+- klasa, która wykonuje jakąś usługę / zadanie dla reszty programu.
+- nie reprezentuje zwierzęcia, ucznia, przedmiotu ani rzeczy.
+- reprezentuje działanie, np.:
+    - zarządzanie listą zwierząt,
+    - zapisywanie do pliku,
+    - logika aplikacji "jak coś zrobić".
+
+:::
+
+
+### `Zoo`
+```csharp
+
+public class Zoo
+{
+    private readonly List<Animal> _animals = [];
+
+    public void AddAnimal(Animal animal)
+    {
+        _animals.Add(animal);
+    }
+
+    public void ShowAll()
+    {
+        foreach (var a in _animals)
+        {
+            Console.WriteLine(a);
+            Console.WriteLine("Sound: " + a.MakeSound());
+
+            if (a is IWalker w) w.Walk();
+            if (a is ISwimmer s) s.Swim();
+            if (a is IFlyer f) f.Fly();
+
+            Console.WriteLine();
+        }
+    }
+}
+```
+
+## `Program` - główny program
+```csharp
+ public static void Main(string[] args)
+    {
+        Zoo zoo = new Zoo();
+
+        zoo.AddAnimal(new Lion("Simba", 5));
+        zoo.AddAnimal(new Penguin("Pingu", 2));
+        zoo.AddAnimal(new Eagle("Aquila", 3));
+
+        Console.WriteLine("=== WELCOME TO THE ZOO ===\n");
+        zoo.ShowAll();
+
+        Console.WriteLine("Press any key to exit...");
+        Console.ReadKey();
+    }
+```
+Pamiętaja i dopowiednich importach!
+
+
+
+
+

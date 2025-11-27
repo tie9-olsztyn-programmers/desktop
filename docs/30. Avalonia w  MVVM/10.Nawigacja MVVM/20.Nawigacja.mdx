@@ -1,0 +1,53 @@
+---
+title: Nawigacja między ekranami
+---
+
+# Nawigacja między ekranami
+
+## Mini-aplikacja z nawigacją
+- 3 ekrany: Home, Settings, About
+- menu z trzema przyciskami
+- kliknięcie przełącza `ContentControl` z bieżącym ekranem
+
+Struktura projektu:
+```
+Views/
+    MainWindow.axaml
+    HomeView.axaml
+    SettingsView.axaml
+    AboutView.axaml
+
+ViewModels/
+    MainViewModel.cs
+    HomeViewModel.cs
+    SettingsViewModel.cs
+    AboutViewModel.cs
+
+```
+
+## Tworzymy nowy projekt
+- Rider
+- Wybierz szablon `Avalonia MVVM Application`
+- Nazwa: `MiniNavigation`
+- pamiętaj o wybraniu "ReactiveUI" (w `Advance`)
+
+
+## NavigationStore
+
+:::tip Co to jest *NavigationStore*
+- to zwykła klasa, która przechowuje informację: "jaki `ViewModel` jest teraz wyświetlany".
+- w MVVM Widoki się nie znają, nie wołają siebie nawzajem, nie wchodzą do siebie.
+- `ViewModel` też nie powinien tworzyć okien ani przełączać XAML bezpośrednio.
+
+
+- Ładujemy właściwy `ViewModel` do `NavigationStore`
+a Avalonia automatycznie ładuje właściwy View
+
+
+:::
+
+
+
+
+
+

@@ -1,0 +1,106 @@
+Aplikacja z nawigacją między ekranami
++ CRUD
++ JSON
++ MVVM
++ Service/Repository to idealny projekt, który:
+
+ (Repository, Service, DTO, DI, mappingi, walidacje),
+
+Zaktualizowany plan startu projektu (z nawigacją)
+
+Każdy etap nadal ma schemat:
+(1) pojęcie → (2) mini-aplikacja → (3) implementacja w FocusForge
+
+1️⃣ Avalonia + MVVM – szybkie przypomnienie
+Pojęcia:
+
+View, ViewModel, Model
+
+DataContext, binding, commands
+
+Mini-aplikacja:
+
+Kalkulator + / -.
+
+W FocusForge:
+
+główne okno,
+
+puste ViewModel-e: HomeViewModel, TimerViewModel, TasksViewModel, StatsViewModel.
+
+2️⃣ Nawigacja między ekranami
+
+🔹 To jest właśnie miejsce, gdzie pojawia się navigation system!
+
+Pojęcia:
+
+NavigationStore / RoutingState (ReactiveUI router),
+
+przełączanie ViewModels,
+
+pattern: MainViewModel + CurrentViewModel,
+
+komunikacja: „zmień ekran na X”.
+
+Mini-aplikacja:
+
+3-ekranowa aplikacja:
+
+Home
+
+Settings
+
+About
+z przyciskami „Przejdź do…”.
+
+W FocusForge:
+
+tworzymy system:
+
+FocusForge to projekt desktopowej aplikacji do zarządzania czasem i zadaniami,
+ który integruje Pomodoro Timer, listę zadań
+i projektów, tagi, statystyki, animacje, tryb fokusowy i powiadomienia systemowe.
+
+
+Cele projektu
+
+stworzyć działający Pomodoro Timer z animacjami i trybem Focus,
+
+opracować system projektów, zadań, tagów i ich stanu,
+
+wprowadzić statystyki czasu pracy (dziennie/tygodniowe),
+
+użyć ReactiveUI + MVVM w praktyce,
+
+korzystać z JSON jako lokalnej bazy danych,
+
+obsłużyć powiadomienia systemowe + system tray,
+
+poznać integrację z Windows API (opcjonalnie: blokowanie okien),
+
+zbudować UI z kontrolami UserControl i Page Navigation.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
