@@ -1,0 +1,151 @@
+---
+title: Testowanie - teoria
+---
+
+# Testowanie w *xUnit* - wprowadzenie
+- *xUnit* to bardzo popularny, nowoczesny framework do pisania testów jednostkowych (unit tests) w ekosystemie .NET.
+- Najprościej mówiąc: *xUnit = narzędzie, które pozwala Ci pisać i uruchamiać testy automatyczne w C#*.
+
+## Dlaczego projekt testowy powinien być osobno?
+- Testy są kompilowane i uruchamiane niezależnie od aplikacji.
+- Nie chcesz mieszać testów z kodem produkcyjnym
+- Możesz testować prywatne klasy, *exposition logic*, refaktoryzować
+- Oddzielna kompilacja = łatwiej zarządzać zależnościami.
+- Narzędzia CI/CD (GitHub Actions) oczekują właśnie takiej struktury
+- `dotnet build`, `dotnet test` - oddzielne instrukcje.
+- W Riderze *Unit Test Runner* sam wykryje projekt testowy
+Od razu wyświetli klasy testowe, raporty, pokrycie itp.
+
+## Jak nazywać projekt testowy?
+```
+Nazwa projektu testowego = nazwa projektu + .Tests
+```
+
+- Twój projekt to `MyApp`
+- Projekt testowy to `MyApp.Tests`
+
+
+## Nazewnictwo klas testowych
+Też obowiązuje pewna konwencja:
+- Testujesz klasę `Calculator`, klasa testowa powinna być `CalculatorTests`
+- Testujesz serwis `UserService`, klasa testowa to `UserServiceTests`
+
+## Nazewnictwo testów
+Ogólny styl:
+```
+MethodName_Scenario_ExpectedResult
+```
+
+
+Przykład
+```csharp
+[Fact]
+public void IsEven_ForOddNumber_ReturnsFalse()
+{
+    Assert.False(Calculator.IsEven(7));
+}
+```
+
+
+## Podstawowe pojęcia
+
+### Atrybuty
+- atrybut to specjalna adnotacja w nawiasach kwadratowych,
+- umieszczamy ją nad metodą lub klasą, aby nadać jej dodatkową funkcję lub metadane.
+
+xUnit używa atrybutów, aby powiedzieć test runnerowi:
+- które metody są testami
+- jak mają być uruchamiane
+
+
+
+
+#### `[Fact]`
+Oznacza pojedynczy test.
+– nie przyjmuje parametrów
+– uruchamiany jako samodzielny test
+```csharp
+[Fact]
+public void Test_Addition()
+{
+    Assert.Equal(5, 2 + 3);
+}
+
+```
+#### `[Theory]`
+Oznacza test z parametrami.
+```csharp
+[Theory]
+[InlineData(2, 3, 5)]
+[InlineData(5, 7, 12)]
+public void Test_Add(int a, int b, int expected)
+{
+    Assert.Equal(expected, a + b);
+}
+
+```
+#### `[InlineData]`
+
+Przekazuje parametry do testu `[Theory]`.
+
+
+### Asercje
+xUnit mam statyczną klasę `Assert`
+
+Jej podstawowe metody:
+- `Assert.Equal(expected, actual)` przykład:
+    - `Assert.Equal(10, Calculator.Add(7, 3));`
+
+- `Assert.True / Assert.False` - przykłady:
+    - `Assert.True(x > 0);`
+    - `Assert.False(x < 0);`
+
+- `Assert.NotNull / Assert.Null` - przykłady:
+    - `Assert.NotNull(result);`
+    - `Assert.Null(result);`
+- `Assert.Throws<T>` - przykłady:
+    - `Assert.Throws<ArgumentException>(() => Calculator.Add(1, 2, 3));`
+    - `Assert.Throws<DivideByZeroException>(() => Divide(10, 0));`
+
+- `Assert.InRange`/`Assert.NotInRange` - ogólnie `Assert.InRange(actual, low, high);`:
+    - `actual` wartość, która testujemy,
+    - `low` dolna granica (włącznie)
+    - `high` górna granicza (włącznie)
+    - przykład:
+        - `Assert.InRange(7, 1, 10);`
+        - Sprawdza, czy `7` jest pomiędzy `1` a `10`
+
+
+
+## Struktura testu (*AAA pattern*)
+- `A` - Arrange (przygotowanie)
+- `A` - Act (akcja)
+- `A` - Assert (sprawdzenie)
+
+```csharp
+[Fact]
+public void Test_Add()
+{
+    // Arrange
+    int a= 2;
+    int b = 3;
+     var calculator = new Calculator();
+
+    // Act
+    var result = calculator.Add(2, 3);
+
+    // Assert
+    Assert.Equal(5, result);
+}
+```
+
+
+
+struktura
+- w jednej solucji masz swoją aplikację
+- w tej samej solucji tworzysz nowy projekt testowy (*UnitTests*)
+
+
+
+
+

@@ -1,0 +1,151 @@
+---
+title: Testowanie - praktyka
+---
+
+# *xUnit* - praktywa
+Ogólnie:
+- tworzymy projekt w Riderze:
+    - powstanie solucja
+    - wewnątrz solucji istnieje projekt/aplikacja
+- wewnątrz solucji tworzymy nowy projekt testowy
+
+## Program kalkulator
+- tworzymy nowy projekt konsolowy w Riderze
+- w naszej aplikacji, która jest wewnątrz solucji tworzymy nową klasę `Calculator.cs`:
+```csharp
+public static  class Calculator
+{
+        public static int Add(int a, int b) => a + b;
+
+        public static bool IsEven(int x) => x % 2 == 0;
+}
+```
+
+Użymy tej klasy w klasie `Program.cs`
+```csharp
+internal class Program
+{
+    public static void Main(string[] args)
+    {
+        Console.WriteLine(Calculator.Add(1, 2));   // 3
+        Console.WriteLine(Calculator.IsEven(2)); // true
+        Console.WriteLine(Calculator.IsEven(3)); // false
+    }
+}
+```
+
+## Piszemy testy
+### Tworzenie projektu testowego
+- kursor na solucję, klikamy prawym przyciskiem myszy `Add` > `New Project` > `Unit Test`
+- nazywamy go `Calculator.Tests.cs`
+- ważne !!!! - pod *Language* mamy *Type* i wybieramy *xUnit* !!!!!
+
+### Refaktoryzacja i łączenie aplikacji z projektem testowym
+- zrefaktoryzuje nawę pliku (było `UnitTest1.cs`) na `CalculatorTests.cs` (nazwa klasy równiez powinna ulec zmianie)
+- dodajemy referencję, aby połączyć naszą aplikacją `Calculator` z projektem testowym:
+    - na projekcie testowym (`Calculator.Tests`) prawy klawisz myszy `Add` > `Reference`
+    - wybierz projekt aplikacji
+    - `.csproj` powinien pojawić się wpis o referencji - np:
+```xml
+ <ItemGroup>
+      <ProjectReference Include="..\ConsoleCalcWithUnitTest\ConsoleCalcWithUnitTest.csproj" />
+    </ItemGroup>
+
+```
+    - to jakby powiedzieć projektu:
+        - "Hej, kompilatorze – możesz korzystać z wszystkich public typów z tamtego projektu"
+
+### Pierwszy test
+Do naszego pliku `CaculatorTests.cs` dodajemy pierwszy test:
+```csharp
+
+namespace Calculator.Tests;
+
+using Xunit;
+using ConsoleCalcWithUnitTest;
+
+public class CalculatorTests
+{
+    [Fact]
+    public void Test1()
+    {
+        // ARRANGE — przygotowanie danych wejściowych
+        int a = 2;
+        int b = 3;
+
+        // ACT — wykonanie testowanej metody
+        int result =Calculator.Add(a, b);
+
+        // ASSERT — sprawdzenie wyniku
+        Assert.Equal(5, result);
+
+    }
+}
+```
+
+Do naszej klasy dopiszmy kilka innych testów:
+```csharp
+
+namespace Calculator.Tests;
+
+using Xunit;
+using ConsoleCalcWithUnitTest;
+
+
+public class CalculatorTests
+{
+
+    [Fact]
+    public void Add_TwoNumbers_ReturnsCorrectSum()
+    {
+        int result = Calculator.Add(10, 10);
+        Assert.Equal(20, result);
+    }
+
+    [Fact]
+    public void IsEven_EvenNumber_returnsTrue()
+    {
+        bool result = Calculator.IsEven(4);
+        Assert.True(result);
+
+    }
+
+    [Fact]
+    public void IsEven_Number_returnsFalse()
+    {
+        Assert.False(Calculator.IsEven(3));
+    }
+
+    // testy parametryzowane
+    [Theory]
+    [InlineData(2, 3, 5)]
+    [InlineData(10, 10, 20)]
+    [InlineData(-1, 1, 0)]
+    [InlineData(0, 0, 0)]
+    public void Add_VariousInputs_ReturnsCorrectSum(int a, int b, int expected)
+    {
+        Assert.Equal(expected, Calculator.Add(a, b));
+    }
+
+}
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
