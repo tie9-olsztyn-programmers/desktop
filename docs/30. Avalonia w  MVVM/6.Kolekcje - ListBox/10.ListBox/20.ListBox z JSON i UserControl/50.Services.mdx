@@ -12,19 +12,28 @@ Utworzymy pierwszy `service`:
   - `IWindowService.cs`
   - `WindowService.cs`
 
-## Co to jest  `service`?
+## Czym jest Serwis (Service)?
 
-:::note `service`
-- to bezstanowy lub lekkostanowy obiekt,
-- obiekt ten wykonuje działania, których `ViewModel`:
-  - nie może lub
-  - nie powinien wykonywać samodzielnie,
-
-bo nie należą do jego odpowiedzialności.
-
-- to zewnętrzny „fachowiec”, do którego `ViewModel` wysyła zlecenie, zamiast wykonywać je sam.
-
+:::note Serwis
+- To **bezstanowy** (lub lekkostanowy) obiekt, który wykonuje zadania wykraczające poza kompetencje ViewModelu.
+- ViewModel **deleguje** zadanie, a Serwis je **realizuje**.
+- Jest realizacją zasady **DRY** (*Don't Repeat Yourself*) – jeden serwis może obsługiwać wiele ViewModeli.
 :::
+
+### Definicja techniczna
+
+W architekturze MVVM, Serwis to warstwa pośrednicząca między **ViewModel**, a **źródłem danych** (np. API Supabase, system plików, baza danych) lub **funkcjami systemowymi** (np. wysyłanie e-maila, logowanie zdarzeń). Serwisy są zazwyczaj wstrzykiwane do ViewModeli przez konstruktor (tzw. *Dependency Injection*).
+
+
+
+### Analogia: Architekt i Wykonawcy
+
+Wyobraź sobie budowę domu:
+* **ViewModel to Architekt:** On wie, co ma być zrobione. Ma plan (logikę UI) i wie, gdzie postawić ścianę, a gdzie okno. Ale architekt sam nie kładzie kabli ani nie montuje rur.
+* **Serwis to Fachowiec (Elektryk, Hydraulik):** Architekt dzwoni do **Serwisu Elektrycznego** i mówi: „Potrzebuję prądu w tym pokoju”.
+  * Architekta nie obchodzi, jakich narzędzi użyje elektryk.
+  * Architekt po prostu oczekuje, że prąd będzie działał.
+  * Ten sam Elektryk (Serwis) może pojechać na dziesięć różnych budów (różnych ViewModeli) i wszędzie wykona tę samą specjalistyczną robotę.
 
 :::tip Metafora `service`
 - to narzędzie zewnętrzne, które `ViewModel` tylko wykorzystuje
@@ -44,6 +53,7 @@ public interface IWindowService
 }
 ```
 
+Przenosimy metodę zamykania okna do naszego serwisu:
 `WindowService.cs`
 ```cs
 public class WindowService : IWindowService
@@ -57,7 +67,26 @@ public class WindowService : IWindowService
 
 ```
 
-**Rejestrujemy `WindowService`** w `App.cs`
+**Mała zmiana**:
+- klasa `App` dziedziczy po klasie `Application`
+- statyczna właściwość `Current` pochodzi z klasy `Application`
+- dlatego dla spójności projektu lepiej jest
+    - zamiast `if (App.Current?.ApplicationLifetime ...`
+    - napisać `if (Application.Current?.ApplicationLifetime ...`
+
+:::tip Analogia: Stanowisko kontra Konkretna osoba
+Wyobraź sobie, że pracujesz w dużej firmie (Twoja aplikacja):
+
+* **Application:** To ogólne pojęcie "Dyrektora" (klasa bazowa). Każda firma ma dyrektora i każdy wie, jakie ma on uprawnienia (np. `ApplicationLifetime`).
+* **App:** To konkretny dyrektor, np. "Dyrektor Jan Kowalski".
+
+Kiedy chcesz wydać polecenie służbowe (użyć `Current`), możesz powiedzieć: *"Zgodnie z decyzją Dyrektora Jana Kowalskiego"* (`App.Current`). Jednak w oficjalnych dokumentach (Twój kod) lepiej napisać: *"Zgodnie z decyzją **Dyrektora**"* (`Application.Current`).
+
+Dlaczego? Bo funkcja "Dyrektora" jest uniwersalna. Jeśli kiedyś zmienisz nazwę swojej klasy z `App` na `CoolGameApp`, musiałbyś poprawiać kod wszędzie. Odwołanie do `Application.Current` będzie działać zawsze, niezależnie od tego, jak nazwiesz swoją podklasę.
+
+:::
+
+## Rejestrujemy `WindowService` w `App.cs`
 - utworzymy statyczną właściwość typu `IWindowService`
 - w konstruktorze przypiszemy do tej właściwości obiekt `WindowService`
 ```cs

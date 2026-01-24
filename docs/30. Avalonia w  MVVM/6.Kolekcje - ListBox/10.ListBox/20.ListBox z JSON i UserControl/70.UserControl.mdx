@@ -4,6 +4,145 @@ title: UserControl
 ---
 
 
+# UserControl
+
+## Przypomnienie
+:::info **UserControl**
+- to samodzielny komponent UI,
+- składa się z:
+    - pliku widoku (`.axaml`) i
+    - pliku logiki (`.axaml.cs`)
+- działa jak niestandardowa kontrolka, którą można wstawić do innych okien tak samo,
+jak wstawiamy `Button` czy `TextBox`.
+
+:::
+
+:::tip Wyjaśnienie przez analogię
+Wyobraź sobie, że budujesz wielkie miasto z LEGO.
+* **Standardowe podejście:** Budujesz każdą kamienicę bezpośrednio na płycie głównej, szukając klocków pośród tysięcy innych. Jeśli chcesz drugą taką samą kamienicę, musisz budować ją od zera.
+* **UserControl:** Budujesz kamienicę jako **osobny moduł (UserControl)** na małej płytce obok. Kiedy jest gotowa, po prostu bierzesz ten gotowy "moduł" i wpinasz go w płytę główną miasta. Jeśli potrzebujesz ich dziesięć – po prostu używasz dziesięciu gotowych klocków.
+
+:::
+
+
+
+## Tworzenie nowej kontrolki
+- Na folderze `Views` prawy klawisz myszy `Add > Avalonia User Control`
+- nowy plik będzie nazywał się `CharacterSummaryView.axaml`
+- z `ListBox` zabieramy definicję
+wyglądu pojedynczego elementu i wklejamy ją do naszego nowego pliku
+
+:::warning Ważne zmiany w `UserControl`
+* `xmlns:vm="clr-namespace:ListBoxJSON.ViewModels"`
+    - `xmlns` to XML NAMEPSACE - "Hej, chcę używać klas z mojego kodu C#"
+    - `vm` prefiks, ksywka, standardowy skrót dla *ViewModel*
+    - `clr-namespace:...` dokładny adres, gdzie w projekcie C# jest odpowiednia klasa
+* `x:DataType="models:Character"`
+    - `x:DataType` "Wszystkie bindingi w tym pliku będą dotyczyć ... (np. obiektu klasy `Character`)
+    - `models` to skrót już zdefiniowany jako właściwość `<UserControl ... xmlns:models="clr-namespace:ListBoxJSON.Models"`
+    - `Character` nazwa klasy
+
+:::
+
+
+
+:::warning Ważne zmiany w `Button`:
+```xml
+<Button ...
+
+        Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).DeleteCommand}"
+        CommandParameter="{Binding}"
+/>
+```
+## Rzutowanie w Bindowaniu: Dlaczego musimy "podpowiadać" kompilatorowi?
+- musieliśmy napisać `((vm:MainWindowViewModel)DataContext)`
+- dlaczego nie mogliśmy napisać po prostu `DataContext.EditCommand`?
+
+### Problem: "Ślepy" Kompilator i Compiled Bindings
+Włączyliśmy w projekcie **Compiled Bindings** (używając `x:DataType`), więc:
+* kompilator Avalonia stał się bardzo rygorystyczny.
+* sprawdza on typy danych w czasie pisania kodu,
+* a nie w trakcie działania aplikacji.
+
+
+Oto co "widzi" kompilator, gdy patrzy na ścieżkę `$parent[Window]`:
+1.  Znajduje obiekt klasy `Window`.
+2.  Patrzy na jego właściwość `DataContext`.
+3.  Sprawdza w dokumentacji Avalonia, jakiego typu jest `DataContext`.
+4.  Widzi: `public object DataContext { get; set; }`.
+
+
+Dla kompilatora `DataContext` jest typu **`System.Object`** (czyli jest to "cokolwiek"):
+* klasa `System.Object` nie ma metody `EditCommand`.
+* dlatego kompilator zgłasza błąd: *"Nie widzę takiej komendy w zwykłym obiekcie!"*.
+
+
+### Rozwiązanie: Rzutowanie (Casting)
+
+Musimy użyć **Rzutowania**, czyli ręcznie poinstruować kompilator:
+*"Słuchaj, obiecuję Ci, że w tym polu `DataContext` nie siedzi byle jaki obiekt,
+ale konkretnie instancja klasy `MainWindowViewModel`"*.
+
+Składnia w XAML wygląda tak:
+```xml
+((Prefix:NazwaKlasy)NazwaWłaściwości)
+```
+
+:::
+
+
+```xml
+<UserControl ...
+         x:DataType="models:Character"
+         xmlns:vm="clr-namespace:ListBoxJSON.ViewModels"
+ >
+    <StackPanel Width="400" Spacing="5">
+        <!-- Imię postaci -->
+        <TextBlock Text="{Binding Name}" FontWeight="Bold"/>
+
+        <!-- Rola w powieści (student, policjant, lichwiarka, itd.) -->
+        <TextBlock Text="{Binding Role}" FontStyle="Italic"/>
+
+        <!-- Krótki opis postaci -->
+        <TextBlock Text="{Binding Description}"
+                   TextWrapping="Wrap"/>
+
+        <StackPanel Orientation="Horizontal" Spacing="10">
+            <Button Content="Edytuj"
+                    HorizontalAlignment="Left"
+                    Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).EditCommand}"
+                    CommandParameter="{Binding}"
+            />
+            <Button Content="Usuń"
+                    HorizontalAlignment="Left"
+                    Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).DeleteCommand}"
+                    CommandParameter="{Binding}"
+            />
+        </StackPanel>
+    </StackPanel>
+</UserControl
+
+
+```
+
+
+## Użycie nowej kontrolki w `MainWindowView`
+Będziemy musieli dopisać przestrzeń nazw, w której zdefiniowana nasza kontrolka:
+
+```xml
+<Window ...
+     xmlns:views="clr-namespace:ListBoxJSON.Views"
+        >
+
+        <ListBox ItemsSource="{Binding Characters}">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                   <views:CharacterSummaryView />
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+
+```
 
 
 

@@ -55,6 +55,28 @@ title: Aktualizacja - UPDATE
 Potrzebujemy:
 - zmiennej do przechowywania informacji, o tym, który elemenent został wybrany `SelectedCharacter`.
 - metody, która pozwoli nam edytować wybrany element `EditCommand`.
+
+
+:::tip Czym jest Task i dlaczego go potrzebujemy?
+### Definicja techniczna
+**Task** (zadanie)
+- to obiekt reprezentujący operację:
+    - która wykonuje się w tle i
+    - zakończy się w przyszłości.
+- jest to fundament programowania asynchronicznego (`async/await`) w C#. Pozwala on programowi "obiecać", że wynik zostanie dostarczony,
+nie blokując przy tym głównego wątku aplikacji.
+
+
+### Analogia: Zamówienie pizzy
+Wyobraź sobie, że zamawiasz pizzę przez telefon:
+* **Synchronous (brak Taska):** Dzwonisz i stoisz z telefonem przy uchu przez 30 minut, nie mogąc się ruszyć, aż pizza zostanie upieczona i dowieziona. Twoje "życie" (interfejs aplikacji) jest zamrożone.
+* **Asynchronous (z Taskiem):** Składasz zamówienie i otrzymujesz **potwierdzenie (to jest Twój Task)**. Odkładasz telefon i możesz w tym czasie sprzątać pokój lub oglądać serial. Gdy pizza przyjeżdża (zadanie się kończy), przerywasz to, co robisz, aby ją odebrać.
+
+### Dlaczego to jest ważne w Avalonia?
+W aplikacjach desktopowych najważniejszy jest **Wątek UI (UI Thread)**.
+Jeśli wykonasz długą operację (np. pobieranie danych z **Supabase**) bez użycia `Task`, okno aplikacji przestanie reagować na kliknięcia i "zastygnie". Używając `Task`, delegujesz ciężką pracę do tła, a interfejs pozostaje płynny i responsywny.
+
+:::
 ```cs
 //...
     // właściwość przechowująca wybrany element-obiekt Character
@@ -73,13 +95,13 @@ Potrzebujemy:
         AddCommand = ReactiveCommand.Create(AddCharacters);
         SaveCommand = ReactiveCommand.Create(SaveToJson);
 
-        EditCommand = ReactiveCommand.Create<Character>(OpenEditWindowAsync);
+        EditCommand = ReactiveCommand.CreateFromTask<Character>(OpenEditWindowAsync);
 
 
     }
 
 
-      private async void OpenEditWindowAsync(Character character)
+      private async Task OpenEditWindowAsync(Character character)
     {
         await new EditWindow
        {
@@ -94,7 +116,7 @@ Potrzebujemy:
 
 :::
 
-Aby powyższy kod mógł zadziałać, potrzebujemy  jeszcze metody `GetMainWindow()`.
+Aby powyższy kod mógł zadziałać, potrzebujemy jeszcze metody `GetMainWindow()`.
 
 Dlatego zrobimy nowy folder `Extensions`, a wewnątrz niego plik `AvaloniaExtensions.cs`
 ```cs
@@ -114,7 +136,7 @@ public static class AvaloniaExtensions
 ```
 
 :::tip Klasa statyczna `static class`
-- klasa statyczna to klasa, której nie można tworzyć jako obiekt
+- klasa statyczna to klasa, z której nie tworzy się żadnych obiektów
 (nie zrobisz `new AvaloniaExtensions()`).
 - zawiera tylko metody statyczne (albo stałe, albo statyczne właściwości).
 - służy do trzymania pomocniczych funkcji, które nie należą do żadnego konkretnego obiektu.
@@ -150,16 +172,18 @@ public int Add(int a, int b) => a + b;
 
 :::info Czym jest `this Application app`
 - nasza metoda jest `public static`
-- jej pierwszym argumentem jest `this`
-- czyli ta metoda jest metodą rozszerzającą
-- czyli znaczy to samo co:
-**"Dodaj tę metodę jako metodę instancyjną do klasy Application"**
+- jej pierwszym argumentem jest `this`:
+    - w języku C# słowo kluczowe `this` przed pierwszym argumentem metody statycznej
+        zmienia sposób, w jaki możemy z niej korzystać.
+    - powoduje, że ta metoda jest metodą rozszerzającą
+    - czyli znaczy to samo co:
+        - **"Dodaj tę metodę jako metodę instancyjną do klasy Application"**
 
 czyli zamiast
 `AvaloniaExtensions.GetMainWindow(Application.Current)`
 
 będziemy pisać
-`AvaloniaExtensions.GetMainWindow(Application.Current)`
+`Application.Current.GetMainWindow();`
 :::
 
 
@@ -171,13 +195,36 @@ będziemy pisać
 2. `as IClassicDesktopStyleApplicationLifetime`
  - próbujemy zrzutować (`cast`) `ApplicationLifetime` na wersję desktopową.
  - Jeśli aplikacja działa jako desktop:
-  - rzutowanie się udaje
-  - mamy dostęp do właściwości `.MainWindow`
+    - rzutowanie się udaje
+    - mamy dostęp do właściwości `.MainWindow`
  - Jeśli to nie jest desktop (np. Android):
-  - rzutowanie zwróci `null`
+    - rzutowanie zwróci `null`
 3. `?.MainWindow`  Operator `?.` znaczy:
  - "Jeśli poprzedni obiekt jest nie `null`, to pobierz `MainWindow`"
  - "Jeśli jest `null`, to zwróć `null`"
+
+:::tip Wyjaśnienie metaforyczne Portier w wieżowcu
+- Wyobraź sobie, że Twoja aplikacja to ogromny wieżowiec.
+- `Application (app)` to cały system zarządzający budynkiem.
+- `ApplicationLifetime`:
+    - to specyficzny "tryb pracy" budynku.
+    - Inaczej zarządza się:
+        - wieżowcem stacjonarnym (Desktop),
+        - a inaczej namiotem eventowym (Mobile/Browser).
+- `IClassicDesktopStyleApplicationLifetime`:
+    - To funkcja portiera.
+    - Tylko w klasycznym budynku (Desktop) mamy portiera, który dokładnie wie,
+  gdzie są główne drzwi wejściowe.
+
+- `MainWindow` to właśnie te Główne Drzwi.
+- funkcja `GetMainWindow` to prośba:
+    - "Hej systemie, jeśli działasz jako budynek stacjonarny i masz portiera,
+    - zapytaj go, gdzie są główne drzwi i wskaż mi je".
+    - Jeśli budynek byłby namiotem (aplikacją mobilną), portiera by nie było,
+    - a funkcja bezpiecznie zwróciłaby `null`.
+
+
+:::
 
 
 ## Piszemy nowe okno do aktualizacji danych
@@ -211,19 +258,19 @@ będziemy pisać
     </StackPanel>
 ```
 - będziemy musieli dodać `EditCharacterViewModel`
-- `x:DataType="vm:EditCharacterViewModel`:
-  - To działa tylko w czasie kompilacji i pisania XAML, i jest ogromnym udogodnieniem, które:
-  - daje pełne *IntelliSense* (podpowiedzi do `Name`, `Role`, `Description`),
-  - wykrywa błędy bindingów na etapie kompilacji (`compiled bindings`),
-  - przyspiesza renderowanie UI (kompilator generuje IL(*Intermediate Language*) dla bindingów):
-  - .NET działa tak:
-  - Kompilujesz C# ->  powstaje IL
-  - Dopiero podczas uruchamiania (runtime / JIT) IL jest tłumaczone na kod maszynowy procesora,
-  - pozwala Riderowi/VS zrozumieć, jaki typ jest `DataContext`,
-  - ale NIE zmienia sposobu działania programu.
+- `x:DataType="vm:EditCharacterViewModel` to działa tylko w czasie kompilacji i pisania XAML, i jest ogromnym udogodnieniem, które:
+    - tę właściwość dodajemy do `<Window ...` w `EditWindow.axaml`
+    - daje pełne *IntelliSense* (podpowiedzi do `Name`, `Role`, `Description`),
+    - wykrywa błędy bindingów na etapie kompilacji (`compiled bindings`),
+    - przyspiesza renderowanie UI (kompilator generuje IL(*Intermediate Language*) dla bindingów):
+    - .NET działa tak:
+    - Kompilujesz C# ->  powstaje IL
+    - Dopiero podczas uruchamiania (runtime / JIT) IL jest tłumaczone na kod maszynowy procesora,
+    - pozwala Riderowi/VS zrozumieć, jaki typ jest `DataContext`,
+    - ale NIE zmienia sposobu działania programu.
 
 
-#### Definiujemy `EditCharacterViewModel`
+### Definiujemy `EditCharacterViewModel`
 1. Aby uprościć pracę, możemy nasz model przekształcić, wprowadzając właściwości reaktywne
 ```cs
 public class Character : ReactiveObject
@@ -233,7 +280,20 @@ public class Character : ReactiveObject
     [Reactive] public string Description { get; set; } = string.Empty;
 }
 ```
+:::tip Właściwości reaktywne w modelu?
+Jeśli Twoim Modelem jest prosta struktura danych,
+- tworzenie identycznego ViewModelu tylko po to, by kopiować dane (tzw. *boilerplate*),
+- wprowadza zbędną złożoność.
 
+
+Używanie ReactiveObject w modelu jest dopuszczalne:
+    - dopóki nie dodajesz tam logiki biznesowej, która powinna być w ViewModelu — np:
+        - walidacja,
+        - wywołania API
+        - ...
+
+
+:::
 
 2. `EditCharacterViewModel`
 ```cs
@@ -313,8 +373,11 @@ jeśli `ApplicationLifetime` nie jest typem klasycznej aplikacji desktopowej, to
   - jeśli coś znaleziono, wywołaj `Close()`,
   - jeśli nie, to nic nie rób (`?.` chroni przed `NullReferenceException`)
 
+PAMIĘTAJ O BRAKUJĄCYCH IMPORTACH W RÓŻNYCH PLIKACH
 
-Nasz kod możemy poprawić wprowadzając pojęcie *serwisu*.
+
+---
+## Nasz kod możemy poprawić wprowadzając pojęcie *serwisu*.
 
 
 

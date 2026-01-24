@@ -47,40 +47,454 @@ Została metoda DELETE.
         SaveCommand = ReactiveCommand.Create(SaveToJson);
         EditCommand = ReactiveCommand.Create<Character>(OpenEditWindowAsync);
 
-        DeleteCommand = ReactiveCommand.Create<Character>(DeleteCharacter);
+        DeleteCommand =  ReactiveCommand.CreateFromTask<Character>(DeleteCharacterAsync);
 
     }
 
-    private void DeleteCharacter(Character? character)
+     private async Task DeleteCharacterAsync(Character? character)
     {
-        if (character == null) return;
-
-        Characters.Remove(character);
-
-        // Jeżeli chcemy, żeby kasowanie łączyło się z zapisywaniem
-       // SaveToJson();
+       // na razie zostawmy pustą
     }
 ```
 
-## Tworzymy `IDialogService`
-Zanim zapiszemy zmiany w pliku `.json`, zapytamy użytkownika,
-czy na pewno chce te zmiany zapisać.
+## Dodawanie okna potwierdzenia (Dialog Service)
+Zanim pozwolimy użytkownikowi na usunięcie danych
+(szczególnie jeśli miałyby zniknąć z bazy **Supabase**),
+musimy upewnić się, że to nie była pomyłka.
 
-Do folderu `Services` dodajemy pliki
-- `IDialogService.cs`
-- `DialogService.cs` (implemenacja interfejsu)
+Do tego celu użyjemy wzorca **Service**.
 
+### Definicja techniczna
+- Wyświetlanie okien dialogowych typu "Yes/No" jest operacją **asynchroniczną**.
+- ViewModel:
+    - wysyła zapytanie do serwisu i
+    - "zawiesza" swoje działanie (`await`), czekając na wynik typu `bool`.
+    - Dzięki temu logika usuwania wykona się tylko wtedy, gdy serwis zwróci `true`.
+
+:::tip Analogia: Recepcjonista w Hotelu
+
+Wyobraź sobie, że Wątek UI to **Recepcjonista**,
+a Okno Dialogowe to **Gość, który musi wypełnić ankietę**.
+
+
+1.  **Podejście Synchroniczne (niepoprawne):**
+Recepcjonista daje Gościowi ankietę i... **kamienieje**. Przestaje mrugać, oddychać i ruszać się.
+    * Gość pyta: "Czy ma Pan długopis?" (wymaga interakcji UI).
+    * Recepcjonista nie odpowiada, bo jest "zablokowany" czekaniem na wypełnioną ankietę.
+    * **Rezultat:** Hotel przestaje działać.
+Aplikacja wygląda jakby się zawiesiła ("Brak odpowiedzi").
+
+2.  **Podejście Asynchroniczne (`await`):**
+Recepcjonista daje Gościowi ankietę i mówi:
+    * "Proszę wypełnić, a ja w tym czasie obsłużę telefon"*.
+    * Recepcjonista wraca do życia (Wątek UI rysuje nowe okno).
+    * Gdy Gość kończy (klika "Tak"), Recepcjonista wraca do niego i bierze wynik.
+    * **Rezultat:** Aplikacja jest płynna, kursor się rusza, przyciski reagują na najechanie (hover).
+
+:::
+
+
+### Analogia: Strażnik przycisku "Destrukcja"
+Wyobraź sobie, że Twój przycisk usuwania to wielki czerwony guzik w fabryce.
+* **Bez serwisu:** Każdy, kto przechodzi i przypadkowo go dotknie, niszczy produkt.
+* **Z serwisem dialogowym:** Przycisk jest zamknięty w szklanej gablocie.
+Gdy go naciśniesz, podchodzi **Strażnik (Serwis)** i pyta: *"Czy na pewno chcesz to zniszczyć?"*.
+Dopiero gdy skiniesz głową (klikniesz Tak), strażnik przekręca kluczyk i pozwala na operację.
+
+### Tworzenie okna potwierdzenia `ConfirmationWindow`
+#### `View` okna
+Do folderu `View` dodajemy nowe okno Avalonii i nazywamy je `ConfirmationWindow`.
+
+`ConfirmationWindowaxaml`
+```xml
+<Window ...
+    x:DataType="vm:ConfirmationWindowViewModel"
+    Title="Potwierdzenie" Width="300" Height="150"
+    WindowStartupLocation="CenterOwner"
+    CanResize="False"
+>
+    <StackPanel Margin="20" Spacing="20">
+        <TextBlock Text="{Binding Message}"
+                   TextWrapping="Wrap" HorizontalAlignment="Center"/>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10">
+            <Button Content="Tak" Command="{Binding ConfirmCommand}"
+                    Width="80" Classes="primary"/>
+            <Button Content="Nie" Command="{Binding CancelCommand}"
+                    Width="80"/>
+        </StackPanel>
+    </StackPanel>
+</Window>
+
+```
+#### `ViewModel` okna
+W folderz `ViewModels` dodajemy nowy plik `ConfirmationWindowViewModel,cs`:
+```cs
+public class ConfirmationWindowViewModel : ViewModelBase
+{
+    public string Message { get; }
+
+    public ReactiveCommand<Unit, bool> ConfirmCommand { get; }
+    public ReactiveCommand<Unit, bool> CancelCommand { get; }
+
+    public ConfirmationWindowViewModel(string message)
+    {
+        Message = message;
+
+        ConfirmCommand = ReactiveCommand.Create(() => true);
+        CancelCommand = ReactiveCommand.Create(() => false);
+    }
+}
+
+```
+:::danger Pamiętaj
+Pamiętaj o odpowiednich importach!
+
+:::
+
+
+### Definicja serwisów
 `IDialogService.cs`
 ```cs
+public interface IDialogService
+{
+    // obiecujemy w przyszłości zwrócić wartość boolowską
+    Task<bool>  ShowConfirmDialogAsync(string message);
+}
 
 ```
-
 
 `DialogService.cs`
 ```cs
 
+public class DialogService : IDialogService
+{
+    public async Task<bool> ShowConfirmDialogAsync(string message)
+    {
+        var viewModel = new ConfirmationWindowViewModel(message);
+        var window = new ConfirmationWindow
+        {
+            DataContext = viewModel
+        };
+
+        // pobieramy główne okna przez funkcję rozszerzającą
+        var mainWindow = Application.Current?.GetMainWindow();
+
+        var result = await window.ShowDialog<bool>(mainWindow!);
+
+        return result;
+    }
+}
 
 ```
+
+:::tip Task vs. Async: Kontrakt a Wykonanie
+
+Często mylimy typ `Task` ze słowem kluczowym `async`.
+Musimy rozróżnić **co zwracamy** od tego, **w jaki sposób to tworzymy**.
+
+### Definicja techniczna
+
+1.  **W Interfejsie (`Task<bool>`):**
+    - Definiujemy **Kontrakt**.
+    - Mówimy: "Ktokolwiek zaimplementuje tę metodę, musi zwrócić obiekt typu `Task`,
+      który kiedyś w przyszłości zamieni się w `bool`".
+    - Interfejs nie pozwala na użycie słowa `async`,
+    - ponieważ `async` to szczegół techniczny wnętrza metody (implementacji).
+2.  **W Klasie (`async Task<bool>`):**
+    - Definiujemy **Implementację**.
+    - Słowo `async` to instrukcja dla kompilatora:
+        - "Pozwól mi używać w środku słowa `await` i
+        - sam automatycznie zapakuj wynik w `Taska`".
+
+
+
+### Analogia: Menu w restauracji a praca kucharza
+
+* **Interfejs (Menu):** W karcie dań jest napisane: **"Zupa Dnia (Czas oczekiwania: 10 min)"**.
+  * To jest Twój `Task`. Klient wie, że dostanie zupę, ale musi poczekać.
+  * W menu nie jest napisane, czy kucharz kroi warzywa ręcznie, czy używa robota, ani czy robi dwie rzeczy naraz. To klienta nie obchodzi.
+* **Klasa (Kucharz):** Kucharz mówi: **"Będę gotował w trybie asynchronicznym (`async`)"**.
+  * Dzięki temu, gdy wstawi wodę na gaz (`await`), może w międzyczasie kroić marchewkę.
+  * Gdyby nie użył trybu `async`, musiałby stać i patrzeć na garnek, aż woda się zagotuje, blokując całą kuchnię.
+
+
+:::
+
+
+### Rejestracja serwisu w aplikacji
+`App.axaml.cs`
+```cs
+
+public partial class App : Application
+{
+    public static IWindowService? WindowService { get; private set; }
+
+    public override void Initialize()
+    {
+        AvaloniaXamlLoader.Load(this);
+    }
+
+    public override void OnFrameworkInitializationCompleted()
+    {
+        WindowService = new WindowService();
+
+        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        {
+            // 1. Najpierw tworzymy nasz serwis
+            IDialogService myDialogService = new DialogService();
+
+            // 2. Potem tworzymy ViewModel i "wstrzykujemy" mu narzędzia
+            // ViewModel nie musi szukać tego serwisu w globalnych zmiennych
+            var mainViewModel = new MainWindowViewModel(myDialogService);
+
+            // 3. Na końcu tworzymy okno i dajemy mu ViewModel
+            desktop.MainWindow = new MainWindow
+            {
+                DataContext = mainViewModel
+            };
+        }
+
+        base.OnFrameworkInitializationCompleted();
+    }
+
+//...
+```
+:::note Dwa podejścia: "Na sztywno" vs "Elastycznie"
+- wcześniej stworzyliśmy instancję serwisu w `App.axaml.cs` (`WindowService = new WindowService();`),
+- jednak nie przekazywaliśmy jej do ViewModelu.
+
+
+## Jak to działało?
+### Podejście 1. Globalny Dostęp
+     - zdefiniowaliśmy statyczną właściwość `WindowService` w klasie `App`,
+     - była to właściwość publiczna, więc każdy miał do niej dostęp.
+
+**Przykład**
+```csharp
+// App.axaml.cs
+public static WindowService MyService { get; set; } // Dostępne dla każdego!
+
+public override void OnFrameworkInitializationCompleted()
+{
+    MyService = new WindowService(); // Tworzymy raz
+    // ...
+}
+
+// MainWindowViewModel.cs
+public void RobCos()
+{
+    // ViewModel sięga "ręką" bezpośrednio do globalnej zmiennej
+    App.MyService.CloseWindow();
+}
+```
+
+
+### Podejście 2. Wstrzykiwanie Zależności
+- ViewModel nie wie o istnieniu klasy App.
+- On tylko mówi w konstruktorze:
+    - "Dajcie mi cokolwiek, co potrafi zamykać okna (`IDialogService`)".
+- Dzięki takiemu podejściu nasz ViewModel jest niezależny:
+    - możemy mu podać:
+        - prawdziwy serwis,
+        - testowy serwis, albo
+        - serwis z innej biblioteki.
+    - To jak ładowarka przenośna – działa w każdym pokoju.
+
+:::
+na przykład:
+```cs
+public override void OnFrameworkInitializationCompleted()
+{
+    // 1. Tworzymy serwis (ładowarkę)
+    IDialogService dialogService = new DialogService();
+
+    // 2. Podajemy go ViewModelowi do ręki
+    // ViewModel nie musi szukać go w globalnych zmiennych
+    var viewModel = new MainWindowViewModel(dialogService);
+
+    if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+    {
+        desktop.MainWindow = new MainWindow
+        {
+            DataContext = viewModel
+        };
+    }
+    // ...
+}
+```
+
+
+## Zmiana w metodzie `DeleteCharacter`
+Wracamy do pliku `MainWindowViewModel`, w którym mamy zdefiniowaną metodę usuwającą
+element z listy:
+- dopiszemy nową właściwość ` private readonly IDialogService _dialogService; `
+- do konstruktora `MainWindowViewModel` dopiszemy parametr `IDialogService dialogService`
+- wartość `DeleteCommand` jest tworzona przez `CreateFromTask`, czyli jako metoda asynchroniczna
+- dopiszemy też ciało metody kasującej `DeleteCharacterAsync`
+
+```cs
+// ...
+    [Reactive] public string NewDescription { get; set; } = string.Empty;
+    public Character? SelectedCharacter { get; set; }
+
+    // Nowa właściwość
+    private readonly IDialogService _dialogService;
+
+    public MainWindowViewModel(IDialogService dialogService)
+    {
+        // przypisanie wartości do nowej właściwości
+        _dialogService = dialogService;
+
+        LoadCharacters();
+        AddCommand = ReactiveCommand.Create(AddCharacters);
+        SaveCommand = ReactiveCommand.Create(SaveToJson);
+
+        EditCommand = ReactiveCommand.CreateFromTask<Character>(OpenEditWindowAsync);
+
+       // zamiana .Create na .CreateFromTaks
+        DeleteCommand = ReactiveCommand.CreateFromTask<Character>(DeleteCharacterAsync);
+
+    }
+
+
+// zmiany w metodzie kasującej
+    private async Task DeleteCharacterAsync(Character? character)
+    {
+        if (character == null) return;
+
+        var isConfirmed =
+            await _dialogService.ShowConfirmDialogAsync($"Do you want to delete {character.Name}?");
+
+        if (isConfirmed)
+        {
+            Characters.Remove(character);
+
+            // Jeżeli chcemy, żeby kasowanie łączyło się z zapisywaniem
+            SaveToJson();
+        }
+    }
+```
+
+## Aktualny stan programu
+- okienko `ConfirmationWindo` pokazuje się,
+- żeden z jego przycisków nie wywołuje żadnej akcji
+- okienko można zamknąć wbudowanym w okno przyciskiem zamykania okna
+
+
+### Problem
+:::warning Problem
+Sytuacja wygląda tak:
+1.  Klikasz "Tak".
+2.  ViewModel wykonuje komendę i zwraca `true`.
+3.  ...i tu następuje cisza. Okno nie wie, co zrobić z tym `true`, więc pozostaje otwarte.
+
+Musimy stworzyć "most", który przekaże wynik z ViewModelu do metody `Close()` w oknie.
+
+---
+Sprawdzenie - `ConfirmationWindowViewModel`
+
+
+Na chwilę zmieńmy definicje metod, aby zobaczyć, czy faktycznie tak jest:
+```cs
+public ConfirmationWindowViewModel(string message)
+    {
+        Message = message;
+
+        ConfirmCommand = ReactiveCommand.Create(() =>
+        {
+            Console.WriteLine("true");
+            return true;
+        });
+        CancelCommand = ReactiveCommand.Create(() =>
+        {
+            Console.WriteLine("false");
+            return false;
+        });
+    }
+```
+
+Po tekście przywróćmy poprzednią wersję
+
+:::
+
+
+### Rozwiązanie
+
+#### Cykl życia okna
+
+:::info Cykl życia okna w Avalonia UI
+
+Okno nie pojawia się "znikąd".
+Przechodzi przez serię etapów, od narodzin w pamięci komputera, aż po całkowite zamknięcie. Każdy z tych etapów daje Ci inne możliwości.
+
+### 1. Konstruktor i InitializeComponent()
+To etap **"embrionalny"**. Tu okno rezerwuje miejsce w pamięci.
+* **Co się dzieje:** Avalonia czyta plik `.axaml` i tworzy obiekty przycisków, list i paneli.
+* **Kiedy używać:** Do podstawowej konfiguracji, która nie wymaga interakcji z systemem operacyjnym.
+
+### 2. OnInitialized
+Etap **"układania wnętrza"**. Wszystkie kontrolki zdefiniowane w XAML już istnieją.
+* **Co się dzieje:** Zakończyła się inicjalizacja kontrolek, ale okno nie jest jeszcze widoczne na ekranie.
+* **Kiedy używać:** Jeśli musisz zmodyfikować jakąś kontrolkę przed jej pokazaniem.
+
+### 3. OnOpened
+Etap **"premiery"**. Okno jest w pełni widoczne i gotowe do pracy.
+* **Co się dzieje:** Okno otrzymało swój "uchwyt" systemowy (Handle), zostało narysowane i użytkownik może w nie klikać.
+* **Kiedy używać:** To najlepszy moment na uruchomienie asynchronicznych zadań (np. `LoadCharacters()` z bazy danych) lub ustawienie kursora w konkretnym polu.
+
+### 4. OnClosing
+Etap **"pożegnania"**. Użytkownik kliknął "X", ale okno jeszcze stoi.
+* **Co się dzieje:** Masz ostatnią szansę, aby zatrzymać proces zamykania.
+* **Kiedy używać:** Do wyświetlania zapytań typu "Masz niezapisane zmiany, czy na pewno chcesz wyjść?". Możesz tu ustawić `e.Cancel = true`, aby przerwać zamykanie.
+
+### 5. OnClosed
+Etap **"sprzątania"**. Okno zniknęło z ekranu.
+* **Co się dzieje:** Okno jest niszczone. To moment na zwolnienie zasobów.
+* **Kiedy używać:** Do zatrzymania timerów, przerwania trwających połączeń z siecią lub zapisania pozycji okna, aby przy następnym uruchomieniu otworzyło się w tym samym miejscu.
+
+
+:::
+
+
+:::tip Analogia: Życie spektaklu teatralnego
+
+1. **Konstruktor:** To budowa scenografii i szycie kostiumów. Wszystko jest w paczkach na zapleczu.
+2. **OnInitialized:** Scena jest ustawiona, aktorzy stoją w kulisach. Czekają na znak, ale kurtyna jest jeszcze opuszczona.
+3. **OnOpened:** **Kurtyna w górę!** Widzowie widzą aktorów, zaczyna się akcja. To wtedy dzieje się najwięcej interakcji.
+4. **OnClosing:** Spektakl się kończy, aktorzy kłaniają się. Jeśli publiczność głośno krzyknie "Bis!" (Twoje `e.Cancel = true`), spektakl trwa dalej.
+5. **OnClosed:** Widzowie wyszli, światła zgasły, teatr jest pusty. Ekipa sprzątająca zwija scenografię.
+
+:::
+
+#### Zdefiniujemy odpowiedź na `true`/`false` w `code-behind`,
+czyli w pliku `ConfirmationWindow.axaml.cs` nadpiszemy metodę:
+```cs
+ protected override void OnOpened(EventArgs e)
+    {
+        base.OnOpened(e);
+
+        // czy datacontex jest poprawnym viewmodelem
+        if (DataContext is ConfirmationWindowViewModel vm)
+        {
+            // subscrybujemy wynik komendy ConfirmCommand
+            // gdy przycisk "Tak" zostanie kliknięty, komenda zwróci "true"
+            // funkcja subscrive przejmie to "True" i przekażde do metody Close()
+            vm.ConfirmCommand.Subscribe(result =>
+            {
+                this.Close(result);
+            });
+
+            // odpowiednio dla Cancel
+            vm.CancelCommand.Subscribe(result =>
+            {
+                this.Close(result);
+            });
+        }
+    }
+
+```
+Teraz wszystko działa.
+
 
 
 
