@@ -1,0 +1,164 @@
+---
+title: Testowanie aplikacji - teoria
+---
+
+# Teoria
+## Co to jest test jednostkowy
+Test jednostkowy (*unit test*) to automatyczny test,
+który sprawdza, czy najmniejsza logiczna część programu działa poprawnie —
+najczęściej jest to pojedyncza **funkcja** lub **metoda**.
+
+:::tip Klasyczna piramida (od dołu – najwięcej, do góry – najmniej)
+- **Testy jednostkowe** (*Unit*) ✅ najwięcej (70%-80%):
+    - testują małe fragmenty kodu (funkcja/metoda)
+    - są najszybsze i najłatwiejsze w utrzymaniu
+- **Testy integracyjne** (*Integration*)  mniej (15%-20%):
+    - sprawdzają współpracę elementów (np. serwis + baza, API + repozytorium)
+    - wolniejsze, ale łapią realne problemy „na styku”
+- **Testy E2E** / **systemowe** (*End-to-End*) najmniej (5%-10%):
+    - testują cały przepływ jak użytkownik (UI→API→DB)
+    - najwolniejsze, najbardziej kruche (łatwo je „zepsuć” zmianą UI)
+:::
+
+## Co dokładnie sprawdza?
+czy dla konkretnego wejścia dostajesz oczekiwany wynik,
+czy kod poprawnie obsługuje przypadki brzegowe (np. 0, puste dane, wartości ujemne),
+czy w razie błędnych danych zwraca błąd/wyjątek zgodnie z założeniami.
+
+## Najważniejsze cechy testu jednostkowego
+- Szybki – uruchamia się w ułamku sekundy.
+- Izolowany – testuje jedną „jednostkę” bez zależności od bazy danych, sieci, plików itp. (te rzeczy zwykle się mockuje / podstawia atrapami).
+- Powtarzalny – zawsze daje ten sam wynik w tych samych warunkach.
+- Automatyczny – uruchamiasz go jednym poleceniem lub w CI (to "automatyczny sprawdzacz projektu" uruchamiany po zmianach w repozytorium).
+
+## Po co się je pisze?
+- szybko wykrywają regresje (coś działało, a po zmianach przestało),
+- ułatwiają refaktoryzację (możesz bezpieczniej zmieniać kod),
+- dokumentują zachowanie funkcji (pokazują przykłady użycia i oczekiwane wyniki).
+
+
+## Jak nazywać projekt testowy?
+```
+Nazwa projektu testowego = nazwa projektu + .Tests
+```
+
+- Twój projekt to `MyApp`
+- Projekt testowy to `MyApp.Tests`
+
+
+## Nazewnictwo klas testowych
+Też obowiązuje pewna konwencja:
+- Testujesz klasę `Calculator`, klasa testowa powinna być `CalculatorTests`
+- Testujesz serwis `UserService`, klasa testowa to `UserServiceTests`
+
+## Nazewnictwo testów
+Ogólny styl:
+```
+MethodName_Scenario_ExpectedResult
+```
+
+
+Przykład
+```csharp
+[Fact]
+public void IsEven_ForOddNumber_ReturnsFalse()
+{
+    Assert.False(Calculator.IsEven(7));
+}
+```
+
+
+## Podstawowe pojęcia
+
+### Atrybuty
+- atrybut to specjalna adnotacja w nawiasach kwadratowych,
+- umieszczamy ją nad metodą lub klasą, aby nadać jej dodatkową funkcję lub metadane.
+
+xUnit używa atrybutów, aby powiedzieć test runnerowi:
+- które metody są testami
+- jak mają być uruchamiane
+
+#### `[Fact]`
+Oznacza pojedynczy test.
+– nie przyjmuje parametrów
+– uruchamiany jako samodzielny test
+```csharp
+[Fact]
+public void Test_Addition()
+{
+    Assert.Equal(5, 2 + 3);
+}
+
+```
+#### `[Theory]`
+Oznacza test z parametrami.
+```csharp
+[Theory]
+[InlineData(2, 3, 5)]
+[InlineData(5, 7, 12)]
+public void Test_Add(int a, int b, int expected)
+{
+    Assert.Equal(expected, a + b);
+}
+
+```
+#### `[InlineData]`
+
+Przekazuje parametry do testu `[Theory]`.
+
+
+### Asercje
+xUnit mam statyczną klasę `Assert`
+
+Jej podstawowe metody:
+- `Assert.Equal(expected, actual)` przykład:
+  - `Assert.Equal(10, Calculator.Add(7, 3));`
+
+- `Assert.True / Assert.False` - przykłady:
+  - `Assert.True(x > 0);`
+  - `Assert.False(x < 0);`
+
+- `Assert.NotNull / Assert.Null` - przykłady:
+  - `Assert.NotNull(result);`
+  - `Assert.Null(result);`
+- `Assert.Throws<T>` - przykłady:
+  - `Assert.Throws<ArgumentException>(() => Calculator.Add(1, 2, 3));`
+  - `Assert.Throws<DivideByZeroException>(() => Divide(10, 0));`
+
+- `Assert.InRange`/`Assert.NotInRange` - ogólnie `Assert.InRange(actual, low, high);`:
+  - `actual` wartość, która testujemy,
+  - `low` dolna granica (włącznie)
+  - `high` górna granicza (włącznie)
+  - przykład:
+  - `Assert.InRange(7, 1, 10);`
+  - Sprawdza, czy `7` jest pomiędzy `1` a `10`
+
+
+
+## Struktura testu (*AAA pattern*)
+- `A` - Arrange (przygotowanie)
+- `A` - Act (akcja)
+- `A` - Assert (sprawdzenie)
+
+```csharp
+[Fact]
+public void Test_Add()
+{
+    // Arrange
+    int a= 2;
+    int b = 3;
+     var calculator = new Calculator();
+
+    // Act
+    var result = calculator.Add(2, 3);
+
+    // Assert
+    Assert.Equal(5, result);
+}
+```
+
+
+
+
+
+

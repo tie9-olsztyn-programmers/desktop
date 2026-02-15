@@ -1,0 +1,425 @@
+---
+title: Testowanie aplikacji - praktykw
+---
+
+
+
+## Prosty formularz
+Zróbmy nowy projekt z prostym formularzem:
+
+`MainWindow.axaml`
+```xml
+ <StackPanel Margin="20" Spacing="10">
+        <Label Content="Imię:" Target="UserNameInput"/>
+        <TextBox Name="UserNameInput" Watermark="Wpisz imię..."/>
+
+        <TextBlock Name="StatusText" Text="Oczekiwanie..." Foreground="Gray"/>
+
+        <CheckBox Name="TermsCheckBox" Content="Akceptuję regulamin"/>
+
+        <StackPanel Orientation="Horizontal" Spacing="10">
+            <RadioButton Name="OptionARadio" Content="Opcja A" GroupName="Options"/>
+            <RadioButton Name="OptionBRadio" Content="Opcja B" GroupName="Options"/>
+        </StackPanel>
+
+        <ComboBox Name="CountryCombo" PlaceholderText="Wybierz kraj">
+            <ComboBoxItem>Polska</ComboBoxItem>
+            <ComboBoxItem>Niemcy</ComboBoxItem>
+            <ComboBoxItem>USA</ComboBoxItem>
+        </ComboBox>
+
+        <Button Name="SubmitButton" Content="Wyślij" Click="SubmitButton_Click"/>
+    </StackPanel>
+
+```
+
+Do `MainWindow.cs` dodajemy metodę obsługującą kliknięcie:
+```csharp
+ public void SubmitButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (TermsCheckBox.IsChecked == true && !string.IsNullOrWhiteSpace(UserNameInput.Text))
+        {
+            var country = (CountryCombo.SelectedItem as ComboBoxItem)?.Content?.ToString();
+            StatusText.Text = $"Wysłano: {UserNameInput.Text} ({country})";
+        }
+        else
+        {
+            StatusText.Text = "Błąd formularza!";
+        }
+    }
+
+```
+---
+## Testy jednostkowe do aplikacji formularz
+
+### Konfiguracja środowiska
+Klikamy na solucję i dodajemy do niej nowy projekt
+- klikamy prawym przyciskiem myszy `Add` > `New Project` > `Unit Test`
+- nazywamy go `<NazwaNaszejAplikacji>.Tests`
+- ważne !!!! - pod *Language* mamy *Type* i wybieramy *xUnit* !!!!!
+
+:::tip Co zrobić w  Rider, gdy nie ma *xUnit*
+- przechodzimy menadżerem plików do folderu, w którym jest solucja
+```
+# 1. Tworzy projekt xUnit (używa wbudowanego identyfikatora)
+dotnet new xunit -n <MojaApka>.Tests
+
+# 2. Dodaje go do Twojego rozwiązania (Solution)
+# Inaczej Rider nie będzie "widział" projektu testowego
+dotnet sln add <MojaApka>.Tests/<MojaApka>.Tests.csproj
+
+# 3. Dodaje referencję do Twojego głównego projektu (podaj właściwą ścieżkę)
+dotnet add <MojaApka>.Tests/<MojaApka>.Tests.csproj reference MojaApka/MojaApka.csproj
+```
+
+:::important Dlaczego dodajemy referencję?
+1. **Dostęp do klas i typów**:
+ - Pozwala projektowi testowemu "widzieć" Twoje okna (MainWindow), modele i logikę napisaną w głównym projekcie.
+2. **Cykl kompilacji**:
+ - Dzięki referencji .NET wie, że zanim uruchomi testy, musi najpierw skompilować główną aplikację, aby testy miały najnowszą wersję kodu do sprawdzenia.
+3. **IntelliSense**:
+ - Rider zaczyna podpowiadać nazwy kontrolek i metod z Twojej aplikacji podczas pisania testów.
+
+
+:::
+
+### Avalonia z *xUnit*
+#### Dodatkowa biblioteka
+Nauczymy *xUnit* obsługi kontrolek w Avalonii.  Wewnątrz folderu projektu testowego :
+
+`dotnet add <MojaApka>.Tests/<MojaApka>.Tests.csproj package Avalonia.Headless.XUnit`
+
+#### Konfiguracja biblioteki *heakless.XUnit*
+Nauczymy testy "rozmawiać" z kontrolkami Avalonii:
+:::tip Plik `TestApp.cs`
+- to serce konfiguracji testów UI.
+- jest jak instrukcja obsługi laboratorium, którą przekazujesz systemowi testowemu, zanim w ogóle wejdzie do budynku.
+
+:::
+
+- przechodzimy do pliku `TestApp.cs`
+- wypełniamy go kodem:
+```csharp
+using Avalonia;             // to "inżynierowie" od konstrukcji
+using Avalonia.Headless;    // to "inżynierowie" od symulacji
+using <NazwaWaszegoProjektuDoTestowania>;   // to dostęp do konkretnej "maszyny", która będzie testowana
+
+[assembly: AvaloniaTestApplication(typeof(<TuTwojaNaza).Tests.TestApp))]
+
+
+namespace .Tests;
+
+public class TestApp
+{
+    // Ta metoda jest szukana przez Avalonia.Headless.
+    // Musi się nazywać dokładnie tak: BuildAvaloniaApp
+    public static AppBuilder BuildAvaloniaApp() => AppBuilder.Configure<App>()
+        .UseHeadless(new AvaloniaHeadlessPlatformOptions());
+}
+```
+
+:::tip `[assemblbly...]`
+- większość atrybutów (np, `[Fact]`) związana jest z konkretną klasą, metodą, właściwością
+- ten *Assambly Attribute* dotyczy całego skompilowanego pliku binarnego
+- jest po to, aby *xUnit* wiedział, która klasa (u nas to `TestApp`) zawiera metodę `BuildAvaloniaApp`
+
+**Metaforycznie**
+Wyobraź sobie, że Twój projekt testowy to **wielka fabryka**,
+w której każda metoda testowa to inny robot sprawdzający konkretny produkt (np. czy przycisk działa).
+
+**Problem**:
+Zanim roboty zaczną pracę, muszą wiedzieć, jakie panują zasady:
+- jakie jest napięcie w gniazdkach,
+- gdzie jest prąd,
+- jaka jest grawitacja.
+
+Jeśli robot spróbuje sprawdzić przycisk w całkowitej próżni, po prostu się zawiesi.
+
+`[assembly: ...]` to tablica informacyjna przy bramie wjazdowej do fabryki.
+- Nie jest przypięta do konkretnego robota (metody), ani do konkretnej linii produkcyjnej (klasy).
+- Wisi na samej bramie. Każdy, kto wchodzi do fabryki (xUnit), najpierw czyta tę tablicę.
+
+**Co mówi ta tablica?**
+> „Uwaga! Zanim ktokolwiek zacznie tu cokolwiek testować,
+> musi udać się do biura TestApp.
+> Tam znajdują się klucze do włączenia zasilania (silnika Avalonii).
+> Tylko po wizycie w tym biurze nasze laboratorium będzie gotowe do pracy”.
+
+
+:::
+
+
+:::note `BuildAvaloniaApp()` to jak symulator lotu
+Ta metoda jest jak tworzenie wirtualnego świata
+- `AppBuilder.Configure<App>()` Mówimy:
+  - „Zbuduj moją aplikację dokładnie tak, jak wygląda ona w rzeczywistości
+(używając moich stylów, kolorów i czcionek zdefiniowanych w App.axaml)”.
+
+- `UseHeadless(...)`
+  - To kluczowy przełącznik.
+  - W normalnym życiu aplikacja potrzebuje
+  - monitora,
+  - karty graficznej,
+  - myszki.
+  - W testach włączamy tryb "Headless" (bezgłowy):
+  - przyciski "istnieją", ale nikt ich nie renderuje na ekranie,
+  - kliknięcia "zachodzą", ale nikt nie musi ruszać dizyczną myszką,
+  - dzięki temu testy trwają milisekundy, a nie sekundy
+
+:::
+
+---
+
+### Pierwszy plik z testami
+**Ważne konwencje nazewnicze**
+1. Nazwa pliku z testami
+- Plik powinien jasno wskazywać, co jest w środku testowane.
+- Konwencja: `[NazwaOknaLubFunkcjonalności]Tests.cs`
+- Przykład: Jeśli testujesz `MainWindow.axaml`, plik powinien nazywać się `MainWindowTests.cs`.
+
+2. Nazwa klasy z testami
+- Klasa wewnątrz pliku powinna odzwierciedlać nazwę pliku (to złota zasada C#).
+- Przykład: `public class MainWindowTests { ... }`
+
+3. Nazewnictwo metod testowych
+- ogólny schemat: `NazwaMetody_Scenariusz_OczekiwanyWynik`
+- przykład:
+  - `SubmitButton_WhenClickedWithEmptyName_ShowsErrorMessage`
+  - `TermsCheckbox_WhenUnchecked_DisablesSubmitButton`
+
+**Testy stanu początkowego** (*Smoke Tests*)
+```csharp
+    [AvaloniaFact]
+    public void Status_ShouldBeWaiting_OnStartup()
+    {
+        // Arrange - Inicjalizujemy okno
+        var window = new MainWindow();
+
+        // Act - W testach stanu początkowego Act jest często pusty lub połączony z Arrange
+        var status = window.FindControl<TextBlock>("StatusText");
+
+        // Assert - Sprawdzamy czy kontrolka nie jest nullem  i czy tekst się zgadza
+        Assert.NotNull(status);
+        Assert.Equal("Oczekiwanie...", status.Text);
+    }
+
+    [AvaloniaFact]
+    public void SubmitButton_ShouldBeEnabled_ByDefault()
+    {
+        // Arrange
+        var window = new MainWindow();
+        var btn = window.FindControl<Button>("SubmitButton");
+
+        // Assert
+        Assert.NotNull(btn);
+        Assert.True(btn.IsEnabled, "Przycisk powinien być aktywny zaraz po uruchomieniu formularza.");
+    }
+
+```
+
+**Jednostkowe Testy kontrolki** (*Single Control Tests*)
+:::note Single Control Tests (Testy pojedynczych kontrolek)
+To testy jednostkowe interfejsu użytkownika, które skupiają się na
+izolowanej weryfikacji jednej konkretnej kontrolki (np. TextBox, CheckBox czy Slider).
+
+
+**Metafora**
+Po co je robić?
+Zanim sprawdzisz, czy samochód jeździ, sprawdzasz każdą część z osobna:
+- czy żarówka w reflektorze świeci,
+- czy kierownica się obraca,
+- czy pedał hamulca stawia opór.
+*Single Control Tests* to taka inspekcja poszczególnych podzespołów przed wyjechaniem na drogę.
+:::
+
+```csharp
+  [AvaloniaFact]
+    public void RadioButtons_ShouldBeMutuallyExclusive()
+    {
+        // Arrange
+        var window = new MainWindow();
+        var radioA = window.FindControl<RadioButton>("OptionARadio");
+        var radioB = window.FindControl<RadioButton>("OptionBRadio");
+
+        // Dobra praktyka: Sprawdź czy kontrolki istnieją przed ich użyciem
+        Assert.NotNull(radioA);
+        Assert.NotNull(radioB);
+
+        // Stan początkowy: upewniamy się, że A jest zaznaczone
+        radioA.IsChecked = true;
+
+        // Act
+        radioB.IsChecked = true; // Zaznaczamy B, co powinno "odklikać" A
+
+        // Assert
+        Assert.False(radioA.IsChecked, "Zaznaczenie opcji B powinno odznaczyć opcję A.");
+        Assert.True(radioB.IsChecked);
+    }
+
+    [AvaloniaFact]
+    public void UserNameInput_ShouldStoreProvidedText()
+    {
+        // Arrange
+        var window = new MainWindow();
+        var nameInput = window.FindControl<TextBox>("UserNameInput");
+        Assert.NotNull(nameInput); // Najpierw sprawdzamy, czy znaleziono kontrolkę
+
+        // Act
+        string testName = "Jan Kowalski";
+        nameInput.Text = testName;
+
+        // Assert
+        Assert.Equal(testName, nameInput.Text);
+    }
+
+```
+
+
+**Testy walidacji negatywnej** (*Negative Validation Tests*)
+:::note Testy walidacji negatywnej
+to testy mające na celu sprawdzenie, czy aplikacja poprawnie reaguje na niepoprawne dane lub niepożądane działania użytkownika. Ich zadaniem jest potwierdzenie,
+że mechanizmy obronne programu (instrukcje if, walidatory, filtry) działają i skutecznie blokują błędne procesy.
+
+Kluczowe założenia:
+- Cel: Udowodnienie, że system nie pozwoli na wykonanie akcji (np. wysłanie formularza), jeśli dane wejściowe nie spełniają określonych reguł biznesowych.
+- Oczekiwany wynik: W tych testach "sukcesem" jest to, że aplikacja wykryła błąd i poinformowała o nim użytkownika (np. zmieniła tekst statusu na "Błąd"), zamiast po prostu "przepuścić" puste dane do bazy danych.
+- Zasada izolacji: W dobrym teście negatywnym psujemy tylko jeden parametr (np. zostawiamy puste imię, ale zaznaczamy zgodę), aby mieć pewność, która konkretnie reguła walidacji zadziałała.
+
+:::
+
+```csharp
+[AvaloniaFact]
+public void Submit_ShouldShowError_WhenTermsNotChecked()
+{
+    // Arrange
+    var window = new MainWindow();
+    var nameInput = window.FindControl<TextBox>("UserNameInput");
+    var terms = window.FindControl<CheckBox>("TermsCheckBox");
+    var button = window.FindControl<Button>("SubmitButton");
+    var status = window.FindControl<TextBlock>("StatusText");
+
+    // Przygotowujemy "prawie dobry" formularz (imię jest, ale zgody brak)
+    nameInput.Text = "Jan";
+    terms.IsChecked = false;
+
+    // Act
+    button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+
+    // Assert
+    Assert.Equal("Błąd formularza!", status.Text);
+}
+
+[AvaloniaFact]
+public void Submit_ShouldShowError_WhenNameIsEmpty()
+{
+    // Arrange
+    var window = new MainWindow();
+    var nameInput = window.FindControl<TextBox>("UserNameInput");
+    var terms = window.FindControl<CheckBox>("TermsCheckBox");
+    var button = window.FindControl<Button>("SubmitButton");
+    var status = window.FindControl<TextBlock>("StatusText");
+
+    // Przygotowujemy "prawie dobry" formularz (zgoda jest, ale imienia brak)
+    nameInput.Text = "";
+    terms.IsChecked = true;
+
+    // Act
+    button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+
+    // Assert
+    Assert.Equal("Błąd formularza!", status.Text);
+}
+```
+
+**Testy ścieżki pozytywnej** (*Happy Path Testing*/*Positive Testing*)
+:::note Czym jest *Happy Path Testing*
+- Testy te sprawdzają sytuację idealną – użytkownik zachowuje się wzorowo,
+wypełnia wszystkie wymagane pola poprawnymi danymi i nie popełnia błędów.
+- Celem jest potwierdzenie, że główna funkcjonalność aplikacji (np. wysłanie danych) po prostu działa.
+
+
+:::
+
+
+**Podstawowy test pozytywny**
+```csharp
+[AvaloniaFact]
+public void Submit_ShouldSucceed_WhenMinimalDataIsProvided()
+{
+    // Arrange
+    var window = new MainWindow();
+    var nameInput = window.FindControl<TextBox>("UserNameInput");
+    var terms = window.FindControl<CheckBox>("TermsCheckBox");
+    var button = window.FindControl<Button>("SubmitButton");
+    var status = window.FindControl<TextBlock>("StatusText");
+
+    // Act - Wypełniamy tylko to, co niezbędne
+    nameInput.Text = "Piotr";
+    terms.IsChecked = true; // Wymagane przez if() w kodzie
+
+    // Klikamy
+    button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+
+    // Assert
+    // Sprawdzamy, czy status NIE zawiera słowa "Błąd"
+    Assert.DoesNotContain("Błąd", status.Text);
+    // Sprawdzamy, czy aplikacja potwierdziła przyjęcie imienia
+    Assert.Contains("Wysłano: Piotr", status.Text);
+}
+```
+
+**Full Happy Path**
+Symulujemy użytkownika, który sumiennie wypełnia każde pole, zmienia opcje i wybiera kraj.
+Sprawdzamy, czy aplikacja poprawnie "skleiła" te wszystkie dane w wynikowy string.
+
+```csharp
+[AvaloniaFact]
+public void Submit_ShouldProcessAllData_WhenFormIsFullyFilled()
+{
+    // Arrange
+    var window = new MainWindow();
+    // Ważne: W testach ComboBoxa warto czasem wywołać Show(),
+    // aby upewnić się, że drzewo wizualne jest w pełni załadowane.
+    window.Show();
+
+    var nameInput = window.FindControl<TextBox>("UserNameInput");
+    var terms = window.FindControl<CheckBox>("TermsCheckBox");
+    var countryCombo = window.FindControl<ComboBox>("CountryCombo");
+    var button = window.FindControl<Button>("SubmitButton");
+    var status = window.FindControl<TextBlock>("StatusText");
+
+    // Act - Symulacja pełnego wypełnienia formularza
+    nameInput.Text = "Anna Nowak";
+    terms.IsChecked = true;
+
+    // Wybór elementu z listy (Indeks 2 to "USA" wg Twojego XAML-a)
+    countryCombo.SelectedIndex = 2;
+
+    // Klikamy przycisk
+    button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+
+    // Assert
+    // Oczekujemy dokładnego formatu, jaki zaprogramowałeś: "Wysłano: {Imię} ({Kraj})"
+    Assert.Equal("Wysłano: Anna Nowak (USA)", status.Text);
+}
+```
+
+:::tip Dlaczego te dwa przykłady są różne?
+- Pierwszy sprawdza logikę biznesową (czy `if` przepuści użytkownika).
+- Drugi sprawdza poprawność danych (czy to, co wybrałem w `ComboBox`ie,
+faktycznie trafiło do kodu C# i zostało poprawnie odczytane).
+
+:::
+
+
+
+
+
+
+
+
+
+
+
+
+

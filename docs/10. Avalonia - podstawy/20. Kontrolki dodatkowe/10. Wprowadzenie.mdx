@@ -1,0 +1,29 @@
+---
+title: Jakie kontrolki poznamy?
+---
+
+
+| Nazwa kontrolki | Opis | Typ w C# (Właściwość) |
+| :--- | :--- | :--- |
+| **Border** | Służy do dekoracji: dodaje obramowanie, tło oraz pozwala zaokrąglać rogi (`CornerRadius`) innych elementów. | `Border` |
+| **NumericUpDown** | Pole liczbowe z przyciskami góra/dół. Gwarantuje, że użytkownik wprowadzi tylko cyfry w określonym przedziale. | `decimal?` (`Value`) |
+| **DatePicker** | Rozwijany kalendarz do wyboru daty. Zapobiega błędom formatu wpisywanego ręcznie (np. zamiana dnia z miesiącem). | `DateTimeOffset?` (`SelectedDate`) |
+| **ProgressBar** | Wizualny pasek postępu. Informuje użytkownika, że aplikacja „żyje” i wykonuje jakieś zadanie (np. ładowanie). | `double` (`Value`) |
+| **Slider** | Suwak do płynnej regulacji wartości (np. głośności). Bardzo intuicyjny dla użytkowników myszek i ekranów dotykowych. | `double` (`Value`) |
+| **Image** | Pozwala na wyświetlanie plików graficznych (PNG, JPG, SVG). Kluczowa do dodawania ikon, logotypów i zdjęć. | `Bitmap` (`Source`) |
+| **ScrollViewer** | „Pudełko” z paskami przewijania. Niezbędne, gdy treść (np. długi formularz) jest większa niż okno aplikacji. | `ScrollViewer` (kontener) |
+| **TabControl** | Pozwala podzielić interfejs na zakładki. Dzięki temu możemy „ukryć” rzadziej używane opcje w osobnych kartach. | `TabControl` (kontener) |
+| **Menu** | Klasyczny pasek narzędzi u góry okna (Plik, Edycja). Pozwala uporządkować funkcje programu w formie list. | `MenuItem` |
+| **ToolTip** | Mała chmurka z tekstem, która pojawia się po najechaniu myszką na element. Idealna do wyjaśniania ikon. | `string` (`ToolTip.Tip`) |
+
+
+
+
+
+
+
+
+
+
+
+
