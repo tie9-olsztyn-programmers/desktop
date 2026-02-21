@@ -54,6 +54,11 @@ public interface IWindowService
 ```
 
 Przenosimy metodę zamykania okna do naszego serwisu:
+:::important UWAGA!
+- fragment poniższego kodu: `(w => w.DataContext == this)?`
+- zamieniamy na `(w => w.DataContext == viewModel)?`
+:::
+
 `WindowService.cs`
 ```cs
 public class WindowService : IWindowService

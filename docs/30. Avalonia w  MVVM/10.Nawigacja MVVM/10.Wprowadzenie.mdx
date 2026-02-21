@@ -1,0 +1,56 @@
+---
+title: Nawigacja w Architekturze ReactiveUI
+---
+
+## 1. Czym jest Nawigacja w ReactiveUI?
+
+**Definicja techniczna:**
+- Nawigacja polega na reaktywnej aktualizacji właściwości w `MainViewModel`,
+która przechowuje aktualnie wyświetlany obiekt klasy `ViewModelBase`.
+- Dzięki metodzie `RaiseAndSetIfChanged`, każda zmiana tej właściwości natychmiast powiadamia
+interfejs użytkownika o konieczności przerysowania zawartości.
+
+:::tip Analogia: Scena Teatralna
+Wyobraź sobie, że Twoja aplikacja to **scena teatralna** (`MainWindow`):
+- Scena ma stałą dekorację ramową (np. menu boczne), ale jej środek zmienia się w zależności od aktu.
+- **Główny ViewModel** to reżyser, który decyduje, który **aktor** (ViewModel konkretnej strony) ma teraz wyjść na
+środek.
+- Widzowie (Użytkownicy) widzą tylko tego aktora, który aktualnie znajduje się w
+świetle reflektorów (`ContentControl`).
+
+
+:::
+---
+
+## 2. Implementacja MainViewModel (ReactiveUI)
+
+```csharp
+using ReactiveUI;
+using System.Reactive;
+
+public class MainWindowViewModel : ViewModelBase
+{
+    private ViewModelBase _currentPage;
+
+    public MainWindowViewModel()
+    {
+        // Ustawiamy stronę startową
+        _currentPage = new HomeViewModel();
+
+        // Polecenie zmiany strony - ReactiveCommand to standard w ReactiveUI
+        NavigateToSettings = ReactiveCommand.Create(() =>
+        {
+            CurrentPage = new SettingsViewModel();
+        });
+    }
+
+    public ViewModelBase CurrentPage
+    {
+        get => _currentPage;
+        set => this.RaiseAndSetIfChanged(ref _currentPage, value);
+    }
+
+    public ReactiveCommand<Unit, Unit> NavigateToSettings { get; }
+}
+
+```
