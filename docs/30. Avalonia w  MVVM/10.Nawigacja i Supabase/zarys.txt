@@ -82,7 +82,24 @@ zbudować UI z kontrolami UserControl i Page Navigation.
 
 
 
+Stworzymy nowoczesną aplikację desktopową do zarządzania czasem i zadaniami
 
+Coś pomiędzy:
+- Forest    - skupienie i motywacia (https://www.forestapp.cc/),
+- Toggl     - mierzenie czasu       (https://toggl.com/),
+- Todoist   - zadania i projektu    (https://www.todoist.com/pl),
+
+ale w wersji na komputer Avalonia MVVM ReactiveUI.
+
+Poznamy m.in.
+- pisanie własnych kontrolek
+- animacje
+- tworzenie własnych okien i ekranow
+- reaktywne komendy
+- praca z SQLite
+- powiadomienia systemow
+- dźwięki
+- ...
 
 
 

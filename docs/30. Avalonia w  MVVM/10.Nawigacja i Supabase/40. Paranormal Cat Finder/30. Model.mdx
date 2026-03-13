@@ -1,0 +1,119 @@
+---
+title: Model aplikacji
+---
+
+
+
+# Model Danych: GhostCat
+
+Klasa modelu to cyfrowy odpowiednik wiersza w Twojej tabeli w bazie danych.
+Musi ona dokładnie odzwierciedlać to, co stworzyłeś w panelu Supabase.
+
+::: Atrybuty w C#
+## Definicja techniczna
+**Atrybuty**:
+- to specjalne klasy, które pozwalają dodawać **metadane** (dodatkowe informacje)
+do elementów programu, takich jak klasy, metody czy właściwości.
+-  nie zmieniają bezpośrednio logiki Twojego kodu, ale dostarczają informacji dla kompilatora
+lub zewnętrznych bibliotek (jak Supabase), jak mają ten kod traktować.
+
+
+**Analogia:**
+- Wyobraź sobie, że Twój kod to **paczki w magazynie**.
+- Sam karton (klasa) mówi tylko, że coś jest w środku.
+- **Atrybut** to **naklejka** na tym kartonie, np. „Ostrożnie, szkło”
+lub „Góra”.
+- Magazynier (biblioteka Supabase) nie zagląda do środka paczki, ale widząc naklejkę, wie,
+że ma ją położyć na specjalnej półce.
+
+:::
+
+
+
+## Kod klasy modelu (`Models/GhostCat.cs`)
+
+Aby Supabase wiedziało, jak połączyć właściwości w C# z kolumnami w bazie danych,
+używamy atrybutów `[Column]`.
+
+```csharp
+using System;
+using Postgrest.Attributes;
+using Postgrest.Models;
+
+namespace SupaBaseCatFinder.Models;
+
+[Table("cats")]
+public class GhostCat : BaseModel
+{
+    // Atrybut [PrimaryKey] oznacza unikalny identyfikator
+    // (zazwyczaj generowany przez bazę)
+    [PrimaryKey("id", false)]
+    public int Id { get; set; }
+
+    // Atrybut [Column] musi mieć dokładnie taką samą nazwę
+    // jak kolumna w panelu Supabase
+    [Column("name")]
+    public string Name { get; set; }
+
+    [Column("power")]
+    public string Power { get; set; }
+
+    [Column("created_at")]
+    public DateTime CreatedAt { get; set; }
+}
+
+```
+
+
+### Wyjaśnienie: [Table("cats")]
+
+Kiedy piszesz `[Table("cats")]` nad swoją klasą `GhostCat`,
+wykonujesz najważniejszy krok w mapowaniu danych.
+
+#### Co to robi?
+Ten atrybut mówi bibliotece Supabase:
+> "Słuchaj, w moim kodzie C# ta klasa nazywa się `GhostCat`,
+> ale kiedy będziesz wysyłać te dane do internetu,
+> szukaj w bazie danych tabeli o nazwie `cats`".
+
+### Dlaczego to jest ważne?
+1. **Różne style nazewnictwa:**
+    - W C# klasy zazwyczaj nazywamy wielką literą i w liczbie pojedynczej (`GhostCat`).
+    - W bazach danych (SQL) tabele często nazywa się małą literą i w liczbie mnogiej (`cats`).
+2. **Elastyczność:**
+    - Możesz zmienić nazwę klasy w kodzie (np. na `ParanormalKitty`)
+   bez konieczności zmiany nazwy tabeli w bazie danych
+   – wystarczy, że atrybut `[Table("cats")]` pozostanie bez zmian.
+
+### Wyjaśnienie: [Column("power")]
+- Atrybut `[Column]` działa na poziomie pojedynczych właściwości (pól) w Twojej klasie.
+- To on decyduje, gdzie dokładnie trafi dana informacja po przelocie przez internet do bazy danych.
+
+#### Co to robi?
+Ten atrybut mówi bibliotece Supabase:
+> "W moim kodzie C# ta właściwość nazywa się `Power` (przez duże 'P'),
+> ale w bazie danych Supabase odpowiada jej kolumna o nazwie `power` (małymi literami)".
+
+#### Dlaczego to jest konieczne?
+- Bazy danych PostgreSQL (na których opiera się Supabase) są bardzo wrażliwe na wielkość liter.
+- Zazwyczaj wszystkie nazwy kolumn tworzy się w nich małymi literami.
+- W C# z kolei standardem jest pisanie nazw właściwości wielką literą.
+- Bez tego atrybutu Supabase szukałoby kolumny `Power`, której nie znajdzie, i zwróci błąd.
+
+:::tip Analogia: Przegródki w szufladzie
+Wyobraź sobie, że Twoja klasa `GhostCat` to **formularz papierowy**,
+który wypełnia łowca kotów, a tabela w bazie danych to **wielka komoda z szufladami**.
+1. Cały formularz ma tytuł "Zgłoszenie kota" (**`[Table("cats")]`**).
+2. Na formularzu masz pole opisane jako "Supermoc Kota" (**`public string Power { get; set; }`**).
+3. Atrybut **`[Column("power")]`** to instrukcja dla urzędnika:
+> *"To, co wpisano w polu 'Supermoc Kota', włóż do szuflady o nazwie 'power'"*.
+
+Bez tej instrukcji urzędnik mógłby próbować upchnąć informację o mocy do szuflady z imieniem,
+co skończyłoby się kompletnym chaosem w Twoich danych!
+
+:::
+
+
+
+
+

@@ -1,0 +1,100 @@
+---
+title: Supabase
+---
+
+## Aktualna struktura projektu
+Powinniśmy mieć taką strukturę projektu:
+```
+### Struktura plików w Twoim projekcie:
+```text
+MojaAplikacja/
+├── Models/
+│   └── GhostCat.cs
+├── ViewModels/
+│   └── MainViewModel.cs
+├── Views/
+│   └── MainWindow.axaml
+└── Services/
+    └── SupaBaseClientManager.cs
+```
+
+
+
+## Tworzymy tablę w Supabase
+
+Zanim kod w Avalonii zadziała, baza musi wiedzieć, jak wyglądają dane o kotach.
+
+1. Zaloguj się do panelu [Supabase](https://supabase.com/dashboard).
+2. Przejdź do sekcji **Table Editor** (ikonka tabeli po lewej).
+3. Kliknij **New Table** i nazwij ją `cats` (ważne: małe litery!).
+4. Dodaj następujące kolumny:
+ - `name` (typ: `text`) – Imię kota.
+ - `power` (typ: `text`) – Jego nadprzyrodzona moc.
+ - `created_at` (typ: `timestamptz`, domyślnie: `now()`) – Kiedy dokonano obserwacji.
+
+:::tip
+Skoro na razie nie używamy RLS (zostawiliśmy go wyłączonego),
+Twoja tabela jest otwarta na zapisy z Twojej aplikacji.
+
+:::
+
+## Pobieramy "Kluczy do Królestwa"
+
+Każdy z Was ma unikalne dane dostępowe.
+Musisz je odnaleźć, aby Twój `SupabaseManager` wiedział,
+z którą bazą ma się połączyć.
+
+
+:::note *Publishable Key* (Klucz Publiczny)
+**Definicja techniczna:**
+- Klucz przeznaczony do użytku po stronie klienta
+(np. w aplikacji Avalonia lub na stronie WWW).
+- Działa on w oparciu o reguły **RLS (Row Level Security)**.
+- Jeśli RLS jest wyłączony, pozwala na wszystko. Jeśli RLS jest włączony,
+pozwala tylko na to, co zdefiniowałeś w regułach.
+
+**Analogia:**
+- To jest Twoja **karta biblioteczna**.
+- Możesz ją pokazać każdemu.
+- Pozwala Ci ona wejść do biblioteki i wypożyczyć książki, ale tylko te,
+do których masz uprawnienia (nie wejdziesz do archiwum tajnych dokumentów bez specjalnej zgody).
+
+:::
+
+:::info *Secret Key* (Klucz Tajny / Service Role)
+**Definicja techniczna:**
+- Klucz omijający wszelkie zabezpieczenia RLS.
+- Daje pełny dostęp administracyjny do całej bazy danych.
+- Przeznaczony wyłącznie do bezpiecznych środowisk (np. Twój własny serwer backendowy).
+
+**Analogia:**
+- To jest **klucz generalny (Master Key)**, który otwiera każde drzwi w całym mieście,
+łącznie z sejfami w banku.
+- Jeśli go zgubisz (wkleisz do kodu aplikacji, którą ktoś może podejrzeć),
+ta osoba może usunąć całą Twoją bazę danych jednym poleceniem.
+
+:::
+
+### Aby pobrać klucze do Supabase
+
+1. Wejdź w **Project Settings** (ikonka zębatki na samym dole po lewej).
+2. Wybierz zakładkę **API Keys**.
+
+
+### Aby pobrać adres URL bazy danych
+1. Kliknij ikonkę zębatki (**Project Settings**) w menu po lewej.
+2. Zamiast w "API keys", kliknij w zakładkę **General** (zazwyczaj pierwsza na górze).
+3. Szukaj sekcji **Project ID** .
+4. Twoim adresem URL będzie:
+`https://<Twoje-Reference-ID>.supabase.co`
+
+---
+
+# Końcówka
+- pobierz Project ID
+- pobierz Publishable Key
+- dopisz te dane do `SupabaseClientManager`
+
+
+
+

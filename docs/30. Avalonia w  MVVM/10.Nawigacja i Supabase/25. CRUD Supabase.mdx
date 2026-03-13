@@ -1,0 +1,9 @@
+## Tabela Operacji CRUD w Supabase (C#)
+
+
+| Operacja (CRUD) | Metoda Supabase | Opis Działania | Przykład w Kodzie (C#) |
+| :--- | :--- | :--- | :--- |
+| **Create** (Utwórz) | `.Insert()` | Dodaje nowy rekord (wiersz) do tabeli w bazie danych. Wymaga podania obiektu modelu. | `await client.From<GhostCat>().Insert(newCat);` |
+| **Read** (Odczytaj) | `.Get()` | Pobiera dane z tabeli. Można połączyć z `.Where()`, aby pobrać tylko konkretne rekordy. | `await client.From<GhostCat>().Get();`<br/>*lub tylko wybrane:*<br/>`await client.From<GhostCat>().Where(x => x.Power == "Lewitacja").Get();` |
+| **Update** (Aktualizuj) | `.Update()` | Nadpisuje istniejący rekord w bazie nowymi danymi. Model musi posiadać ID, aby baza wiedziała, co zmienić. | `cat.Power = "Niewidzialność";`<br/>`await client.From<GhostCat>().Update(cat);` |
+| **Delete** (Usuń) | `.Delete()` | Trwale usuwa rekord z bazy danych. Wymaga przekazania obiektu, który chcemy skasować. | `await client.From<GhostCat>().Delete(cat);` |

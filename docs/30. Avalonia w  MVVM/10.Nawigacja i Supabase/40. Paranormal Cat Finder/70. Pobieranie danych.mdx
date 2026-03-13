@@ -1,0 +1,106 @@
+---
+title: Pobieranie i wyświetlanie danych
+---
+
+
+
+# Lekcja: Rejestr Duchów – Pobieranie danych z bazy
+
+Wysłaliśmy już nasze pierwsze zgłoszenia w zaświaty (do Supabase).
+Teraz zbudujemy "Księgę Łowcy", czyli listę, która wyświetli wszystkie dotychczasowe
+spotkania z paranormalnymi kotami.
+
+
+:::info ` ObservableCollection`
+To specjalny typ kolekcji (listy) w .NET,
+który automatycznie powiadamia interfejs użytkownika (Avalonię) za każdym razem,
+gdy dodasz do niej lub usuniesz z niej element.
+
+**Analogia:**
+Wyobraź sobie, że zwykła lista (`List<T>`) to **wydrukowane menu w restauracji**.
+    - Jeśli szef kuchni wymyśli nowe danie, musi wydrukować wszystkie karty od nowa,
+    żeby klienci je zobaczyli (musiałbyś ręcznie odświeżać widok w aplikacji).
+    - Z kolei `ObservableCollection` to **cyfrowa tablica nad kasą w fast-foodzie**.
+    - Gdy manager dodaje nową pozycję na komputerze na zapleczu,
+tablica nad kasą miga i od razu wyświetla nowego burgera. W MVVM to właśnie Avalonia patrzy na tę cyfrową tablicę.
+
+:::
+
+## Rozbudowa ViewModelu (Księga Łowcy)
+
+Musimy dodać do naszego `MainWindowViewModel`
+miejsce na listę kotów oraz komendę, która pobierze je z Supabase.
+
+```csharp
+public class MainWindowViewModel : ViewModelBase
+{
+    // ...
+
+    // Nowe! Cyfrowa tablica dla naszego interfejsu.
+    public ObservableCollection<GhostCat> CatsList { get; } = [];
+
+    // Nowe! Komenda do pobierania danych.
+    public ReactiveCommand<Unit, Unit> LoadCatsCommand { get; }
+
+    public MainWindowViewModel()
+    {
+        // NOWE!
+        LoadCatsCommand = ReactiveCommand.CreateFromTask(LoadFromSupabaseAsync);
+
+        //...
+    }
+
+    private async Task LoadFromSupabaseAsync() // NOWE!!!
+    {
+        var client = SupaBaseClientManager.Client;
+
+        // Magia Supabase: Pobierz wszystko z tabeli GhostCat
+        var response = await client.From<GhostCat>().Get();
+
+        // Czyścimy starą listę, żeby nie dublować kotów przy każdym kliknięciu
+        CatsList.Clear();
+
+        // Przenosimy koty z paczki (response.Models) na naszą tablicę cyfrową
+        foreach (var cat in response.Models)
+        {
+            CatsList.Add(cat);
+        }
+    }
+//...
+
+```
+
+:::danger `variable ModeledResponse<GhostCat> response`
+- Zwróć uwagę na `response.Models`.
+- Metoda `.Get()` nie zwraca samej listy kotów, ale obiekt odpowiedzi (`Response`),
+który zawiera m.in. status połączenia.
+- Prawdziwe dane znajdują się zawsze we właściwości `.Models`.
+
+:::
+
+
+## Modyfikacja `MainWindow.axaml`
+```xml
+<!-- ... -->
+ <ListBox ItemsSource="{Binding CatsList}" Height="200">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <TextBlock Text="🐈 👻" VerticalAlignment="Center" />
+                        <StackPanel>
+                            <TextBlock Text="{Binding Name}" FontWeight="Bold" />
+                            <TextBlock Text="{Binding Power}" FontStyle="Italic" FontSize="12" />
+                        </StackPanel>
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+    </StackPanel>
+
+</Window>
+
+
+
+
+
+```

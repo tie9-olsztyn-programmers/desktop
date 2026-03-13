@@ -1,0 +1,353 @@
+---
+title: Nawigacja w Architekturze ReactiveUI
+---
+
+## Czym jest Nawigacja w ReactiveUI?
+
+**Definicja techniczna:**
+- Nawigacja polega na reaktywnej aktualizacji właściwości w `MainViewModel`,
+która przechowuje aktualnie wyświetlany obiekt klasy `ViewModelBase`.
+- Dzięki metodzie `RaiseAndSetIfChanged`, każda zmiana tej właściwości natychmiast powiadamia
+interfejs użytkownika o konieczności przerysowania zawartości.
+
+:::note `View Switching`
+- to wzorzec nawigacji polegający na dynamicznym przypisywaniu różnych obiektów `ViewModel`
+do jednej właściwości w głównym modelu widoku (np. MainViewModel).
+- Interfejs użytkownika wykorzystuje kontrolkę `ContentControl`, która nasłuchuje
+zmian tej właściwości i automatycznie dobiera odpowiedni widok (`View`) za pomocą tzw. szablonów danych (`DataTemplates`).
+
+:::
+
+:::tip Analogia: Scena Teatralna
+Wyobraź sobie, że Twoja aplikacja to **scena teatralna** (`MainWindow`):
+- Scena ma stałą dekorację ramową (np. menu boczne), ale jej środek zmienia się w zależności od aktu.
+- **Główny ViewModel** to reżyser, który decyduje, który **aktor** (ViewModel konkretnej strony) ma teraz wyjść na
+środek.
+- Widzowie (Użytkownicy) widzą tylko tego aktora, który aktualnie znajduje się w
+świetle reflektorów (`ContentControl`).
+
+
+:::
+
+
+:::tip Analogia: Cyfrowa Ramka na Zdjęcia
+- Wyobraź sobie, że okno Twojej aplikacji to inteligentna cyfrowa ramka na zdjęcia (nasza kontrolka ContentControl).
+- Ramka fizycznie cały czas stoi w tym samym miejscu na Twoim biurku (nasze główne okno aplikacji MainWindow).
+- Ty jesteś Głównym `ViewModelem` (MainViewModel).
+- Masz w ręku pendrive z różnymi zdjęciami (poszczególne `ViewModele`, np. `LoginViewModel`, `DashboardViewModel`).
+- Kiedy decydujesz się wyświetlić coś innego, po prostu podmieniasz plik na ekranie ramki (`RaiseAndSetIfChanged`).
+- Ramka automatycznie odświeża obraz, dopasowując go do nowego zdjęcia.
+
+
+:::
+
+
+
+---
+
+##  Implementacja MainViewModel (ReactiveUI)
+Utwórzmy nowy projekt MVVM ReactiveUI
+
+:::tip Pamiętajmy
+Pamiętajmy o doinstlowaniu silnika `Fody` i jego pluginu `Reactive.Fody`:
+```
+dotnet add package Fody
+dotnet add package ReactiveUI.Fody
+```
+
+
+:::
+
+
+```csharp
+public class MainWindowViewModel : ViewModelBase
+{
+    private ViewModelBase _currentPage;
+
+    public ViewModelBase CurrentPage
+    {
+        get => _currentPage;
+        set => this.RaiseAndSetIfChanged(ref _currentPage, value);
+    }
+
+    // Deklarujemy dwie komendy - dla każdego przycisku w menu
+    public ReactiveCommand<Unit, Unit> NavigateToSettings { get; }
+    public ReactiveCommand<Unit, Unit> NavigateToHome { get; }
+    public MainWindowViewModel()
+    {
+        // Ustawiamy stronę startową
+        _currentPage = new HomeViewModel();
+
+
+        // Inicjalizacja komend przypisujących odpowiednie ViewModele
+        NavigateToSettings = ReactiveCommand.Create(() =>
+        {
+            CurrentPage = new SettingsViewModel();
+        });
+
+        NavigateToHome = ReactiveCommand.Create(() =>
+        {
+            CurrentPage = new HomeViewModel();
+        });
+    }
+
+}
+
+```
+
+
+
+## Dostosowanie `MainWindow.axaml`
+
+```xml
+
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:MyNavigationFIrst.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="MyNavigationFIrst.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="Aplikacja z Menu"
+        Width="800" Height="450"
+        >
+
+    <Design.DataContext>
+        <!-- This only sets the DataContext for the previewer in an IDE,
+             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+        <vm:MainWindowViewModel/>
+    </Design.DataContext>
+
+    <Window.DataTemplates>
+        <DataTemplate DataType="{x:Type vm:HomeViewModel}">
+            <views:HomeView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:SettingsViewModel}">
+            <views:SettingsView />
+        </DataTemplate>
+    </Window.DataTemplates>
+
+    <Grid ColumnDefinitions="200, *">
+
+        <Border Grid.Column="0" Background="#2D2D30" Padding="10">
+            <StackPanel Spacing="10">
+                <TextBlock Text="MENU" Foreground="White" FontWeight="Bold" Margin="0,0,0,20" />
+
+                <Button Content="Strona Główna"
+                        Command="{Binding NavigateToHome}"
+                        HorizontalAlignment="Stretch" />
+                <Button Content="Ustawienia"
+                        Command="{Binding NavigateToSettings}"
+                        HorizontalAlignment="Stretch" />
+            </StackPanel>
+        </Border>
+
+        <ContentControl Grid.Column="1" Content="{Binding CurrentPage}" />
+
+    </Grid>
+</Window>
+
+
+```
+**Wyjaśnienie:** `<Window.DataTemplates>`
+- to absolutne serce nawigacji w architekturze MVVM.
+- to on sprawia, że surowe dane potrafią zamienić się w interfejs użytkownika.
+
+:::info Szablony Danych (`DataTemplates`)
+- to zbiór instrukcji dla frameworka Avalonia, który definiuje sposób wizualnej reprezentacji obiektu.
+- blok `<Window.DataTemplates>` działa jak globalny słownik reguł dla całego okna.
+- Każdy pojedynczy `<DataTemplate>` wewnątrz tego bloku składa się z dwóch elementów:
+    - Warunku (zDataTypez): Np. `DataType="{x:Type vm:HomeViewModel}"` – mówi silnikowi:
+        - "Kiedykolwiek natrafisz w pamięci na obiekt typu `HomeViewModel`..."
+    - Wyniku (zawartość tagu): Np. `<views:HomeView />` – dopowiada resztę instrukcji:
+        - "...narysuj na ekranie kontrolkę `HomeView`".
+
+Dzięki temu, gdy podmieniasz właściwość `CurrentPage = new HomeViewModel()`,
+Avalonia automatycznie wie, jakiego widoku użyć.
+
+:::
+
+:::tip Analogia: Katalog Kostiumografa w Teatrze
+- Wyobraź sobie, że sekcja `<Window.DataTemplates>` to oficjalny katalog kostiumografa.
+- Twój Główny `ViewModel` (Reżyser) decyduje, że na środek sceny (`ContentControl`) wkracza teraz
+aktor grający Ustawienia (`SettingsViewModel`).
+- Jednak aktorzy na zapleczu są w swoich codziennych, szarych ubraniach (to czyste dane C#).
+- Scena natychmiast sprawdza w katalogu kostiumografa (`DataTemplates`), w co ubrać tego konkretnego aktora.
+- Znajduje wpis: "Aha! Typ: `SettingsViewModel`. Instrukcja: ubierz go w strój `SettingsView`!".
+- Aktor zostaje błyskawicznie ubrany i wchodzi na scenę w pełnej krasie (jako przyciski, formularze i suwaki).
+
+
+
+Gdyby nie ten katalog, Avalonia nie wiedziałaby,
+jak narysować Twój `ViewModel` i po prostu wypisałaby na ekranie surowy tekst:
+"`MyNavigationFirst.ViewModels.SettingsViewModel`".
+
+:::
+
+
+
+
+
+---
+
+## Nowe `View`
+
+Aby powyższy kod się skompilował, musimy stworzyć w folderze Views dwie proste kontrolki typu `UserControl`
+oraz odpowiadające im `ViewModel`:
+- `HomeView.axaml` (i odpowiadający mu `HomeViewModel`)
+- `SettingsView.axaml` (i odpowiadający mu `SettingsViewModel`)
+
+
+:::info Podrzędny `ViewModel` i wstrzykiwanie akcji
+- Podrzędny `ViewModel` to zwykła klasa dziedzicząca po `ViewModelBase`.
+- Reprezentuje logikę pojedynczego widoku (strony).
+- Aby zachować luźne powiązania (*Loose Coupling*), podrzędny `ViewModel` nie powinien nic wiedzieć
+o istnieniu `MainWindowViewModel`.
+- Zamiast tego, w jego konstruktorze przyjmujemy delegat `Action` (czyli metodę bez parametrów),
+który zostaje wywołany, gdy chcemy zmienić stronę.
+
+:::
+
+### Tworzymy odpowiednie `View`
+Na folderze `Views` > `Add` > `Avalonia UserControl`!
+Nazwij plik `HomeView.axaml` i `SettingsView.axaml`.
+
+`HomeView.axaml`
+```xml
+<UserControl <!-- .... -->
+             x:Class="MyNavigationFIrst.Views.HomeView"
+             xmlns:vm="using MyNavigationFIrst.ViewModels"
+             x:DataType="vm:HomeViewModel"
+             >
+
+    <Grid Background="Purple">
+
+        <TextBlock Text="Sweet Home"
+                   Foreground="White"
+                   FontSize="48"
+                   FontWeight="Bold"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"/>
+
+    </Grid>
+</UserControl>
+
+```
+:::tip Kluczowe linijki w pliku widoku (.axaml)
+Zwróćmy uwagę na:
+- `xmlns:vm="using:MyNavigationFIrst.ViewModels"`
+- `x:DataType="vm:HomeViewModel"`
+Te dwie właściwości muszą ze sobą współpracować, aby interfejs wiedział, skąd brać dane.
+
+1. Skrót do folderu (`xmlns:vm=...`)
+    - Technicznie:
+        - Jest to deklaracja przestrzeni nazw (XML Namespace).
+        - Mówimy w niej kompilatorowi XAML, gdzie fizycznie w projekcie leżą nasze klasy C#.
+        - Słowo `vm` to tylko wymyślony przez nas krótki alias (skrót).
+
+    - Analogia:
+        - To jak dodanie numeru do książki telefonicznej w komórce.
+        - Zamiast za każdym razem wpisywać długi, trudny numer (pełną ścieżkę do folderu),
+            zapisujesz go pod krótką nazwą "vm" (`ViewModel`).
+
+2. Wskazanie konkretnego modelu (`x:DataType=...`)
+    - Technicznie:
+        - To włączenie *Compiled Bindings*.
+        - Używając naszego skrótu `vm`, wskazujemy palcem konkretną klasę (np. `HomeViewModel`),
+      z którą ten widok będzie połączony.
+
+    - Analogia:
+        - To jak wręczenie edytorowi kodu słownika pojęć.
+        - Dzięki temu, gdy niżej napiszesz `{Binding WelcomeMessage}`, edytor natychmiast sprawdzi w słowniku
+      `HomeViewModel`, czy takie hasło tam istnieje, i w razie literówki od razu podkreśli błąd na czerwono.
+:::
+
+
+
+
+
+`SettingsView.axaml`
+```xml
+<UserControl <!-- ... -->
+             xmlns:viewModels="clr-namespace:MyNavigationFIrst.ViewModels"
+             x:DataType="viewModels:SettingsViewModel"
+             >
+    <Grid Background="Green">
+
+        <TextBlock Text="Opcje"
+                   Foreground="White"
+                   FontSize="48"
+                   FontWeight="Bold"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"/>
+
+    </Grid>
+</UserControl>
+
+```
+
+
+### Tworzymy odpowiednie `ViewModel`
+Na folderze `ViewModels` > `Add` > `Avalonia ViewModel`!
+Nazwij plik `HomeViewModel.cs` i `SettingsViewModel.cs`.
+
+
+
+
+
+`HomeViewModel.cs`
+```csharp
+public class HomeViewModel : ViewModelBase
+{
+
+}
+
+
+```
+
+
+`SettingsViewModel.cs`
+```csharp
+
+public class SettingsViewModel : ViewModelBase
+{
+
+}
+
+```
+
+
+## Teksty z `ViewModele`
+```csharp
+public class HomeViewModel : ViewModelBase
+{
+    [Reactive] public string? Home { get; set; } = "My Sweet Home";
+
+}
+```
+
+```csharp
+public class SettingsViewModel : ViewModelBase
+{
+    [Reactive] public string? UserSettings { get; set; } = "Super User Settings";
+
+}
+
+```
+
+I dopsowanie w `HomeView.axaml` oraz `SettingsView.axaml`:
+```xml
+<TextBlock Text="{Binding Home}" />
+<TextBlock Text="{Binding UserSettings}" />
+```
+
+
+
+
+
+
+
+
+

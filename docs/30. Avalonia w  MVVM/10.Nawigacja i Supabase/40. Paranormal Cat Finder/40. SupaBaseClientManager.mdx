@@ -1,0 +1,43 @@
+---
+title: SupaBaseClientManager
+---
+
+- W głównej ścieżce tworzymy folder `Services`.
+- w tym folderze tworzymy plik `SupaBaseClientManager.cs`
+
+```csharp
+using Supabase;
+
+namespace <twoja nazwa projektu>.Services;
+
+
+public static class SupaBaseClientManager
+{
+    // Skonstruowany na podstawie Twojego Project ID
+    private const string ProjectUrl = "https://<TwójProjectID>.supabase.co";
+
+    // Twój Publishable key (ten długi ciąg znaków)
+    private const string PublishableKey = "<tutaj klucz publiczny>";
+
+    private static Client? _client;
+    public static Client Client => _client ??= new Client(ProjectUrl, PublishableKey);
+}
+
+```
+
+**Wyjanienia**
+- `private static Client? _client`;
+    - To jest nasz magazyn.
+    - Przechowujemy tu stworzone połączenie, aby nie tworzyć go za każdym razem od nowa.
+
+- `public static Client Client => _client ??= new Client(ProjectUrl, PublishableKey);`
+    - Analogia (Ekspres do kawy):
+        - Wyobraź sobie, że `Client` to ekspres do kawy w biurze.
+        - Jeśli ktoś rano chce kawy i widzi, że ekspres nie jest jeszcze rozgrzany
+        (`_client` jest `null`), to go włącza i przygotowuje (`new Client(...)`).
+        - Każda kolejna osoba, która przyjdzie po kawę,
+      nie kupuje nowego ekspresu, tylko korzysta z tego, który już stoi i jest gotowy do pracy.
+    - Operator `??=` to skrót, który mówi:
+    > "Jeśli to, co po lewej, jest puste, to stwórz to za pomocą tego, co po prawej.
+    > Jeśli nie jest puste, po prostu to zwróć".
+

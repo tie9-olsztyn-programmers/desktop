@@ -1,0 +1,34 @@
+---
+title: Proste GUI
+---
+
+`MainWindow.xaml`
+```csharp
+<StackPanel Spacing="15" Margin="30">
+    <TextBlock Text="Zgłoś Nadprzyrodzonego Kota" FontSize="20" FontWeight="Bold"/>
+
+    <TextBox Text="{Binding CatName, Mode=TwoWay}"
+             Watermark="Imię kota (np. Puszek-Widmo)" />
+
+    <TextBox Text="{Binding ObservedPower, Mode=TwoWay}"
+             Watermark="Zaobserwowana moc (np. Lewitacja nad drapakiem)" />
+
+    <Button Content="Wyślij Raport do Bazy"
+            Command="{Binding ReportCatCommand}"
+            Background="Purple" Foreground="White" />
+
+    <StackPanel IsVisible="{Binding IsReporting}"
+                Orientation="Horizontal" Spacing="10">
+
+        <ProgressBar IsIndeterminate="True" Width="100"/>
+
+        <TextBlock Text="Wysyłanie sowy do bazy..." VerticalAlignment="Center"/>
+    </StackPanel>
+</StackPanel>
+
+```
+
+
+
+
+

@@ -1,0 +1,30 @@
+---
+title: Paranormal Cat Finder
+---
+
+### Krótki opis aplikacji
+Napiszemy prostą aplikację, w której użytkownicy
+będą zgłaszać spotkania z kotami,
+które wykazują nadprzyrodzone zdolności (np.
+przechodzenie przez zamknięte drzwi lodówki, pojawianie się znikąd).
+
+
+### Tworzenie projektu i instalacja zależności
+1. Robimy nowy projekt MVVM.
+2. doinstalowujemy niezbędne paczki:
+ - `dotnet add package ReactiveUI.Fody`
+ - `dotnet add package supabase-csharp`
+
+
+:::info `supabase-csharp`
+- Oficjalna biblioteka, która udostępnia gotowe metody do komunikacji z API Supabase.
+- Pakuje skomplikowane zapytania sieciowe w proste funkcje C#.
+
+**Metafora (Magiczny Portal):**
+Zamiast samodzielnie budować rakietę, aby polecieć z danymi do chmury,
+**supabase-csharp** daje Ci gotowy przycisk teleportacji.
+Ty tylko mówisz: `.Insert(cat)`, a biblioteka zajmuje się całą logistyką
+– sprawdza uprawnienia, nawiązuje połączenie i upewnia się, że
+raport o kocie dotarł bezpiecznie na miejsce.
+
+:::

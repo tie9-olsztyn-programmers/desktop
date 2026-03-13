@@ -1,0 +1,144 @@
+---
+title: Konfiguracja MainWindowViewModel
+---
+
+
+```csharp
+public class MainWindowViewModel : ViewModelBase
+{
+    private string _observedPower;
+    // Pomocnik, który sam powie nam, czy baza danych jeszcze "mieli" dane
+    private ObservableAsPropertyHelper<bool> _isReporting;
+    public bool IsReporting => _isReporting.Value;
+
+    [Reactive] public string CatName { get; set; } = string.Empty;
+    [Reactive] public string ObservedPower { get; set; } =string.Empty;
+
+    public ReactiveCommand<Unit, Unit> ReportCatCommand { get; }
+
+    public MainWindowViewModel()
+    {
+        // Walidacja: Przycisk "Raportuj" działa tylko, gdy wpiszemy imię kota
+        var canReport = this.WhenAnyValue(
+            x => x.CatName,
+            name => !string.IsNullOrWhiteSpace(name)
+        );
+
+        ReportCatCommand = ReactiveCommand.CreateFromTask(SendToSupabaseAsync, canReport);
+
+        // ToProperty automatycznie aktualizuje IsReporting, gdy komenda pracuje
+        _isReporting = ReportCatCommand.IsExecuting
+            .ToProperty(this, x => x.IsReporting);
+    }
+
+    private async Task SendToSupabaseAsync()
+    {
+        var client = SupaBaseClientManager.Client;
+        var newCat = new GhostCat { Name = CatName, Power = ObservedPower };
+
+        await client.From<GhostCat>().Insert(newCat);
+
+        // Czyścimy formularz po udanym polowaniu
+        CatName = string.Empty;
+        ObservedPower = string.Empty;
+    }
+}
+
+```
+
+
+## Wyjaśnienie
+
+### Fody
+-  dzięki *Fody*, nie musisz pisać długiego kodu z powiadomieniem o zmianie (`RaiseAndSetIfChanged`).
+- Atrybut `[Reactive]` sprawia, że gdy użytkownik wpisze coś w okienku,
+Avalonia natychmiast się o tym dowie.
+
+**Analogia**:
+- To jak inteligentny arkusz papieru.
+- Gdy tylko dopiszesz literkę do imienia kota, papier sam "krzyczy" do reszty systemu:
+> "Hej, zmieniłem treść!".
+
+###  Dynamiczna Walidacja (`canReport`)
+- `WhenAnyValue` to czujnik.
+    - obserwuje on właściwość `CatName`.
+- Jeśli pole jest puste, `canReport` przyjmuje wartość false.
+
+**Analogia**
+- To jak strażnik przycisku.
+- Mówisz mu:
+> "Nie pozwalaj nikomu nacisnąć przycisku, dopóki pole z imieniem kota jest puste".
+- Strażnik cały czas patrzy na pole i na bieżąco odblokowuje lub blokuje przycisk.
+
+### `ReactiveCommand` i obsługa stanu (`IsReporting`)`
+- `ReportCatCommand` wiąże naszą metodę wysyłania z regułą `canReport`.
+- `IsExecuting` to wbudowany w ReactiveUI strumień, który wie, kiedy metoda `SendToSupabaseAsync` trwa.
+- `ToProperty` przepisuje ten stan do właściwości `IsReporting`,
+którą podepniemy pod pasek ładowania (`ProgressBar`) w `XAML`.
+
+**Analogia**:
+- To jak kontrolka na desce rozdzielczej.
+- Gdy silnik (komenda) pracuje, lampka (`IsReporting`) świeci się automatycznie.
+- Nie musisz jej sam zapalać i gasić – ona jest podłączona bezpośrednio do zapłonu.
+
+### Komunikacja z Supabase (`SendToSupabaseAsync`)
+1. Sięgamy po naszego „kuriera” z klasy `SupaBaseClientManager`.
+2. Pakujemy dane z formularza do modelu `GhostCat`.
+3. Wysyłamy go do tabeli `cats` (którą zdefiniowaliśmy atrybutem w modelu).
+4. Czyścimy formularz, żeby łowca mógł zgłosić kolejnego kota.
+
+
+:::info `await client.From<GhostCat>().Insert(newCat);`
+1. `await` (Asynchroniczność)
+- Operator, który wstrzymuje wykonywanie metody do czasu zakończenia zadania sieciowego,
+- nie blokując przy tym interfejsu użytkownika (UI).
+
+**Analogia:**
+- Wyobraź sobie, że zamawiasz pizzę przez telefon.
+- Nie stoisz nieruchomo przy słuchawce przez 30 minut, gapiąc się w ścianę (blokowanie UI).
+- Składasz zamówienie i zajmujesz się oglądaniem telewizji, ale
+- "czekasz" (`await`), aż dzwonek do drzwi oznajmi, że pizza dotarła, by móc ją zjeść.
+
+2. `From<GhostCat>()` (Cel podróży)
+- Metoda generyczna, która sprawdza atrybut `[Table]` w klasie `GhostCat`.
+- Dzięki temu biblioteka wie, do której tabeli w Supabase skierować dane.
+
+**Analogia:**
+- To jak **zaadresowanie koperty**.
+- Zamiast pisać ręcznie
+    - "Zanieś to do tabeli o nazwie cats", po prostu wskazujesz na model:
+    - "Użyj adresu zapisanego na tym wzorze (klasie)".
+    - System sam odczytuje, że `GhostCat` to tabela `cats`.
+
+3. `Insert(newCat)` (Akcja)
+- Metoda typu `POST`, która zamienia obiekt C# na format JSON i wysyła go do API Supabase,
+aby stworzyć nowy rekord w bazie.
+
+**Analogia:**
+- To moment **wrzucenia listu do skrzynki**.
+- `newCat` to Twój wypełniony formularz z imieniem i mocą kota.
+- `Insert` to polecenie dla kuriera: "Wstaw ten nowy rekord do szuflady".
+
+4. Co dzieje się "pod maską"? (Proces)
+
+1. **Serializacja:** `newCat` (obiekt C#) zostaje zamieniony na tekst: `{"name": "Puszek", "power": "Latanie"}`.
+2. **Transport:** Tekst leci przez internet do adresu URL, który podałeś w Managerze.
+3. **Uwierzytelnienie:** Supabase sprawdza Twój `PublishableKey`. Jeśli klucz pasuje, wpuszcza dane.
+4. **Zapis:** Baza PostgreSQL dopisuje nowy wiersz w tabeli `cats`.
+
+
+:::tip Dlaczego to "fajne"?
+W tradycyjnym programowaniu musiałbyś napisać coś takiego:
+- `INSERT INTO cats (name, power) VALUES ('Puszek', 'Latanie');`
+- A potem ręcznie obsłużyć:
+    - połączenie z bazą,
+    - otwarcie i
+    - zamknięcie portów.
+
+W Supabase robisz to jedną, bezpieczną linijką kodu,
+która jest **odporna na błędy typu SQL Injection**.
+
+:::
+
+
+

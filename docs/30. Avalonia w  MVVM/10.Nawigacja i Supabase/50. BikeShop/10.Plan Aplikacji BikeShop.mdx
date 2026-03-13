@@ -1,0 +1,27 @@
+---
+title: Plan BikeShopApp
+---
+
+
+1. Budowa "Drzwi" i "Wnętrza" (Nawigacja Główna)
+    - Utworzenie okna logowania (`LoginView`) z polami na e-mail i hasło.
+    - Utworzenie widoku po zalogowaniu (`MainDashboardView`),
+   który zawiera w sobie menu po lewej stronie okna.
+    - Konfiguracja Głównego Reżysera (`MainWindowViewModel`), aby
+   potrafił przełączać się między "Drzwiami" a "Wnętrzem".
+
+2. Wypełnienie "Wnętrza" (Magazyn i Ustawienia)
+    - Stworzenie widoku `InventoryView` z tekturowymi, przykładowymi rowerami (*Mock Data*).
+    - Stworzenie widoku `ManagerView` (Biura Kierownika),
+   gdzie dodamy przycisk "Wyloguj" oraz w przyszłości zmianę motywu.
+
+3. Ochrona sklepu w chmurze (Autoryzacja Supabase)
+    - Podłączenie Supabase.
+    - Ożywienie ekranu logowania – przycisk "Zaloguj" wysyła zapytanie do serwera,
+   a w trakcie czekania kręci się wskaźnik ładowania (aby interfejs nie zamarzł).
+
+4. Prawdziwy Towar (Baza Danych Supabase)
+    - Pobieranie prawdziwej listy rowerów do naszego Magazynu i
+   dodawanie nowych modeli z poziomu aplikacji.
+
+
