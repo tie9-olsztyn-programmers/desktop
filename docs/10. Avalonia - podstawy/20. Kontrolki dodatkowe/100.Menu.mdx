@@ -1,0 +1,73 @@
+---
+title: Menu
+---
+
+
+
+## Czym jest Menu?
+- To ten pasek na samej górze okna (Plik, Edycja, Widok itd.).
+- Składa się z trzech głównych klocków:
+    - `Menu`
+        - Główny kontener trzymający cały pasek.
+        - Zazwyczaj umieszczamy go na samej górze okna.
+    - `MenuItem`
+        - Pojedynczy element menu (np. "Plik" lub "Zapisz").
+        - Można je zagnieżdżać – wkładając `MenuItem` w inny `MenuItem`, tworzymy podmenu (rozwijaną listę).
+    - `Separator`
+        - Zwykła, pozioma kreska, która oddziela od siebie grupy opcji (np. "Zapisz" od "Zakończ").
+
+
+## Przykład
+
+```xml
+ <StackPanel>
+    <Menu Background="#f0f0f0">
+            <MenuItem Header="_Plik">
+                    <MenuItem Header="Nowy" Click="OnNewClick" />
+                    <MenuItem Header="Otwórz..." />
+                    <MenuItem Header="Zapisz" HotKey="Ctrl+S"
+                              InputGesture="Ctrl+S" />
+
+                    <Separator /> <MenuItem Header="Zakończ"
+                                            Click="OnExitClick" HotKey="Ctrl+Q"
+                                            InputGesture="Ctrl+Q" />
+            </MenuItem>
+
+            <MenuItem Header="_Edycja">
+                    <MenuItem Header="Kopiuj" HotKey="Ctrl+C"
+                              InputGesture="Ctrl+C" />
+                    <MenuItem Header="Wklej" HotKey="Ctrl+V"
+                              InputGesture="Ctrl+V" />
+
+                    <MenuItem Header="Opcje zaawansowane">
+                            <MenuItem Header="Zaznacz wszystko" />
+                            <MenuItem Header="Usuń formatowanie" />
+                    </MenuItem>
+            </MenuItem>
+    </Menu>
+    <TextBlock Text="Tutaj będzie główna treść programu..."
+               Margin="20" />
+</StackPanel>
+```
+
+```csharp
+ private void OnNewClick(object? sender, RoutedEventArgs e)
+    {
+        // Akcja dla nowej operacji
+        Console.WriteLine("Kliknięto: Nowy plik");
+    }
+
+    private void OnExitClick(object? sender, RoutedEventArgs e)
+    {
+        // Zamknięcie całej aplikacji! To zawsze robi wrażenie na uczniach.
+        this.Close();
+    }
+```
+
+
+
+
+
+
+
+

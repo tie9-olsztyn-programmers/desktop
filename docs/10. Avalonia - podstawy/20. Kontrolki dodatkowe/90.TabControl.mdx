@@ -1,0 +1,191 @@
+---
+title: TabControl
+---
+
+
+## Czym jest TabControl?
+- Działa dokładnie tak jak karty w przeglądarce internetowej.
+- Mamy zestaw "zakładek" na górze (lub z boku),
+a kliknięcie w każdą z nich podmienia całą zawartość okna poniżej.
+
+## Struktura:
+- `TabControl` Główny kontener.
+- `TabItem` Pojedyncza karta. Posiada dwie kluczowe części:
+    - `Header` To, co widać na "pasku" (tytuł karty).
+    - `Content` To, co znajduje się wewnątrz karty (może to być dowolna inna kontrolka lub panel).
+
+:::tip Zasada "jednego dziecka"
+- `TabItem` (podobnie jak `Border`) może mieć tylko jeden bezpośredni element pod sobą.
+- Dlatego zawsze wkładamy tam `StackPanel`, `Grid` lub `ScrollViewer`.
+
+:::
+
+## Kluczowe właściwości i funkcje
+- `TabStripPlacement` Pozwala przenieść zakładki na dół (`Bottom`), lewo (`Left`) lub prawo (`Right`).
+- `SelectedIndex` Indeks aktualnie wybranej karty (liczony od `0`).
+- `SelectedItem` Cały obiekt wybranej karty.
+
+
+## Przykład
+
+```xml
+<TabControl Margin="20" TabStripPlacement="Bottom">
+
+    <TabItem Header="Ogólne">
+            <StackPanel Margin="10" Spacing="10">
+                    <TextBlock Text="Ustawienia wyświetlania"
+                               FontSize="18"
+                               FontWeight="Bold"/>
+                    <CheckBox Content="Włącz tryb ciemny" IsChecked="True"/>
+                    <CheckBox Content="Autozapis" />
+            </StackPanel>
+    </TabItem>
+
+    <TabItem Header="Użytkownik">
+            <StackPanel Margin="10" Spacing="10">
+                    <TextBlock Text="Dane profilowe"
+                               FontSize="18"
+                               FontWeight="Bold"/>
+                    <TextBox Watermark="Imię i nazwisko" />
+                    <Button Content="Zapisz profil" HorizontalAlignment="Right"/>
+            </StackPanel>
+    </TabItem>
+
+    <TabItem>
+            <TabItem.Header>
+                    <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="⚠️ "/>
+                            <TextBlock Text="Zaawansowane"/>
+                    </StackPanel>
+            </TabItem.Header>
+            <TextBlock Text="Strefa niebezpieczna!" Foreground="Red"
+                       VerticalAlignment="Center"
+                       HorizontalAlignment="Center"/>
+    </TabItem>
+
+</TabControl>
+```
+
+
+## Przesyłanie danych między kartami
+- wszystkie karty (`TabItems`) należą do tego samego okna (`MainWindow`)
+- czyli z perspektywy kodu C# (*Code-behind*) lub mechanizmu *Binding*u,
+nie ma znaczenia, na której karcie znajduje się kontrolka –
+wszystkie są "widoczne" w tym samym czasie w pamięci programu.
+
+### Sposób 1 Przez Nazwę (`x:Name`) – *Code-behind*
+Jeśli kontrolka na `Karcie 1` ma nazwę, możesz do niej sięgnąć z kodu wywołanego na `Karcie 2`.
+
+
+```xml
+<TabControl>
+    <TabItem Header="Karta A">
+            <TextBox Name="InputOnTabA" Watermark="Wpisz coś tutaj..." />
+    </TabItem>
+
+    <TabItem Header="Karta B">
+            <StackPanel>
+                    <Button Content="Pobierz z Karty A" Click="OnGetDataClick" />
+                    <TextBlock Name="ResultOnTabB" />
+            </StackPanel>
+        </TabItem>
+</TabControl>
+
+```
+
+```csharp
+ private void OnGetDataClick(object sender, RoutedEventArgs e)
+    {
+        // Bez problemu sięgamy do TextBoxa, który fizycznie jest na innej karcie
+        string data = InputOnTabA.Text;
+        ResultOnTabB.Text = $"Odebrano: {data}";
+    }
+
+```
+
+### Sposób 2: Przez Binding (Bez kodu C#)
+Możesz połączyć kontrolki bezpośrednio w XAML,
+używając znaku `#`, który poznaliśmy przy `Sliderze`.
+To świetnie pokazuje "żywe" przesyłanie danych.
+
+
+Podmieńmy `Karta B` w naszym `axaml`:
+```xml
+<TabItem Header="Karta B">
+    <TextBlock Text="{Binding #InputOnTabA.Text}"
+               Foreground="Blue"
+               FontSize="20" />
+</TabItem>
+```
+
+Musimy też skasować metodę `OnGetDataClick` z `MainWindow.xaml.cs`.
+
+
+
+
+## Przechodzenie do innych kart - `SelectedIndex`
+```xml
+ <TabControl Name="SettingsTabControl" TabStripPlacement="Left">
+
+                        <TabItem>
+                                <TabItem.Header>
+                                        <StackPanel Orientation="Horizontal" Spacing="10">
+                                                <TextBlock Text="👤" FontSize="18"/>
+                                                <TextBlock Text="Profil użytkownika" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                </TabItem.Header>
+
+                                <StackPanel Margin="30" Spacing="15">
+                                        <TextBlock Text="Ustawienia Profilu" FontSize="24" FontWeight="Bold"/>
+                                        <TextBox Watermark="Twoje Imię" Width="250" HorizontalAlignment="Left"/>
+                                        <Button Content="Zapisz zmiany" Classes="accent" />
+
+                                        <Button Content="Przejdź do Bezpieczeństwa →"
+                                                Click="OnNextTabClick"
+                                                Margin="0,50,0,0"/>
+                                </StackPanel>
+                        </TabItem>
+
+                        <TabItem>
+                                <TabItem.Header>
+                                        <StackPanel Orientation="Horizontal" Spacing="10">
+                                                <TextBlock Text="🔒" FontSize="18"/>
+                                                <TextBlock Text="Bezpieczeństwo" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                </TabItem.Header>
+
+                                <StackPanel Margin="30" Spacing="15">
+                                        <TextBlock Text="Prywatność i Hasła" FontSize="24" FontWeight="Bold"/>
+                                        <ToggleSwitch Content="Weryfikacja dwuetapowa" OnContent="Włączona" OffContent="Wyłączona"/>
+                                        <Button Content="Zmień hasło" />
+                                </StackPanel>
+                        </TabItem>
+
+                </TabControl>
+
+```
+
+```csharp
+ private void OnNextTabClick(object? sender, RoutedEventArgs e)
+    {
+        // Przeskakujemy do następnej zakładki (z indeksu 0 na 1)
+        SettingsTabControl.SelectedIndex = 1;
+    }
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

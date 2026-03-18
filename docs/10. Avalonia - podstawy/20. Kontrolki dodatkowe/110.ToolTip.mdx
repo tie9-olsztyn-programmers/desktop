@@ -1,0 +1,58 @@
+---
+title: ToolTip
+---
+
+import useBaseUrl from "@docusaurus/useBaseUrl"
+
+
+## Czym jest `ToolTip`?
+- to to małe okienko, które pojawia się, gdy najedziesz myszką na jakiś element i
+przez chwilę ją tam przytrzymasz.
+- Znika samo, gdy odjedziesz kursorem.
+- ToolTip nie jest zwykłą kontrolką, którą wrzucasz luzem do okna.
+- Jest to tzw. Właściwość Dołączana (*Attached Property*).
+- Oznacza to, że "przyklejamy" ją do już istniejących elementów (np. do przycisku, obrazka, czy suwaka).
+
+
+## Prosty przykład
+
+```xml
+ <StackPanel Margin="20" Spacing="20">
+
+    <Button Content="💾 Zapisz"
+            ToolTip.Tip="Kliknij, aby zapisać plik na dysku (Ctrl+S)" />
+
+    <TextBox Watermark="Wpisz wiek..."
+             ToolTip.Tip="Wiek musi być liczbą między 1 a 120" />
+
+</StackPanel>
+```
+
+
+## Złożony przykład
+- Pobierz obraze:
+<a href={useBaseUrl('/myImages/warning.png')} download>Pobierz obrazek *warning*</a>
+- Dodaj zdjęcie do folderu `Assets` w projekcie i zmień jego właściwość na `AvaloniaResource`.
+
+```xml
+<Button Content="🗑️ Usuń konto" Background="LightGray">
+    <ToolTip.Tip>
+        <StackPanel Spacing="5">
+            <TextBlock Text="OSTRZEŻENIE!"
+                       Foreground="Red"
+                       FontWeight="Bold" />
+            <TextBlock
+                Text="Ta akcja bezpowrotnie skasuje wszystkie Twoje dane." />
+            <Image
+                Source="avares://Dodatkowe kontrolki/Assets/warning.png"
+                Height="50"
+                HorizontalAlignment="Center" />
+        </StackPanel>
+    </ToolTip.Tip>
+</Button>
+```
+
+
+
+
+

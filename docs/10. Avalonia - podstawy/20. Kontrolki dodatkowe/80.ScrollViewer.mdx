@@ -1,0 +1,58 @@
+---
+title: ScrollViewer
+---
+
+
+## Czym jest ScrollViewer?
+- Wyobraź sobie, że masz okno o wysokości 500 pikseli,
+ale chcesz w nim wyświetlić listę 100 przycisków,
+która zajmuje 3000 pikseli.
+- Bez `ScrollViewer` reszta przycisków po prostu "zniknie" poza dolną krawędzią okna.
+
+`ScrollViewer`
+- to "okno z widokiem".
+- Pozwala on umieścić wewnątrz dużą zawartość i przeglądać ją za pomocą suwaków (pionowego i poziomego).
+
+
+## Kluczowe zasady:
+- Tylko jedno dziecko:
+    - Podobnie jak `Border`, `ScrollViewer` może mieć tylko jeden element wewnątrz
+  (zazwyczaj jest to `StackPanel` lub `Grid`).
+- Automatyczne suwaki:
+    - Domyślnie suwaki pojawiają się tylko wtedy, gdy zawartość faktycznie wystaje poza ramy.
+
+## Kluczowe właściwości
+| Właściwość |    Wartości |  Opis
+| -------------             | -------------                 | ------------- |
+|`VerticalScrollBarVisibility`  | Auto, Visible, Hidden, Disabled | Steruje pionowym paskiem. |
+| `HorizontalScrollBarVisibility`|Auto, Visible, Hidden, Disabled"| Steruje poziomym paskiem. |
+| `AllowAutoHide` | True / False | Czy paski mają znikać, gdy nie używamy myszki (styl mobilny). |
+
+
+
+```xml
+<Border BorderBrush="Gray" BorderThickness="1" Width="300" Height="200">
+    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                  HorizontalScrollBarVisibility="Disabled">
+
+        <StackPanel Margin="10" Spacing="5">
+            <TextBlock Text="Długa lista opcji:" FontWeight="Bold" FontSize="18"/>
+            <Button Content="Opcja 1" />
+            <Button Content="Opcja 2" />
+            <Button Content="Opcja 3" />
+            <Button Content="Opcja 4" />
+            <Button Content="Opcja 5" />
+            <Button Content="Opcja 6" />
+            <Button Content="Opcja 7" />
+            <Button Content="Opcja 8" />
+            <TextBlock Text="Koniec listy" HorizontalAlignment="Center" Margin="0,10"/>
+        </StackPanel>
+
+    </ScrollViewer>
+</Border>
+```
+
+
+
+
+
