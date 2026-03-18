@@ -1,0 +1,92 @@
+---
+title: Aplikacja - Losowanie obrazków
+---
+
+import useBaseUrl from '@docusaurus/useBaseUrl';
+
+
+Zasoby: <a href={useBaseUrl('/myFiles/kotlinekcsharpekjavascriptek.zip')} download>Pobierz ZIP (trzy obrazki do aplikacji)</a>
+
+
+
+## `.axaml`
+```xml
+<StackPanel Margin="10">
+    <Button x:Name="RandomSelectionButton"
+            Margin="20"
+            Content="Wylosuj obrazek"
+            Width="300"
+            HorizontalAlignment="Center"
+            HorizontalContentAlignment="Center"
+            Background="Fuchsia"
+            Foreground="Beige"
+            CornerRadius="20"
+            Click="ShowRandomImage"
+    />
+
+    <Image x:Name="DisplayCsharpek" Width="200" Height="200"
+           Stretch="Uniform" Margin="10"
+    />
+
+</StackPanel>
+```
+
+## Logika aplikacji
+
+```csharp
+
+
+public partial class MainWindow : Window
+{
+
+    private readonly string[] _imagePaths =
+    {
+        "avares://LosoweZmieniaanieZdjec/Assets/kotlinek.png",
+        "avares://LosoweZmieniaanieZdjec/Assets/javascriptek.png",
+        "avares://LosoweZmieniaanieZdjec/Assets/csharpek.png"
+    };
+
+    private readonly Random _random = new();
+
+    public MainWindow()
+    {
+       InitializeComponent();
+
+       // Przykład załadowania pliku zasoby podczas tworzenia okna
+       // 'avares' - pochodzi od Ava-lonia Res-ources
+       // `://` ten znak występuje w innych uri np. `http://`
+       // `LosoweZmieniaanieZdjec` - to nazwa projektu
+       // var uri = new Uri("avares://LosoweZmieniaanieZdjec/Assets/javascriptek.png");
+       // // Używamy bezpośrednio AssetLoader do otwarcia zasobu
+       // using (var stream = AssetLoader.Open(uri))
+       // {
+       //     var bitmap = new Bitmap(stream);
+       //     DisplayCsharpek.Source = bitmap;
+       // }
+    }
+
+    private void ShowRandomImage(object? sender, RoutedEventArgs e)
+    {
+        try
+        {
+            // Losowanie indeksu obrazu
+            var randomImagePath = _imagePaths[_random.Next(_imagePaths.Length)];
+
+            // Ładowanie obrazu ze strumienia
+            using var stream = AssetLoader.Open(new Uri(randomImagePath));
+            DisplayCsharpek.Source = new Bitmap(stream);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Błąd ładowania obrazu: {ex.Message}");
+        }
+    }
+}
+
+```
+
+
+
+
+
+

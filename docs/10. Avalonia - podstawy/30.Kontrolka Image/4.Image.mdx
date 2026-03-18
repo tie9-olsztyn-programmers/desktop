@@ -1,0 +1,126 @@
+---
+title: Kontrolka Image
+---
+
+# Do czego służy kontrolka Image?
+- Kontrolka `<Image />` służy do wyświetlania grafiki w aplikacji Avalonia (np. PNG, JPG, SVG).
+- Jest lekka – nie służy do edycji, tylko do prezentacji.
+
+# Jak używać kontrolki Image?
+## Zasób osadzony
+- Utworzyć w projekcie folder np. `Assets`
+- Przenieść do niego obrazki
+- Prawy klawisz myszki na obrazku:
+    - Wybierz *Properties*
+    - Ustaw *Build Action* na *AvaloniaResource*
+    - Zapisz
+- Sprawdzenie:
+    - Zmień sposób wyświetlania plików i folderów z *Solution* na *File System*
+    - Znajdź plik z rozszerzeniem `.csproj`
+    - Otwórz ten plik:
+        - w jednej z `<Item Group>` znajdziesz
+        - `<AvaloniaResource Include="Assets\<NazwaTwojegoObrazka>.png" />`
+## Źródło obrazu (Source)
+- Właściwość `Source` wskazuje, skąd ma być załadowany obraz.
+    -  `<Image Source="avares://NazwaProjektu/Assets/logo.png" Width="100" Height="100"/>`
+    - Ścieżka `avares://` oznacza zasób osadzony w projekcie (np. pliki w folderze `Assets`, oznaczone jako `AvaloniaResource` w `.csproj`).
+
+## Rozmiar
+- `Width` i `Height` – ustawiają szerokość i wysokość obrazka.
+- Jeśli nie podasz, obraz wyświetli się w oryginalnym rozmiarze.
+- Dopasowanie `Stretch` - określa, jak obraz ma się skalować do rozmiaru kontrolki:
+    - `None` – bez skalowania.
+    - `Fill` – rozciąga, może zniekształcić.
+    - `Uniform` – dopasowuje, zachowując proporcje.
+    - `UniformToFill` – wypełnia cały obszar, przycinając nadmiar.
+
+Przykład:
+`<Image Source="avares://App/Assets/photo.jpg" Stretch="Uniform"/>`
+
+
+## Umiejscowienie obrazu
+- Możesz go opakować w inne kontrolki (np. `Border`), żeby dodać ramkę czy tło.
+- W `StackPanel`, `Grid` i innych `layoutach` zachowuje się jak zwykła kontrolka.
+
+## Ładowanie dynamiczne (C#)
+Obraz może być ładowany dynamicznie w kodzie `C#`
+```csharp
+var img = new Image();
+img.Source = new Avalonia.Media.Imaging.Bitmap("Assets/photo.png");
+```
+
+### Przykład, gdy obrazek nie jest zasobem aplikacji
+- kontrolka `Image` została nazwana `MyImage`
+- zdjęcie zostało zapisane w `/bin/Debug/net9.0/Assets/olsztyn.jpg` (znajdziesz tę ścieżkę przełączając wyświetlanie plików i folderów z *Solution* na *File System*)
+- takie zdjęcie nie będzie zasobem aplikacji
+
+```xml
+   <StackPanel>
+       <TextBlock Text="Obrazki" />
+       <Image x:Name="MyImage"  />
+   </StackPanel>
+```
+
+
+```csharp
+public partial class MainWindow : Window
+{
+    public MainWindow()
+    {
+        InitializeComponent();
+        MyImage.Source = new Avalonia.Media.Imaging.Bitmap("Assets/olsztyn.jpg");
+    }
+
+
+}
+```
+
+### Przykład z obrazkiem, który jest zasobem aplikacji
+- kontrolka `Image` została nazwana `MyImage`
+- zdjęcie zostało zapisane po prostu w zrobionym folderze `Assets`, a jego *Build action* ustawiony na *AvaloniaResource*
+
+```xml
+   <StackPanel>
+       <TextBlock Text="Obrazki" />
+       <Image x:Name="MyImage"  />
+   </StackPanel>
+```
+
+```csharp
+public MainWindow()
+{
+    InitializeComponent();
+
+    try
+        {
+            var uri = new Uri("avares://AvaloniaApplication1/Assets/olimp.jpg");
+            using (var asset = AssetLoader.Open(uri)) // zamyka stream po użyciu
+            {
+                MyImage.Source = new Bitmap(asset);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Błąd podczas ładowania obrazu: {ex.Message}");
+        }
+
+}
+```
+
+**Wyjaśnienie**
+- `AssetLoader.Open` - daje `Stream`, więc trzeba go zamknąć (`using` zrobi to automatycznie).
+- `new Bitmap(stream)` od razu odczytuje dane, więc po utworzeniu bitmapy można bezpiecznie zwolnić strumień.
+- `try/catch` - chroni przed sytuacją, gdy np. ktoś usunie/źle nazwie plik w `Assets/`.
+
+
+
+
+
+
+
+
+
+
+
+
+
