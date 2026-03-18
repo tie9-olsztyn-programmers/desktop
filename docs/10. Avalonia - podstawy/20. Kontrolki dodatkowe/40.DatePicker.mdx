@@ -1,0 +1,59 @@
+---
+title: DataPicker
+----
+
+
+Służy do wyboru konkretnej daty.
+Nie operuje na zwykłym `DateTime`, ale na typie `DateTimeOffset?`.
+
+## Kluczowe właściwości:
+- `SelectedDate` Wybrana data (typ `DateTimeOffset?`).
+- `MinYear` / `MaxYear` Ograniczenie zakresu lat (np. żeby ktoś nie wybrał roku 1850).
+- `YearVisible` / `MonthVisible` / `DayVisible`:
+Możemy ukryć np. wybór dnia, jeśli potrzebujemy tylko miesiąca i roku.
+
+
+```xml
+ <StackPanel Margin="20" Spacing="10">
+        <TextBlock Text="Wybierz datę urodzenia:" />
+
+        <DatePicker Name="BirthDatePicker"
+                    SelectedDate="2010-01-01"
+                    HorizontalAlignment="Left" />
+
+        <Button Content="Sprawdź datę" Click="OnCheckDateClick" />
+        <TextBlock Name="DateResult" />
+    </StackPanel>
+```
+
+```csharp
+private void OnCheckDateClick(object sender, RoutedEventArgs e)
+{
+    // 1. Pobieramy SelectedDate (DateTimeOffset?)
+    DateTimeOffset? selected = BirthDatePicker.SelectedDate;
+
+    if (selected.HasValue)
+    {
+        // 2. Możemy wyciągnąć samo DateTime, jeśli wolimy klasyczny format
+        DateTime date = selected.Value.DateTime;
+
+        // 3. Wyświetlamy sformatowaną datę
+        DateResult.Text = $"Wybrałeś: {date.ToShortDateString()}";
+
+        // Ciekawostka dla uczniów: Ile dni temu to było?
+        var daysAgo = (DateTime.Now - date).TotalDays;
+        DateResult.Text += $" (to było {(int)daysAgo} dni temu!)";
+    }
+    else
+    {
+        DateResult.Text = "Nic nie wybrano!";
+    }
+}
+
+```
+
+
+
+
+
+

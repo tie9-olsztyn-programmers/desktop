@@ -1,0 +1,122 @@
+
+---
+title: Image
+---
+
+
+import useBaseUrl from "@docusaurus/useBaseUrl";
+
+Służy wyłącznie do wyświetlania obrazu.
+Najważniejszą rzeczą do zrozumienia jest to, że `Image` to tylko "ramka",
+a to, co w niej widzimy, określa właściwość `Source`.
+
+## Kluczowe właściwości:
+- `Source` Ścieżka do pliku graficznego.
+- `Stretch` Decyduje o tym, jak obraz ma się zachować, gdy ramka ma inny rozmiar niż sam plik (bardzo ważne!).
+- `StretchDirection` Określa, czy obraz może być tylko powiększany, tylko pomniejszany, czy oba.
+
+
+
+## Jak dodać obraz do projektu (w Riderze)?
+- Zanim użyjemy obrazka w kodzie, musimy go mieć w projekcie.
+- W projekcie Avalonia zrób folder  `Assets`.
+- Do tego nowego folderu dodaj dwa pliki:
+    - <a href={useBaseUrl('/myImages/catbegsinski.png')} download>Pobierz obrazek kota (Beksiński)</a>
+    - <a href={useBaseUrl('/myImages/dogdali.png')} download>Pobierz obrazek psa (Dali)</a>
+
+:::warring
+Ważne Sprawdź we właściwościach pliku w Riderze, czy `Build Action`
+jest ustawione na `AvaloniaResource`
+
+:::
+
+
+## Co oznaczają tryby `Stretch`?
+- `None` Obraz zachowuje oryginalny rozmiar (może zostać ucięty).
+- `Fill` Rozciąga obraz, aby wypełnił całą ramkę (może go zniekształcić – "roztyć" lub "wydłużyć").
+- `Uniform` (Najczęstszy) Skaluje obraz tak, aby cały zmieścił się w ramce bez zniekształceń.
+- `UniformToFill` Skaluje tak, aby wypełnić całą ramkę bez zniekształceń (może uciąć boki obrazu).
+
+
+```xml
+<StackPanel Margin="20" Spacing="10">
+    <Border BorderBrush="Gray" BorderThickness="2"
+            CornerRadius="10" ClipToBounds="True"
+            Width="400" Height="300"
+            >
+            <Image Name="MyImage"
+                   Source="avares://Dodatkowe kontrolki/Assets/dogdali.png"
+                   Stretch="UniformToFill" />
+    </Border>
+
+    <TextBlock Text="Opcje dopasowania (Stretch):" />
+    <ComboBox Name="StretchSelector" SelectionChanged="OnStretchChanged">
+            <Stretch>None</Stretch>
+            <Stretch>Fill</Stretch>
+            <Stretch>Uniform</Stretch>
+            <Stretch>UniformToFill</Stretch>
+    </ComboBox>
+
+    <Button Content="Change Image"  Click="ChangeImage"/>
+</StackPanel>
+
+```
+
+
+
+:::tip `ClipToBounds="True"`
+Border mówi do swojej zawartości:
+> "Wszystko, co nie mieści się w moich zaokrąglonych granicach, zostaje odcięte".
+
+Dzięki temu obrazek idealnie dopasowuje się do kształtu ramki.
+
+:::
+
+```csharp
+
+    private void OnStretchChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        // Sprawdzamy, czy sender to faktycznie ComboBox
+        if (sender is not ComboBox comboBox) return;
+        //  Pobieramy wybrany element.
+        // Ponieważ w XAML użyliśmy <Stretch>...</Stretch>,
+        // wybranym obiektem będzie bezpośrednio wartość z enuma Stretch.
+        var selectedStretch = comboBox.SelectedItem;
+        if (selectedStretch is not Stretch stretchValue) return;
+        // Przypisujemy nową wartość do obrazka
+        // Zakładamy, że obrazek ma Name="MyImage"
+        MyImage?.Stretch = stretchValue;
+    }
+
+
+    private void ChangeImage(object? sender, RoutedEventArgs e)
+    {
+        //  Zmiana stanu (negacja)
+        _isCatShowing = !_isCatShowing;
+
+        //  Wybór URI (operator warunkowy)
+        var path = _isCatShowing ? CatUri : DogUri;
+        var uri = new Uri(path);
+
+        // Bezpieczne otwieranie strumienia za pomocą 'using'
+        // Strumień zostanie automatycznie zamknięty po stworzeniu bitmapy
+        using var assetStream = AssetLoader.Open(uri);
+        MyImage.Source = new Bitmap(assetStream);
+    }
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

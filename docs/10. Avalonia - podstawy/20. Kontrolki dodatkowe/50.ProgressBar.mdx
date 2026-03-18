@@ -1,0 +1,109 @@
+---
+title: ProgressBar
+---
+
+Jest to pasek postępu, który wizualizuje postęp operacji.
+
+Może działać w dwóch trybach:
+- Deterministyczny: Wiemy, ile jest do zrobienia (np. pobieranie 10 plików).
+- Indeterministyczny: Nie wiemy, ile to potrwa (np. „łączenie z serwerem”) –
+pasek wtedy po prostu „lata” w kółko.
+
+
+## Kluczowe właściwości:
+- `Minimum` / `Maximum` Zakres postępu (domyślnie 0-100).
+- `Value` Aktualny stan postępu.
+- `IsIndeterminate` Jeśli ustawisz na `True`, pasek będzie animowany w pętli (świetne do ekranów ładowania).
+- `Orientation` Możesz zrobić pasek pionowy (`Vertical`) lub poziomy (`Horizontal`).
+- `ShowProgressText` (Zależnie od motywu) wyświetla procenty na pasku.
+
+
+```xml
+  <StackPanel Margin="20" Spacing="10">
+        <TextBlock Text="Postęp instalacji:" />
+
+        <ProgressBar Name="MyProgressBar"
+                     Minimum="0"
+                     Maximum="100"
+                     Value="0"
+                     Height="20"
+                     ShowProgressText="True" />
+
+        <StackPanel Orientation="Horizontal" Spacing="10">
+            <Button Content="Dodaj +10%" Click="OnAddProgressClick" />
+            <Button Content="Reset" Click="OnResetClick" />
+        </StackPanel>
+
+        <CheckBox Name="InfiniteCheck"
+                  Content="Tryb 'Czekaj w nieskończoność'"
+                  IsChecked="{Binding #MyProgressBar.IsIndeterminate, Mode=TwoWay}" />
+    </StackPanel>
+
+```
+:::tip    `IsChecked="{Binding #MyProgressBar.IsIndeterminate, Mode=TwoWay}" `
+1. Symbol `#` (Shorthand dla ElementName)
+- W tradycyjnym WPF pisałoby się długie: `{Binding ElementName=MyProgressBar, Path=IsIndeterminate}`.
+- Avalonia wprowadziła genialny skrót: `#`.
+- `#MyProgressBar` mówi: „Szukaj w tym samym pliku XAML kontrolki, która ma `Name="MyProgressBar"`”.
+
+To pozwala jednej kontrolce „podglądać” właściwości drugiej.
+
+2. `.IsIndeterminate`
+- To jest ścieżka (`Path`).
+- Mówimy `CheckBoxowi`: „Nie interesuje mnie cały `ProgressBar`,
+interesuje mnie konkretnie jego właściwość `IsIndeterminate` (czy pasek 'lata' w kółko)”.
+
+3. `Mode=TwoWay` (Kluczowy element!)
+- To określa kierunek przepływu informacji.
+Mamy trzy główne tryby:
+- `OneWay` Jeśli pasek zmieni tryb, `CheckBox `się zaktualizuje. \
+Ale kliknięcie w `CheckBox` nic nie zrobi z paskiem.
+- `TwoWay` Działa w obie strony.
+    - Klikasz `CheckBox → Włączasz/wyłączasz` animację paska.
+    - Zmieniasz coś w kodzie paska `→ CheckBox` sam się zaznacza/odznacza.
+
+
+## Binding
+Wyobraź sobie, że musiałbyś to zakodować klasycznie w C#:
+- Musiałbyś stworzyć zdarzenie `Checked` w `CheckBoxie`, żeby włączyć pasek.
+- Musiałbyś stworzyć zdarzenie `Unchecked`, żeby wyłączyć pasek.
+- Jeśli w kodzie C# zmieniłbyś stan paska, musiałbyś pamiętać, żeby ręcznie „odptaszkować” `CheckBox`,
+żeby UI się nie rozspójnił.
+
+Z Bindingiem wystarczy ta jedna linijka.
+
+:::tip **Metafora**
+"Wyobraźcie sobie, że `CheckBox` i `ProgressBar` są połączone niewidzialną sznurówką (`Binding`).
+Gdy pociągniesz za jeden koniec (`Mode=TwoWay`),
+drugi koniec porusza się tak samo.
+`#` to adres, pod który ta sznurówka jest przypięta".
+
+:::
+
+```csharp
+   private void OnAddProgressClick(object sender, RoutedEventArgs e)
+    {
+        // Sprawdzamy, czy nie wyjdziemy poza Maximum (100)
+        if (MyProgressBar.Value < MyProgressBar.Maximum)
+        {
+            MyProgressBar.Value += 10;
+        }
+    }
+
+    private void OnResetClick(object sender, RoutedEventArgs e)
+    {
+        MyProgressBar.Value = 0;
+    }
+```
+
+
+
+
+
+
+
+
+
+
+
+

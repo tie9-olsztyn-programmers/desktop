@@ -1,0 +1,80 @@
+---
+title: Slider
+---
+
+To kontrolka, która pozwala wybrać wartość liczbową poprzez przesuwanie "suwaka" (tzw. `thumb`)
+wzdłuż ścieżki.
+Jest idealna do ustawień typu głośność, jasność czy rozmiar tekstu.
+
+## Kluczowe właściwości:
+- `Minimum` / `Maximum` Zakres (podobnie jak w `ProgressBar`).
+- `Value` Aktualna pozycja suwaka (typ `double` – uwaga, `NumericUpDown` miał `decimal`, tutaj mamy `double`).
+- `Orientation` Horizontal (poziomy) lub Vertical (pionowy).
+- `IsSnapToTickEnabled` Jeśli ustawisz na `True`, suwak nie będzie "płynął",
+ale będzie przeskakiwał do najbliższych kresek (skoków).
+- `TickFrequency` Co ile mają pojawiać się "skoki" (np. co 1.0).
+
+
+```xml
+ <StackPanel Margin="20" Spacing="20">
+    <TextBlock Text="Przesuń suwak, aby zmienić rozmiar tekstu:" />
+
+    <Slider Name="FontSizeSlider"
+            Minimum="10"
+            Maximum="100"
+            Value="20"
+            TickFrequency="5"
+            IsSnapToTickEnabled="True"
+            ValueChanged="OnSliderValueChanged"
+            />
+    <Button Content="Zapisz ustawienia"
+            Click="OnSaveSettingsClick"
+            HorizontalAlignment="Center"
+            Margin="0,20,0,0" />
+
+    <TextBlock Text="Wielki Tekst"
+               FontSize="{Binding #FontSizeSlider.Value}"
+               HorizontalAlignment="Center"
+               Foreground="Coral" />
+
+    <TextBlock Text="{Binding #FontSizeSlider.Value, StringFormat='Aktualna wielkość: {0:F0} pkt'}"
+               HorizontalAlignment="Center" />
+</StackPanel>
+
+```
+
+
+```csharp
+   private void OnSliderValueChanged(object? sender, RangeBaseValueChangedEventArgs e)
+    {
+        // e.NewValue to wartość PO zmianie
+        // e.OldValue to wartość PRZED zmianą
+
+        var aktualnaWartosc = e.NewValue;
+
+        // Przykład: aktualizacja głośności w czasie rzeczywistym
+        Console.WriteLine($"Suwak jest teraz na: {aktualnaWartosc}");
+    }
+    private void OnSaveSettingsClick(object sender, RoutedEventArgs e)
+    {
+        // Slider używa typu double
+        double currentSize = FontSizeSlider.Value;
+
+        // Możemy rzutować na int, jeśli nie potrzebujemy ułamków
+        int intSize = (int)currentSize;
+
+        Console.WriteLine($"Zapisano rozmiar: {intSize}");
+    }
+
+```
+
+
+
+
+
+
+
+
+
+
+

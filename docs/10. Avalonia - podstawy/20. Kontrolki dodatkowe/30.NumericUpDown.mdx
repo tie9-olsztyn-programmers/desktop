@@ -1,0 +1,98 @@
+---
+title: NumericUpDown
+---
+
+
+Jest to połączenie pola tekstowego (`TextBox`)
+z dwoma przyciskami (strzałkami góra/dół).
+Służy do wprowadzania wartości liczbowych.
+
+
+Dlaczego nie użyć zwykłego `TextBoxa`?
+- Walidacja: `NumericUpDown` przyjmuje tylko liczby.
+- Wygoda: Można zmieniać wartość kółkiem myszy lub strzałkami na klawiaturze.
+- Bezpieczeństwo: Możemy łatwo ustawić zakres (np. od 1 do 100), którego użytkownik nie przekroczy.
+
+## Kluczowe właściwości:
+- `Value`: Aktualna wartość (uwaga: jest to typ `decimal?`, czyli liczba dziesiętna, która może być `null`em).
+- `Minimum` / `Maximum`: Dolna i górna granica (np. `Minimum="0"`,  `Maximum="100"`).
+- `Increment: O` ile ma się zmieniać wartość po jednym kliknięciu (np. 0.5 lub 10).
+- `FormatString` Jak liczba ma być wyświetlana
+(np. `C2` dla waluty, `P0` dla procentów, lub `F2` dla dwóch miejsc po przecinku).
+- `Watermark` Tekst podpowiedzi, gdy pole jest puste.
+
+```xml
+<StackPanel Margin="20" Spacing="20">
+    <TextBlock Text="Wybierz swój wiek:" FontWeight="Bold"/>
+
+    <NumericUpDown x:Name="AgeInput"
+                   Minimum="0"
+                   Maximum="150"
+                   Increment="1"
+                   Value="18"
+                   FormatString="0 lat"
+                   HorizontalAlignment="Left"
+                   Width="150"
+
+                   />
+    <Button Content="Pobierz wiek" Click="OnGetAgeClick" />
+    <TextBlock Name="ResultText" />
+
+    <TextBlock Text="Ustaw jasność (0-1):" Margin="0,10,0,0"/>
+    <NumericUpDown Minimum="0"
+                   Maximum="1"
+                   Increment="0.1"
+                   FormatString="P0"
+                   Value="0.5"
+                   HorizontalAlignment="Left"
+                   Width="150"
+                           ValueChanged="OnValueChanged"
+                           />
+
+</StackPanel>
+```
+
+:::tip
+Sprawdź `ShowButtonSpinner="False"`
+
+:::
+
+```csharp
+public partial class MainWindow : Window
+{
+    public MainWindow()
+    {
+        InitializeComponent();
+    }
+
+    private void OnValueChanged(object sender, NumericUpDownValueChangedEventArgs e)
+    {
+        // e.NewValue zawiera nową wartość, e.OldValue starą
+        var nowaWartosc = e.NewValue;
+        Console.WriteLine(nowaWartosc);
+        // Możesz tu np. od razu przeliczyć cenę w sklepie
+    }
+
+    private void OnGetAgeClick(object? sender, RoutedEventArgs e)
+    {
+        // 1. Pobieramy wartość (może być null, jeśli pole jest puste)
+        decimal? val = AgeInput.Value;
+
+        if (val.HasValue)
+        {
+            // 2. Jeśli potrzebujesz liczby całkowitej (int), musisz ją rzutować
+            int age = (int)val.Value;
+
+            ResultText.Text = $"Twój wiek to: {age}";
+        }
+        else
+        {
+            ResultText.Text = "Proszę podać liczbę!";
+        }
+    }
+}
+
+
+```
+
+
