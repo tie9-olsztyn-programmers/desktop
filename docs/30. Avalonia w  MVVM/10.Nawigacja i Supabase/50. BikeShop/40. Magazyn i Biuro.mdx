@@ -1,0 +1,232 @@
+---
+title: Magazyn i Biuro
+---
+
+Przechodzimy do punktu drugieg:
+```
+2. Wypełnienie "Wnętrza" (Magazyn i Ustawienia)
+ - Stworzenie widoku `InventoryView` z tekturowymi, przykładowymi rowerami (*Mock Data*).
+ - Stworzenie widoku `ManagerView` (Biura Kierownika),
+gdzie dodamy przycisk "Wyloguj" oraz w przyszłości zmianę motywu.
+
+```
+
+W poprzednim kroku zbudowaliśmy Głównego Reżysera (`MainWindowViewModel`), który przełączał
+"Drzwi" (Logowanie) na "Wnętrze" (Dashboard).
+
+Teraz zastosujemy **Zasadę Matrioszki**.
+Nasze "Wnętrze" (`MainDashboardViewModel`) stanie się **Małym Reżyserem**.
+Będzie miało własną, mniejszą scenę (po prawej stronie) i własnych, mniejszych
+aktorów (`InventoryViewModel` oraz `ManagerViewModel`).
+
+
+---
+## Tworzymy model i kartonowe dane (*Mock Data*)
+Zanim wpuścimy rowery na scenę, musimy zdefiniować, jak wygląda rower.
+W folderze `Models` utwórz prostą klasę `Bike`.
+
+```csharp
+public class Bike
+{
+    public string Brand { get; set; } = string.Empty;
+    public string ModelName { get; set; } = string.Empty;
+    public decimal Price { get; set; }
+}
+```
+
+## Tworzymy Mniejszych Aktorów (Sub-ViewModels)
+Teraz tworzymy dwa nowe `ViewModele`, które będą wyświetlane w prawej części naszego panelu.
+
+### `InventoryViewModel.cs` (Magazyn)
+Ten `ViewModel` wygeneruje sztuczne (Mock) dane,
+żebyśmy mieli na czym pracować, zanim podepniemy prawdziwą bazę Supabase.
+
+```csharp
+public class InventoryViewModel : ViewModelBase
+    {
+        public ObservableCollection<Bike> Bikes { get; } = new();
+
+        public InventoryViewModel()
+        {
+            // Wypełniamy magazyn "kartonowymi" rowerami (Mock Data)
+            Bikes.Add(new Bike { Brand = "Trek", ModelName = "Marlin 7", Price = 3500m });
+            Bikes.Add(new Bike { Brand = "Giant", ModelName = "Talon 2", Price = 2800m });
+            Bikes.Add(new Bike { Brand = "Specialized", ModelName = "Rockhopper", Price = 3200m });
+        }
+    }
+```
+
+### `ManagerViewModel.cs` (Biuro Kierownika)
+Tutaj znajdzie się przycisk wylogowania. Użyjemy wiedzy o delegatach (`Action`)!
+```csharp
+public class ManagerViewModel(Action onLogout) : ViewModelBase
+{
+    public ReactiveCommand<Unit, Unit> LogoutCommand { get; } = ReactiveCommand.Create(() =>
+    {
+        onLogout.Invoke(); // Naciskamy przycisk wylogowania!
+    });
+
+}
+```
+:::danger Primary contructor
+W powyższym kodzie użyliśmy konstruktora podstawowego,
+którego syntaktyka jest podobna do Kotlina.
+Ten sam kod bez konstruktora podstawowego:
+```csharp
+public class ManagerViewModel : ViewModelBase
+{
+    public ReactiveCommand<Unit, Unit> LogoutCommand { get; }
+
+    // Otrzymujemy "czerwony przycisk" od Dashboardu
+    public ManagerViewModel(Action onLogout)
+    {
+        LogoutCommand = ReactiveCommand.Create(() =>
+        {
+            onLogout.Invoke(); // Naciskamy przycisk wylogowania!
+        });
+    }
+}
+```
+
+:::
+
+---
+
+## Szkolimy Małego Reżysera (`MainDashboardViewModel`)
+Nasz Dashboard musi teraz zarządzać tym, co widać po prawej stronie.
+Dodajemy mu właściwość `CurrentPage` (jego własny reflektor).
+```csharp
+public class MainDashboardViewModel : ViewModelBase
+{
+    // Reflektor Małego Reżysera (pokazuje Magazyn lub Biuro)
+    [Reactive] public ViewModelBase CurrentPage { get; private set; }
+
+    // Komendy dla przycisków w menu po lewej
+    public ReactiveCommand<Unit, Unit> ShowInventoryCommand { get; }
+    public ReactiveCommand<Unit, Unit> ShowManagerCommand { get; }
+
+    // Konstruktor Dashboardu przyjmuje akcję wylogowania od Głównego Reżysera
+    public MainDashboardViewModel(Action onLogout)
+    {
+        // Na start pokazujemy Magazyn
+        CurrentPage = new InventoryViewModel();
+
+        // Konfiguracja przycisków menu
+        ShowInventoryCommand = ReactiveCommand.Create(() =>
+        {
+            CurrentPage = new InventoryViewModel();
+        });
+
+        ShowManagerCommand = ReactiveCommand.Create(() =>
+        {
+            // Przekazujemy akcję wylogowania głębiej, do Biura Kierownika
+            CurrentPage = new ManagerViewModel(onLogout);
+        });
+    }
+}
+```
+
+## Budujemy scenografię `InventoryView.xaml`
+```xml
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+            xmlns:viewModels="clr-namespace:BikeShopNawigateSupabase.ViewModels"
+            x:DataType="viewModels:InventoryViewModel"
+            x:Class="BikeShopNawigateSupabase.Views.InventoryView">
+
+    <StackPanel Margin="20" Spacing="15">
+        <TextBlock Text="Stan Magazynu" FontSize="24" FontWeight="Bold"/>
+
+        <ListBox ItemsSource="{Binding Bikes}" Background="White" CornerRadius="5">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Horizontal" Spacing="15" Margin="5">
+                        <TextBlock Text="🚲" FontSize="20"/>
+                        <TextBlock Text="{Binding Brand}" FontWeight="Bold" Width="100"/>
+                        <TextBlock Text="{Binding ModelName}" FontStyle="Italic" Width="150"/>
+                        <TextBlock Text="{Binding Price, StringFormat='{}{0} PLN'}"
+                                   Foreground="Green" FontWeight="Bold"/>
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+    </StackPanel>
+</UserControl>
+```
+
+## Budujemy wygląd biura kierownika (`ManagerView.xaml`)
+```xml
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="BikeShopNawigateSupabase.Views.ManagerView"
+             xmlns:viewModels="clr-namespace:BikeShopNawigateSupabase.ViewModels"
+             x:DataType="viewModels:ManagerViewModel"
+             >
+
+    <StackPanel Margin="20" Spacing="20" HorizontalAlignment="Center"
+                VerticalAlignment="Center">
+        <TextBlock Text="Biuro Kierownika" FontSize="24" FontWeight="Bold"
+                    HorizontalAlignment="Center"/>
+        <TextBlock Text="Opcje zmiany motywu pojawią się wkrótce..."
+                    FontStyle="Italic" Foreground="Gray"/>
+
+        <Button Content="Wyloguj się" Command="{Binding LogoutCommand}"
+                Background="DarkRed" Foreground="White" Width="200"
+                HorizontalContentAlignment="Center"/>
+    </StackPanel>
+
+</UserControl>
+```
+
+
+## Aktualizujemy wygląd `DashboardView.xaml`
+Zamiast statycznego napisu damy ` <ContentControl Content="{Binding CurrentPage}" />`
+
+```xml
+  <Grid ColumnDefinitions="200,*">
+    <Border Grid.Column="0" Background="#2C3E50" Padding="10">
+        <StackPanel Spacing="10">
+            <TextBlock Text="MENU" Foreground="White" FontWeight="Bold" Margin="0,0,0,20"/>
+            <Button Content="Rowery" Foreground="White" Background="Transparent" />
+            <Button Content="Klienci" Foreground="White" Background="Transparent" />
+            <Button Content="Serwis" Foreground="White" Background="Transparent" />
+            <Button Content="Kierownik" Command="{Binding ShowManagerCommand}"
+                    HorizontalAlignment="Center"
+                    Foreground="White" Background="Transparent" />
+        </StackPanel>
+    </Border>
+
+    <Grid Grid.Column="1" Background="#ECF0F1">
+        <ContentControl Content="{Binding CurrentPage}" />
+    </Grid>
+</Grid>
+```
+
+## Ostatni szlif u Głównego Reżysera (`MainWindowViewModel`.cs)
+Ponieważ zmieniliśmy konstruktor Dashboardu, musimy zaktualizować główny plik MainWindowViewModel.cs.
+Musimy przekazać mu funkcję wylogowywania (powrót do logowania).
+
+`MainWindowViewModel.cs"
+```csharp
+// ...
+// Aktualizujemy metodę metodę:
+private void GoToDashboard()
+{
+    // Kiedy wchodzimy do Dashboardu, dajemy mu instrukcję, jak ma nas wylogować (GoToLogin)
+    CurrentViewModel = new MainDashboardViewModel(GoToLogin);
+}
+
+// Nowa metoda do wylogowywania
+private void GoToLogin()
+{
+    CurrentViewModel = new LoginViewModel(GoToDashboard);
+}
+///...
+```
+
