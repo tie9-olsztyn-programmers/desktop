@@ -1,0 +1,230 @@
+---
+title: Nawigacja główna
+---
+
+
+
+## Budowa "Drzwi" i "Wnętrza" (Nawigacja Główna)
+- Utworzenie okna logowania (`LoginView`) z polami na e-mail i hasło.
+- Utworzenie widoku po zalogowaniu (`MainDashboardView`),
+który zawiera w sobie menu po lewej stronie okna.
+- Konfiguracja Głównego Reżysera (`MainWindowViewModel`), aby
+potrafił przełączać się między "Drzwiami" a "Wnętrzem".
+
+### LoginView
+#### LoginViewModel
+
+```csharp
+// PAMIĘTAJ O IMPORTACH
+
+public class LoginViewModel : ViewModelBase
+{
+    [Reactive] public string Email { get; set; } = string.Empty;
+    [Reactive] public string Password { get; set; } = string.Empty;
+
+    public ReactiveCommand<Unit, Unit> LoginCommand { get; }
+
+    // Konstruktor przyjmuje "instrukcję" (Action), co zrobić po udanym zalogowaniu
+    public LoginViewModel(Action onLoginSuccess)
+    {
+        // Przycisk działa tylko, gdy oba pola są wypełnione
+        var canLogin = this.WhenAnyValue(
+            x => x.Email, x => x.Password,
+            (email, pass) => !string.IsNullOrWhiteSpace(email) && !string.IsNullOrWhiteSpace(pass)
+        );
+
+        LoginCommand = ReactiveCommand.Create(() =>
+        {
+            // Tutaj w przyszłości zapytamy Supabase, czy hasło jest poprawne.
+            // Na razie udajemy, że zawsze jest OK i wywołujemy akcję przejścia:
+            onLoginSuccess.Invoke();
+        }, canLogin);
+        }
+}
+```
+
+:::note Czym jest `Action`?
+## Technicznie
+- `Action` to tzw. **Delegat** (Delegate).
+- to zmienna, która zamiast przechowywać dane (jak `string` czy `int`),
+**przechowuje całą metodę (funkcję)**.
+- `Action` oznacza metodę, która:
+    - niczego nie zwraca (`void`) i
+    - nie przyjmuje żadnych parametrów (ma puste nawiasy `()`).
+
+
+## Naoczne: Strażnik i Czerwony Przycisk
+Wyobraź sobie, że `LoginViewModel` to **Strażnik**, którego zatrudniłeś do pilnowania drzwi
+w swoim sklepie rowerowym.
+- Gdyby Strażnik musiał wiedzieć:
+    - jak dokładnie otworzyć sklep,
+    - musiałbyś mu dać klucze do wszystkich pomieszczeń,
+    - instrukcję obsługi alarmu,
+    - plany budynku i listę pracowników
+(czyli `LoginViewModel` musiałby w swoim kodzie tworzyć `MainDashboardViewModel` i znać całą nawigację).
+- **Zamiast tego używamy `Action`:**
+    - Zatrudniasz Strażnika i
+    - dajesz mu do ręki małe pudełko z jednym, **czerwonym przyciskiem**
+  (to jest właśnie nasz `Action onLoginSuccess`).
+    - Mówisz Strażnikowi:
+  > "Twoim jedynym zadaniem jest sprawdzenie dowodu osobistego (e-mail i hasło).
+  > Jeśli wszystko się zgadza, masz po prostu wcisnąć ten czerwony przycisk.
+  > Nie interesuj się tym, co ten przycisk robi".
+
+:::
+
+
+:::tip Inne delegaty
+## 1. Func (Funkcja)
+- `Func` to delegat, który:
+    - przyjmuje od 0 do 16 parametrów, ale **zawsze musi coś zwrócić**.
+    - W zapisie kątowym (np. `Func<int, string>`), **ostatni** podany typ to zawsze typ zwracany.
+
+
+- `Predicate` to delegat, który
+    - przyjmuje dokładnie jeden parametr i
+    - zawsze zwraca wartość logiczną (`bool` - prawda/fałsz).
+    - Służy do sprawdzania, czy dany obiekt spełnia określony warunek.
+    - W praktyce jest to, to samo co `Func<T, bool>`.
+    - W zapisie kątowym to `Predicate<T>`
+:::
+
+:::tip `.Invoke()`
+- W języku C# `.Invoke()` to wbudowana metoda każdego delegata (takiego jak `Action`, `Func` czy `Predicate`).
+- Jej jedynym zadaniem jest **uruchomienie (wywołanie) metody,
+która jest aktualnie przechowywana wewnątrz tego delegata**.
+
+:::
+
+
+**Krok A: Reżyser (MainWindowViewModel) daje przycisk**
+W naszym głównym oknie napisaliśmy:
+`CurrentViewModel = new LoginViewModel(GoToDashboard);`
+Reżyser mówi: "Hej Logowaniu, masz tu przycisk. Kiedy go wciśniesz, włączy się moja prywatna metoda `GoToDashboard`".
+
+**Krok B: Strażnik (LoginViewModel) wciska przycisk**
+W modelu logowania, gdy hasło jest poprawne, wywołujemy:
+`onLoginSuccess.Invoke();`
+Słowo `.Invoke()` to dosłownie moment fizycznego wciśnięcia przycisku. Strażnik klika, a gdzieś daleko (w Głównym Oknie) otwierają się drzwi do panelu `MainDashboardViewModel`.
+
+---
+
+## Dlaczego to jest tak genialne rozwiązanie? (Luźne powiązania)
+
+Dzięki temu **`LoginViewModel` jest całkowicie ślepy i niezależny**.
+Możesz wziąć ten sam `LoginViewModel` i użyć go w innej aplikacji (np. mobilnej), podając mu w konstruktorze zupełnie inny przycisk (np. `Action`, który zamiast otwierać sklep, wyświetli animację fajerwerków). Model logowania robi tylko jedną rzecz (sprawdza hasło) i deleguje resztę na zewnątrz.
+
+
+
+## 3. Jak to wygląda w naszym kodzie?
+
+**Krok A: Reżyser (MainWindowViewModel) daje przycisk**
+W naszym głównym oknie napisaliśmy:
+`CurrentViewModel = new LoginViewModel(GoToDashboard);`
+Reżyser mówi: "Hej Logowaniu, masz tu przycisk. Kiedy go wciśniesz, włączy się moja prywatna metoda `GoToDashboard`".
+
+**Krok B: Strażnik (LoginViewModel) wciska przycisk**
+W modelu logowania, gdy hasło jest poprawne, wywołujemy:
+`onLoginSuccess.Invoke();`
+Słowo `.Invoke()` to dosłownie moment fizycznego wciśnięcia przycisku. Strażnik klika, a gdzieś daleko (w Głównym Oknie) otwierają się drzwi do panelu `MainDashboardViewModel`.
+
+
+
+#### LoginView - UserControl w View
+
+```xml
+<UserControl
+            <!-- ... -->
+             xmlns:viewModels="clr-namespace:BikeShopNawigateSupabase.ViewModels"
+             x:DataType="viewModels:LoginViewModel"
+             >
+ <StackPanel Width="300" Spacing="15" VerticalAlignment="Center">
+    <TextBlock Text="Logowanie do BikeShop"
+               FontSize="20" HorizontalAlignment="Center"/>
+
+    <TextBox Text="{Binding Email}"
+             Watermark="Adres e-mail" />
+    <TextBox Text="{Binding Password}"
+             Watermark="Hasło" PasswordChar="*" />
+
+    <Button Content="Zaloguj się" Command="{Binding LoginCommand}"
+            HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
+</StackPanel>
+```
+
+
+---
+
+### MainDashboardView - Us
+
+`MainDashboardViewModel.cs`
+```csharp
+public class MainDashboardViewModel : ViewModelBase
+{
+    public string WelcomeMessage => "Witaj w panelu zarządzania BikeShop!";
+}
+```
+
+`MainDashboardView.xaml`
+```xml
+<UserControl <!-- ... -->
+             x:Class="BikeShopNawigateSupabase.Views.MainDashboardView"
+             xmlns:viewModels="clr-namespace:BikeShopNawigateSupabase.ViewModels"
+             x:DataType="viewModels:MainDashboardViewModel"
+             >
+
+    <Grid ColumnDefinitions="200,*">
+        <Border Grid.Column="0" Background="#2C3E50" Padding="10">
+            <StackPanel Spacing="10">
+                <TextBlock Text="MENU" Foreground="White" FontWeight="Bold" Margin="0,0,0,20"/>
+                <Button Content="Rowery" Foreground="White" Background="Transparent" />
+                <Button Content="Klienci" Foreground="White" Background="Transparent" />
+                <Button Content="Serwis" Foreground="White" Background="Transparent" />
+            </StackPanel>
+        </Border>
+
+        <Grid Grid.Column="1" Background="#ECF0F1">
+            <TextBlock Text="{Binding WelcomeMessage}"
+                       FontSize="24" Foreground="Black"
+                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        </Grid>
+    </Grid>
+</UserControl>
+
+
+```
+---
+### MainWindow
+
+#### ViewModel
+```csharp
+public class MainWindowViewModel : ViewModelBase
+{
+    // To jest nasz Reflektor. Ktokolwiek tu wejdzie, zostanie pokazany na ekranie.
+    [Reactive] public ViewModelBase CurrentViewModel { get; private set; }
+
+    public MainWindowViewModel()
+    {
+        // Na start aplikacji pokazujemy Drzwi (Logowanie).
+        // Przekazujemy mu metodę GoToDashboard, aby wiedział, jak wpuścić nas do środka.
+        CurrentViewModel = new LoginViewModel(GoToDashboard);
+    }
+
+    // Ta metoda zmienia aktora na scenie
+    private void GoToDashboard()
+    {
+        CurrentViewModel = new MainDashboardViewModel();
+    }
+}
+```
+
+
+#### `View`
+Do kontrolki `Window` dodajemy:
+```xml
+<ContentControl Content="{Binding CurrentViewModel}" />
+
+```
+
+
+
