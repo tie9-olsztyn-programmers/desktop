@@ -40,13 +40,25 @@ pasek wtedy po prostu „lata” w kółko.
     </StackPanel>
 
 ```
+
+:::caution Wersja Avalonii
+Jeżeli syntaktyk `#` generuje błędy, to prawdopodobnie musisz zaktualizować wersję Avalonii:
+- zmień wyświetlanie plików i folderów w Riderze z *Solution* na *File System*
+- znajdź plik z rozszerzeniem `.csproj`
+- wszędzie, gdzie występuje `Version=` przy Avalonii zwiększ do
+### `11.3.13`!!!!!
+
+:::
+
+
 :::tip    `IsChecked="{Binding #MyProgressBar.IsIndeterminate, Mode=TwoWay}" `
 1. Symbol `#` (Shorthand dla ElementName)
 - W tradycyjnym WPF pisałoby się długie: `{Binding ElementName=MyProgressBar, Path=IsIndeterminate}`.
-- Avalonia wprowadziła genialny skrót: `#`.
+- Avalonia wprowadziła skrót: `#`.
 - `#MyProgressBar` mówi: „Szukaj w tym samym pliku XAML kontrolki, która ma `Name="MyProgressBar"`”.
 
 To pozwala jednej kontrolce „podglądać” właściwości drugiej.
+
 
 2. `.IsIndeterminate`
 - To jest ścieżka (`Path`).
@@ -62,6 +74,7 @@ Ale kliknięcie w `CheckBox` nic nie zrobi z paskiem.
     - Klikasz `CheckBox → Włączasz/wyłączasz` animację paska.
     - Zmieniasz coś w kodzie paska `→ CheckBox` sam się zaznacza/odznacza.
 
+:::
 
 ## Binding
 Wyobraź sobie, że musiałbyś to zakodować klasycznie w C#:

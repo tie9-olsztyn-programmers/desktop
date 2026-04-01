@@ -37,8 +37,10 @@ ale będzie przeskakiwał do najbliższych kresek (skoków).
                HorizontalAlignment="Center"
                Foreground="Coral" />
 
-    <TextBlock Text="{Binding #FontSizeSlider.Value, StringFormat='Aktualna wielkość: {0:F0} pkt'}"
-               HorizontalAlignment="Center" />
+    <TextBlock
+        Name="SizeChangingTextBlock"
+        Text="{Binding #FontSizeSlider.Value, StringFormat='Aktualna wielkość: {0:F0} pkt'}"
+        HorizontalAlignment="Center" />
 </StackPanel>
 
 ```
@@ -54,6 +56,8 @@ ale będzie przeskakiwał do najbliższych kresek (skoków).
 
         // Przykład: aktualizacja głośności w czasie rzeczywistym
         Console.WriteLine($"Suwak jest teraz na: {aktualnaWartosc}");
+
+        SizeChangingTextBlock.FontSize = aktualnaWartosc;
     }
     private void OnSaveSettingsClick(object sender, RoutedEventArgs e)
     {

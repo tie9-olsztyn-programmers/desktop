@@ -1,4 +1,3 @@
-
 ---
 title: Image
 ---
@@ -44,13 +43,13 @@ jest ustawione na `AvaloniaResource`
             CornerRadius="10" ClipToBounds="True"
             Width="400" Height="300"
             >
-            <Image Name="MyImage"
+            <Image x:Name="MyImage"
                    Source="avares://Dodatkowe kontrolki/Assets/dogdali.png"
                    Stretch="UniformToFill" />
     </Border>
 
     <TextBlock Text="Opcje dopasowania (Stretch):" />
-    <ComboBox Name="StretchSelector" SelectionChanged="OnStretchChanged">
+    <ComboBox x:Name="StretchSelector" SelectionChanged="OnStretchChanged">
             <Stretch>None</Stretch>
             <Stretch>Fill</Stretch>
             <Stretch>Uniform</Stretch>
@@ -73,16 +72,25 @@ Dzięki temu obrazek idealnie dopasowuje się do kształtu ramki.
 :::
 
 ```csharp
+class .... {
+
+    // ścieżka np. avares://Dodatkowe kontrolki/Assets/dogdali.png"
+    var _catUri = "<ścieżka dostępu do obrazka kota>";
+    var _dogtUri = "<ścieżka dostępu do obrazka psa>";
+    bool _isCatShowing = false;
 
     private void OnStretchChanged(object? sender, SelectionChangedEventArgs e)
     {
         // Sprawdzamy, czy sender to faktycznie ComboBox
         if (sender is not ComboBox comboBox) return;
+
         //  Pobieramy wybrany element.
         // Ponieważ w XAML użyliśmy <Stretch>...</Stretch>,
         // wybranym obiektem będzie bezpośrednio wartość z enuma Stretch.
         var selectedStretch = comboBox.SelectedItem;
+
         if (selectedStretch is not Stretch stretchValue) return;
+
         // Przypisujemy nową wartość do obrazka
         // Zakładamy, że obrazek ma Name="MyImage"
         MyImage?.Stretch = stretchValue;
@@ -95,7 +103,7 @@ Dzięki temu obrazek idealnie dopasowuje się do kształtu ramki.
         _isCatShowing = !_isCatShowing;
 
         //  Wybór URI (operator warunkowy)
-        var path = _isCatShowing ? CatUri : DogUri;
+        var path = _isCatShowing ? _catUri : _dogUri;
         var uri = new Uri(path);
 
         // Bezpieczne otwieranie strumienia za pomocą 'using'
@@ -104,6 +112,135 @@ Dzięki temu obrazek idealnie dopasowuje się do kształtu ramki.
         MyImage.Source = new Bitmap(assetStream);
     }
 ```
+
+---
+
+
+## Ładowanie dynamiczne (C#)
+Obraz może być ładowany dynamicznie w kodzie `C#`
+```csharp
+var img = new Image();
+img.Source = new Avalonia.Media.Imaging.Bitmap("Assets/photo.png");
+```
+
+### Przykład, gdy obrazek nie jest zasobem aplikacji
+- kontrolka `Image` została nazwana `MyImage`
+- zdjęcie zostało zapisane w:
+    - `/bin/Debug/net10.0/Assets/olsztyn.jpg`
+    - znajdziesz tę ścieżkę przełączając wyświetlanie plików i folderów:
+        - z *Solution*
+        - na *File System*
+- takie zdjęcie nie będzie zasobem aplikacji
+
+```xml
+   <StackPanel>
+       <TextBlock Text="Obrazki" />
+       <Image x:Name="MyNewImage"  />
+   </StackPanel>
+```
+
+
+```csharp
+public partial class MainWindow : Window
+{
+    public MainWindow()
+    {
+        InitializeComponent();
+        MyImage.Source = new Avalonia.Media.Imaging.Bitmap("Assets/olsztyn.jpg");
+    }
+
+
+}
+```
+
+---
+## Losowe wyświetlanie obrazków
+
+Zasoby: <a href={useBaseUrl('/myFiles/kotlinekcsharpekjavascriptek.zip')} download>Pobierz ZIP (trzy obrazki do aplikacji)</a>
+
+## `.axaml`
+```xml
+<StackPanel Margin="10">
+    <Button x:Name="RandomSelectionButton"
+            Margin="20"
+            Content="Wylosuj obrazek"
+            Width="300"
+            HorizontalAlignment="Center"
+            HorizontalContentAlignment="Center"
+            Background="Fuchsia"
+            Foreground="Beige"
+            CornerRadius="20"
+            Click="ShowRandomImage"
+    />
+
+    <Image x:Name="DisplayCsharpek" Width="200" Height="200"
+           Stretch="Uniform" Margin="10"
+    />
+
+</StackPanel>
+```
+
+## Logika aplikacji
+
+```csharp
+
+
+public partial class MainWindow : Window
+{
+
+    private readonly string[] _imagePaths =
+    {
+        "avares://LosoweZmieniaanieZdjec/Assets/kotlinek.png",
+        "avares://LosoweZmieniaanieZdjec/Assets/javascriptek.png",
+        "avares://LosoweZmieniaanieZdjec/Assets/csharpek.png"
+    };
+
+    private readonly Random _random = new();
+
+    public MainWindow()
+    {
+       InitializeComponent();
+
+       // Przykład załadowania pliku zasoby podczas tworzenia okna
+       // 'avares' - pochodzi od Ava-lonia Res-ources
+       // `://` ten znak występuje w innych uri np. `http://`
+       // `LosoweZmieniaanieZdjec` - to nazwa projektu
+       // var uri = new Uri("avares://LosoweZmieniaanieZdjec/Assets/javascriptek.png");
+       // // Używamy bezpośrednio AssetLoader do otwarcia zasobu
+       // using (var stream = AssetLoader.Open(uri))
+       // {
+       //     var bitmap = new Bitmap(stream);
+       //     DisplayCsharpek.Source = bitmap;
+       // }
+    }
+
+    private void ShowRandomImage(object? sender, RoutedEventArgs e)
+    {
+        try
+        {
+            // Losowanie indeksu obrazu
+            var randomImagePath = _imagePaths[_random.Next(_imagePaths.Length)];
+
+            // Ładowanie obrazu ze strumienia
+            using var stream = AssetLoader.Open(new Uri(randomImagePath));
+            DisplayCsharpek.Source = new Bitmap(stream);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Błąd ładowania obrazu: {ex.Message}");
+        }
+    }
+}
+
+```
+
+
+
+
+
+
+
+
 
 
 
