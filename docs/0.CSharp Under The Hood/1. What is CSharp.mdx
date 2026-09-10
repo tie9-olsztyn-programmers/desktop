@@ -1,0 +1,114 @@
+---
+title: What is C#?
+---
+
+:::tip What is C#?
+- C# (pronounced "C sharp") is a modern, multi-paradigm programming language created by Microsoft.
+- It runs on the .NET platform.
+:::
+
+:::tip C# Language Features:
+- C# is a strongly typed language, which helps catch many errors at the compilation stage.
+- Equipped with a *garbage collection* mechanism (*.NET CLR*):
+- the programmer does not need to manage memory manually,
+- it avoids typical C/C++ problems with memory leaks or pointers.
+- It supports:
+- object-oriented programming (classes, inheritance, polymorphism, abstraction),
+- functional programming (lambdas, LINQ),
+- imperative programming.
+:::
+
+:::note The .NET Ecosystem
+- Common Language Runtime (CLR) - the execution engine that manages running .NET programs:
+  - *garbage collection*,
+  - type safety,
+  - JIT (Just-In-Time) compilation,
+  - code isolation.
+- Base Class Library (BCL):
+  - a massive set of ready-to-use classes and APIs for I/O operations,
+  - working with collections,
+  - handling files, networking, security, text, XML/JSON, etc.
+- SDK and command-line tools (.NET SDK / CLI) - a toolset (dotnet CLI) enabling:
+  - creation,
+  - compilation,
+  - testing,
+  - publishing applications across different platforms (Windows, macOS, Linux).
+- NuGet package manager — an ecosystem for library distribution:
+  - thousands of ready-made packages (from ORMs, through UI libraries, to analytical tools),
+  - easy addition of dependencies to a project,
+  - easy updating of dependencies in a project.
+- Cross-platform capabilities (.NET 5+ / .NET Core) - support for:
+  - Windows,
+  - macOS,
+  - Linux under a unified runtime,
+  - enables building server, console, desktop, mobile, and containerized applications.
+:::
+
+:::important Use Cases
+- Desktop applications (WinForms, WPF, Avalonia, .NET MAUI)
+- Services and microservices (ASP.NET Core)
+- Websites and APIs (Blazor, ASP.NET MVC/Web API)
+- Game development (Unity)
+- Mobile applications (Xamarin, .NET MAUI)
+- Cloud and IoT (Azure SDK, .NET IoT)
+:::
+
+----
+# Sample Program
+
+```csharp
+using System; // Importing the system library
+
+class Program // Declaration of a class named Program
+{
+     static void Main(string[] args) // The main function of the program
+    {
+        Console.WriteLine("Welcome to C#!"); // Prints text to the screen
+    }
+}
+```
+
+## E x p l a n a t i o n
+- `using System` - We include the System namespace, which contains classes such as Console,
+enabling the use of built-in functions.
+- `class Program` - Everything in C# is placed inside classes. This code snippet defines a class named Program.
+- `static void Main(string[] args)` - The main method of the program, where everything begins. Every C# program must have a starting point in the form of a Main method.
+- `Console.WriteLine()` - A function used to display text in the console.
+
+## Where to write this program?
+- You can use an online compiler: https://dotnetfiddle.net/
+- VS Code
+- JetBrains Rider
+- Visual Studio
+- ...
+
+## How to run such a program
+:::tip Installing .NET
+Install the .NET environment on your computer:
+
+https://dotnet.microsoft.com/download
+
+Choose the package that matches your operating system.
+:::
+
+:::info Creating a project
+;
+In the console, run the command
+- `dotnet new console -n <ProjectName>` - this creates a new console project.
+- `cd <ProjectName>` - navigates to the project folder.
+- `dotnet run `- runs the program:
+
+
+if necessary, it will perform a build first,
+quickly executes the program:
+- `dotnet build` - compiles the project:
+    - generates the compiled output,
+    - does not gather all files into a single publishing directory,
+    - does not run the program.
+    - dotnet publish - publishes the project:
+        - performs a build,
+        - creates a publish directory (e.g., `bin/Release/net9.0/publish`),
+        - contains all the files needed to run the application.
+:::
+
+

@@ -1,0 +1,108 @@
+---
+title: "Primitive Types: The Sticky Notes of C#"
+sidebar_position: 2
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Primitive Types: The Sticky Notes of C#
+
+Before you try to simulate an entire MMORPG economy or build a massive cloud API,
+your CPU needs to know how to hold a single number without sweating.
+
+In our **4W2H Data Logistics** model, this lesson is all about **WHAT** you are holding and **WHERE** it lives in hardware.
+Meet the **Sticky Note** dimension: primitive types (also known in C# as *value types*).
+
+---
+
+## 1. The Demo: The "Copy Cat" Experiment
+
+Let’s launch a tiny console program to see how primitive values behave in real life:
+
+```csharp
+using System;
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        // 1. Write an order on sticky note 'a'
+        int a = 5;
+
+        // 2. Clone it onto a fresh sticky note 'b'
+        int b = a;
+
+        // 3. Scribble over sticky note 'a'
+        a = 10;
+
+        // What happened to 'b'?
+        Console.WriteLine($"a: {a}"); // Prints: 10
+        Console.WriteLine($"b: {b}"); // Still prints: 5!
+    }
+}
+```
+
+
+:::info Why didn't b turn into 10 when we changed a?
+Because of the core rule of primitives:
+- Value types store their payload directly, and
+- assignment creates an independent copy.
+
+They don't point to each other; they simply duplicate the ink on the note.
+
+:::
+
+---
+
+## 2. Under the Hood: The 4W2H Breakdown
+Let's dissect these simple values through our architectural lens:
+
+
+### 0. WHAT: The Sticky Note
+#### The Metaphor
+    - A tiny yellow Post-it note stuck to the chef's counter.
+    - It holds one piece of info: "Order #42" or "Table 4 is Hungry: true".
+    - If you want to hand it to an assistant,
+  you don't share a Google Doc — you just scribble a duplicate note and hand it over.
+
+#### Technical Definition
+- Value types that directly contain their bits.
+- No heap allocation, no object headers, no garbage collection overhead.
+- The Humorous Reality:
+    - If your program only needs to know whether the user clicked a checkbox,
+    - do not construct a 400-line `CheckboxLifecycleManagementStrategyFactory`.
+    - Use a `bool`. Keep it a sticky note.
+
+:::tip Stop designing a rocket ship when all you need is a bicycle.
+The joke about replacing a single bool with a 400-line `CheckboxLifecycleManagementStrategyFactory` captures
+the two golden rules of pragmatic software engineering:
+- **KISS** (Keep It Simple, Stupid): If a state is binary, your solution should be binary. A checkbox is either true or false. Wrapping a single boolean in multiple layers of handlers, interfaces, and lifecycle hooks doesn’t make the code "enterprise-grade" — it just turns a one-second read into a frustrating debugging session.
+- **YAGNI** (You Aren't Gonna Need It): Developers often build massive abstractions "just
+in case" the requirements change tomorrow.
+You don't need a configurable strategy pattern until you actually have multiple, diverging business strategies.
+Solving hypothetical problems for a hypothetical future creates real, concrete maintenance debt today.
+
+
+The "Sticky Note" Rule:
+- If a piece of information fits on a sticky note, don't buy a fireproof safe and hire a librarian to guard it.
+- Always write the simplest primitive that works first, and only introduce design patterns when
+the problem genuinely outgrows them.
+
+
+:::
+
+
+## 1. WHERE: The Pocket (Call Stack)
+- **The Metaphor**: Tucked right into the chef’s apron pocket.
+Blazing fast to pull out, zero red tape, but as soon as the chef clocks out and
+takes off the apron (the function returns), the pocket empties and the notes are incinerated.
+- **Technical Definition**: Local primitive variables are allocated on the Thread Call Stack.
+Pushing and popping variables here is virtually instant (moving a single CPU stack pointer).
+
+
+
+
+
+
+
