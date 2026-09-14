@@ -1,0 +1,194 @@
+---
+title: Data Conversion and Parsing
+---
+
+Let's dive straight into the deep end! Below is a fully working C# program.
+It takes data in one form and violently (or gently) forces it into another.
+
+Read through it carefully.
+
+```csharp
+using System;
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        // 1. Implicit Conversion (Safe & Automatic)
+        int smallNumber = 42;
+        double floatingNumber = smallNumber; // int smoothly becomes a double
+
+        // 2. Explicit Casting (Trust me, compiler, I know what I'm doing)
+        double price = 13.99;
+        int roundedPrice = (int)price; // Loses the .99!
+
+        // 3. Conversion via helper class
+        bool isAlive = true;
+        string statusMessage = Convert.ToString(isAlive);
+
+        // 4. Parsing: String to Number
+        string userInput = "123";
+        int parsedNumber = int.Parse(userInput);
+
+        // 5. Safe Parsing with TryParse
+        string sketchyInput = "Not a number, buddy";
+
+        bool success = int.TryParse(sketchyInput, out int safeResult);
+
+        if (success)
+        {
+            Console.WriteLine($"Parse succeeded: {safeResult}");
+        }
+        else
+        {
+            Console.WriteLine("Parse failed. We avoided a crash!");
+        }
+
+        Console.WriteLine($"Price: {roundedPrice}, Status: {statusMessage}, Parsed: {parsedNumber}");
+    }
+}
+```
+:::tip Quick Question to Ponder...
+If we can just write `(int)price` to cast a `double` to an `int`, why can't we do `(int)"123"`?
+Why do we need `Convert` or `Parse`? Keep this in mind as we break it down!
+:::
+
+
+## Breakdown: The 4W2H Model
+Let's deconstruct what is actually happening when we morph data from one type to another.
+
+### 0. The Domain: WHAT are we processing? (Primitives vs Complex Objects vs DTO)
+Metaphor: Imagine data types as physical containers. An int is a small square box,
+a double is a slightly larger square box, and a string is a piece of paper with handwriting on it.
+- Conversion (`Convert.ToX`): You are melting down the contents of one box and pouring it into a different box.
+It transforms the data structure entirely.
+- Casting (`(type)`): You are telling the compiler: "Look, I know this object looks like a generic box,
+but I promise it's actually an `int`. Treat it like one."
+If you try to cast a `double` to an `int`, it forcibly chops off the decimal part so it fits in
+the square box.
+- Parsing (`int.Parse`): You are reading the handwritten note (String) and interpreting its meaning to
+build a brand new primitive value. You cannot cast a `string` to an `int` because paper isn't a box.
+You must parse (read) it.
+
+### 1. State & Storage: WHERE does the data live? (Local vars vs Global state vs DB)
+Metaphor: Moving furniture between apartments.
+
+In C#, variables hold space in memory.
+- Implicit Conversion (`int` -> `long`): Moving from a small apartment to a penthouse.
+C# does this automatically because there is zero risk of losing your stuff (data).
+- Explicit Casting (`double` -> `int`): Moving from a penthouse to a small apartment.
+You have to sign a waiver (`(int)`) acknowledging you might have to throw away your favorite couch
+(the decimal values, like .99).
+- Where does it live? In the code above, all these transformed values live in Local variables inside
+the Main method. Once `Main` finishes execution, they are wiped from local memory.
+
+
+### 2. Evaluation Strategies: WHEN do we cook? (Eager Paradigm vs Lazy Paradigm)
+
+Metaphor: Ordering a sandwich. Eager is biting into it immediately without looking;
+Lazy is checking the ingredients first.
+
+
+When we process `string` conversions, we are dealing with eager execution.
+- `int.Parse("123")` is Eager and Reckless. It grabs the string and immediately tries to build an integer.
+If the `string` says "Apple", it chokes and throws an Exception (crashing your app).
+- `int.TryParse("Apple", out int result)` is Eager but Cautious.
+It attempts to parse, but gracefully handles failure. It doesn't throw a tantrum;
+it just returns a false boolean.
+
+
+### 3. Data Flow: WHO sets the pace? (Pull Model vs Push Model)
+Metaphor: Delivery driver handing you a package.
+
+Look at `int.TryParse(sketchyInput, out int safeResult);`. Notice that weird out keyword?
+- Normally, methods return exactly one value (Pull).
+- `TryParse` needs to tell you TWO things: "Did it work?" AND "What is the result?".
+- The `out` modifier is a Push mechanism. It says: "Create this safeResult variable,
+pass its memory address to me, and I will forcefully PUSH the parsed number into it if I succeed."
+The method itself returns a boolean (`true`/`false`) as the primary status indicator.
+
+
+### 4. Reactivity: HOW does the UI know? (Normal var vs State/Broadcaster)
+Metaphor: A smoke alarm vs. a polite text message.
+
+How does our application react when data conversion goes horribly wrong?
+- The Smoke Alarm (Parse / Convert): If you execute `int.Parse("Hello")`, C# triggers a `FormatException`.
+This is a system-wide panic. If you don't catch it, your application dies.
+- The Polite Text (`TryParse`): This is localized reactivity. The method simply returns false.
+You use standard if/else logic to react smoothly in your UI (e.g., displaying text in red saying
+"Please enter a valid number" instead of crashing).
+
+### 5. Lifecycle: HOW LONG does it survive? (Volatile memory vs Persistence)
+
+Metaphor: A photograph vs. the real person.
+
+
+When you do `string myString = myDouble.ToString();`, you are not altering myDouble.
+You are taking a "photograph" of its current state and saving that representation in a completely new,
+volatile `string` variable.
+
+
+Both the original variable and the newly parsed/converted variable exist independently in the local memory
+block. As soon as the `{ }` brackets of the `Main` method close, both the original and the converted data
+are swept away by the Garbage Collector.
+
+
+## Summary
+- **Implicit Conversion**: Automatic and safe (e.g., `int` to `double`).
+- **Explicit Casting: Forced and potentially lossy (e.g., `(int)13.99` becomes `13`).
+- **Convert**: A helper class to transform entirely different types (e.g., bool to string).
+- **Parse**: specifically for reading text (string) and turning it into a specific data type.
+- **TryParse**: The safest way to parse strings, utilizing the out parameter to avoid explosive exceptions.
+
+:::tip Conversion (Type Casting)
+
+- Conversion is basically dressing up one data type in another type's clothes.
+- It applies to both value types (simple) and reference types.
+- It works on almost any data type, provided there is a logical transformation rule.
+(Sorry, you can't magically convert a `Button` into a `DatabaseConnection` without writing your own
+custom dark magic operators like implicit or explicit).
+- In C#, conversions are divided into:
+    - Implicit: Automatic and stealthy. The compiler handles it behind your back because it knows it's
+  100% safe (like putting a tiny int into a spacious long box).
+    - Explicit: You have to manually force it and take the blame if things go south
+  (like violently squeezing a double into an int and losing your precious decimals).
+- It is performed using:
+    - Casting operators: `(Type)variable` (the bossy "do it because I said so" method) and as
+  (the polite "try to convert this, or just give me null" approach).
+    - Helper methods: `Convert`, `Parse`, `TryParse` (the holy trinity of turning random strings into actual numbers).
+:::
+
+:::tip Casting (Rzutowanie)
+- It’s basically whispering to the compiler: "Trust me, just treat this object as type X."
+- For **reference types**, the object in memory doesn't change—you're just making it wear a different nametag.
+- For **value types**, it gets physical. Casting `(int)3.14` brutally chops off the `.14` and
+leaves you with a naked `3`.
+- Performed using casting operators:
+    - `(Type)variable` (The classic, aggressive cast. If you lie to the compiler about the type,
+  it will throw an `InvalidCastException` right in your face).
+    - `as` (The pacifist cast for reference types. If the object isn't actually type `X`,
+  it avoids drama and just quietly hands you null).
+:::
+
+:::tip Parsing
+- It’s basically analyzing text and transforming it into a data structure or a specific type
+(taking a raw wall of text and actually making sense of it).
+- In the C# realm, parsing is almost exclusively about performing alchemy on strings
+to turn them into other data types (like numbers, dates, or booleans).
+- It strictly assumes your **input** is **text**. It looks at a string like `"42"` and
+teaches the computer that it’s a math number, not just a nice drawing of a four and a two.
+- Bonus: You usually do this with:
+    - `.Parse()` (which will throw a dramatic exception if the text is garbage) or
+    - `.TryParse()` (the diplomatic version for when you have severe trust issues with your users' input).
+:::
+
+:::warning The Hierarchy: Conversion vs. Casting vs. Parsing
+- **Conversion**: The umbrella term. It describes any transformation from Type A to Type B,
+regardless of the method used.
+- Casting: A syntax-level conversion using operators like `()` or `as`.
+It requires a pre-existing relationship between the types (like parent/child classes or numeric families).
+You cannot cast a string into a number.
+- **Parsing**: A text-exclusive conversion. The input is always a string.
+It runs an algorithm to interpret human-readable text into actual machine data types
+(like turning the word `"42"` into a math-ready `int`).
+:::

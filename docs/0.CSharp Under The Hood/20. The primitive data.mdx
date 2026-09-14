@@ -3,8 +3,6 @@ title: "Primitive Types: The Sticky Notes of C#"
 sidebar_position: 2
 ---
 
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
 
 # Primitive Types: The Sticky Notes of C#
 
@@ -44,7 +42,7 @@ class Program
 ```
 
 
-:::info Why didn't b turn into 10 when we changed a?
+:::info Why didn't `b` turn into `10` when we changed `a`?
 Because of the core rule of primitives:
 - Value types store their payload directly, and
 - assignment creates an independent copy.
@@ -61,18 +59,19 @@ Let's dissect these simple values through our architectural lens:
 
 ### 0. WHAT: The Sticky Note
 #### The Metaphor
-    - A tiny yellow Post-it note stuck to the chef's counter.
-    - It holds one piece of info: "Order #42" or "Table 4 is Hungry: true".
-    - If you want to hand it to an assistant,
+- A tiny yellow Post-it note stuck to the chef's counter.
+- It holds one piece of info: "Order #42" or "Table 4 is Hungry: true".
+- If you want to hand it to an assistant,
   you don't share a Google Doc — you just scribble a duplicate note and hand it over.
 
 #### Technical Definition
 - Value types that directly contain their bits.
 - No heap allocation, no object headers, no garbage collection overhead.
-- The Humorous Reality:
-    - If your program only needs to know whether the user clicked a checkbox,
-    - do not construct a 400-line `CheckboxLifecycleManagementStrategyFactory`.
-    - Use a `bool`. Keep it a sticky note.
+
+#### The Humorous Reality:
+- If your program only needs to know whether the user clicked a checkbox,
+- do not construct a 400-line `CheckboxLifecycleManagementStrategyFactory`.
+- Use a `bool`. Keep it a sticky note.
 
 :::tip Stop designing a rocket ship when all you need is a bicycle.
 The joke about replacing a single bool with a 400-line `CheckboxLifecycleManagementStrategyFactory` captures
@@ -93,12 +92,78 @@ the problem genuinely outgrows them.
 :::
 
 
-## 1. WHERE: The Pocket (Call Stack)
+### 1. WHERE: The Pocket (Call Stack)
 - **The Metaphor**: Tucked right into the chef’s apron pocket.
 Blazing fast to pull out, zero red tape, but as soon as the chef clocks out and
 takes off the apron (the function returns), the pocket empties and the notes are incinerated.
 - **Technical Definition**: Local primitive variables are allocated on the Thread Call Stack.
 Pushing and popping variables here is virtually instant (moving a single CPU stack pointer).
+
+---
+# 3. The C# Sticky Note Catalog
+C# gives you different sizes of sticky notes depending on how big your numbers are and how much RAM you want to spare.
+
+## Whole Numbers (Integers)
+- `byte`,8-bit (unsigned),0 to 255,"Color channels (RGB), raw sensor bytes"
+- `sbyte`,8-bit (signed),-128 to 127,"Tiny counters, low-level protocol packets"
+- `short`,16-bit (signed),"-32,768 to 32,767","Retro game coordinates, microcontrollers"
+- `int`,32-bit (signed),~-2.14 billion to +2.14 billion,"The Default. Array indexing, loop counters"
+- `long`,64-bit (signed),~-9 quintillion to +9 quintillion,"Timestamps, database primary keys"
+
+```csharp
+byte redChannel = 255;
+short enemiesInDungeon = 30000;
+int playerScore = 42;
+long ticksSinceEpoch = 9223372036854775807L; // Note the 'L' suffix
+```
+
+## Floating-Point Numbers (The Decimals)
+Real numbers are tricky because computers store everything in base-2 (binary). You have three choices:
+
+```csharp
+// 1. Float: 32-bit (fast, but low precision). Always add an 'f' suffix!
+float speed = 3.14f;
+
+// 2. Double: 64-bit (The standard for math and physics calculations)
+double pi = 3.141592653589793;
+
+// 3. Decimal: 128-bit (Ultra-precise, base-10 calculation engine. Suffix 'm')
+decimal accountBalance = 99.99m;
+```
+
+## Characters & Text
+```csharp
+char grade = 'A';         // Exactly one UTF-16 character (single quotes)
+string hero = "Anna";     // A sequence of characters (double quotes)
+```
+
+:::caution String Imposter Alert!
+char is a true primitive value type (16 bits on the stack).
+
+string, however, is a wolf in sheep's clothing: it is actually an Organized Binder
+(a reference type stored on the heap)! Because C# treats strings as immutable (unchangeable),
+it feels like a primitive, but it lives in the dynamic memory warehouse.
+:::
+
+## Boolean Flags
+
+```csharp
+bool isGameOver = false;
+bool hasKeyCard = true;
+```
+The simplest sticky note in existence: 1 byte in memory representing either `true` or `false`.
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
