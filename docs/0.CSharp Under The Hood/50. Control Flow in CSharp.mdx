@@ -1,0 +1,214 @@
+---
+title: Control Flow in C#
+sidebar_label: Control Flow
+---
+
+# Directing the Traffic: Control Flow in C#
+
+Welcome, Code Commander! Right now, your code executes top-to-bottom, like a boulder rolling down a hill.
+But what if we want to make decisions? What if we want to repeat an action 100 times without copy-pasting the
+same line 100 times?
+
+We need **Control Flow**. Let's start with a fully working example. Don't worry if it looks like alien
+hieroglyphs—just read it like a story.
+
+---
+
+## Top-Down: The Working Engine
+
+Examine this working C# console application:
+
+```csharp
+using System;
+
+
+public class Program
+{
+    public static void Main()
+    {
+        int visitorAge = 20;
+        var dayOfWeek = 3;
+
+        // 1. Making a decision
+        if (visitorAge >= 18)
+        {
+            Console.WriteLine("Welcome to the club!");
+        }
+        else
+        {
+            Console.WriteLine("Sorry kid, come back later.");
+        }
+
+        // 2. Handling specific cases OLD WAY
+        switch (dayOfWeek)
+        {
+            case 3:
+                Console.WriteLine("It's Wednesday! Half-price drinks.");
+                break;
+            default:
+                Console.WriteLine("Regular pricing applies.");
+                break;
+        }
+
+        // 2. Handling specific cases New WAY
+        var day = dayOfWeek switch
+        {
+            3 => "It's Wednesday! Half-price drinks.",
+            _ => "Regular pricing applies.",
+        };
+
+
+        // 3. Repeating an action
+        Console.WriteLine("Counting down to closing time...");
+        for (var i = 5; i > 0; i--)
+        {
+            if (i == 3)
+            {
+                Console.WriteLine("Wait, let me skip number 3!");
+                continue;
+            }
+            Console.WriteLine(i);
+        }
+    }
+}
+```
+:::tip 🕵️‍♂️ Detective Question
+Look closely at the `for` loop at the bottom. What do you think happens when `i` reaches `3`?
+Will the number `3` be printed to the console? Take a guess before we dissect this!
+
+
+:::
+
+
+
+## Breaking It Down: The 4W2H Method
+Let's put our code on the operating table and analyze how we control the flow of data using the 4W2H Framework.
+
+### 0. The Domain: WHAT are we processing?
+- **Metaphor**: The Bouncer's Checklist.
+- **Technical Definition**: We are processing Boolean expressions (conditions that evaluate to true or false)
+and Primitives (like integers) to dictate which block of code the CPU executes next.
+- **Humor**: A Boolean is exactly like a cat at a closed door. It either wants in (true) or it wants out (false).
+There is absolutely no "maybe" in C#.
+
+:::note `if`, `else if`, and `else`
+These are your bread-and-butter decision makers.
+- `if`: Executes a block if the condition is true.
+- `else if`: Checks a new condition if the first one failed.
+- `else`: The "catch-all" garbage bin if absolutely nothing else was true.
+
+:::
+```csharp
+int x = 10;
+
+if (x > 10) {
+    Console.WriteLine("Greater than 10");
+} else if (x == 10) {
+    Console.WriteLine("Exactly 10!"); // <-- This runs!
+} else {
+    Console.WriteLine("Less than 10");
+}
+```
+
+### 1. State & Storage: WHERE does the data live?
+- **Metaphor**: The short-term memory of a goldfish.
+- **Technical Definition**: Control flow relies heavily on Local Variables (like `var i = 0`) stored in
+the computer's Stack memory. They hold the current "state" of a loop or a switch statement.
+- **Humor**: These variables live fast and die young. They don't go to a database, they don't get saved to a hard drive.
+If you pull the plug on your PC, they vanish into the digital ether.
+
+:::note The switch Statement
+When you have a single variable and want to check it against many possible values,
+`switch` is much cleaner than writing a giant, ugly chain of if-else if.
+:::
+
+```csharp
+int doomsday = 13;
+Console.WriteLine(doomsday switch
+{
+    1 => "Monday",
+    3 => "Wednesday",
+    _ => "Another day"
+
+});
+
+```
+
+
+
+
+### 2. Evaluation Strategies: WHEN do we cook?
+- **Metaphor**: Checking IDs at the door vs. checking IDs at the bar.
+- **Technical Definition**: Loops evaluate their conditions at different times.
+A while loop evaluates before execution (Pre-test).
+A `do-while` loop evaluates after the first execution (Post-test).
+- **Humor**: `do-while` is the "shoot first, ask questions later" loop.
+It will run its code at least once, even if the condition was spectacularly false from the very beginning.
+
+```csharp
+// 1. The 'while' loop (Checks BEFORE running)
+int i = 0;
+while (i < 5) {
+    Console.WriteLine("i is: " + i);
+    i++;
+}
+
+// 2. The 'do-while' loop (Runs ONCE, then checks)
+int j = 10;
+do {
+    Console.WriteLine("j is: " + j); // This prints once!
+    j--;
+} while (j > 50); // Condition is false, so it stops immediately after.
+```
+
+### 3. Data Flow: WHO sets the pace?
+- **Metaphor**: The strict gym coach vs. the loose treadmill.
+- **Technical Definition**: The programmer dictates the flow using specific loop types and control keywords
+like `break` and `continue`.
+    - `for`: Used when you know exactly how many iterations you want. (The gym coach saying "Give me 5 pushups!").
+    - `break`: Instantly kills the loop and escapes.
+    - `continue`: Skips the rest of the current iteration and jumps straight to the next one.
+- **Humor**: Using `break` is like throwing down a ninja smoke bomb to escape a boring conversation.
+Using `continue` is like saying, "I'm ignoring you right now, but I'll listen to the next guy."
+
+```csharp
+for (int i = 0; i < 5; i++)
+{
+    if (i == 2) continue; // Skips printing '2'
+    if (i == 4) break;    // Kills the loop before printing '4'
+
+    Console.WriteLine("Iteration number " + i);
+    // Output: 0, 1, 3
+}
+```
+
+### 4. Reactivity: HOW does the UI (or Program) know?
+- **Metaphor**: Choose Your Own Adventure book.
+- **Technical Definition**: The program reacts to changes in variables by branching.
+The Instruction Pointer (the invisible finger reading your code) jumps to different memory addresses based on
+the Boolean outcomes of your if and switch statements.
+- **Humor**: The program doesn't panic when things change. It just blindly follows the `else` path
+straight into the abyss of edge cases you forgot to test.
+
+### 5. Lifecycle: HOW LONG does it survive?
+- **Metaphor**: Groundhog Day.
+- **Technical Definition**: Loop variables (like the `i` declared inside a `for` loop) have Block Scope.
+Their lifecycle is tied entirely to the curly braces `{ }` of the loop.
+- **Humor**: RIP `i`. You were born at `i = 0`, you worked hard until `i < 5`, and then
+you were ruthlessly destroyed by the garbage collector. Gone but not forgotten.
+
+## Summary & Review
+You are now the master of time and space... at least within your C# console window! Let's recap:
+- `if` / `else if` / `else`: For branching logic based on `true`/`false` conditions.
+- `switch`: For cleanly matching one variable against many possible exact values.
+- `for`: A loop used when you know exactly how many times you want to iterate.
+- `while`: A loop that repeats as long as a condition remains true (checks before acting).
+- `do-while`: A loop that acts first, and checks the condition later.
+- `break` / `continue`: Your emergency exits and skip buttons inside loops.
+
+---
+:::note  🧠 Check Your Understanding
+1. If you want a piece of code to execute at least once regardless of the starting condition, which loop should you use?
+2. In a modern switch expression, what specific symbol acts as the "catch-all"
+to handle situations where none of the previous values match?
+3. What is the exact difference between break and continue inside a for loop?
