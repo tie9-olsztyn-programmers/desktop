@@ -1,0 +1,220 @@
+---
+title: Building a Quiz Game - Putting Structures to Work
+description: Combine Dictionaries, Lists, and Loops to build a fully functional console game.
+---
+
+# 🎮 Level 3: The Grand Trial (Building a Quiz Game)
+
+Welcome back, Code Adventurer! You’ve collected the Array boxes, the List backpacks, and
+the Dictionary lockers. You also know how to talk to the user using the Console.
+
+Now, it’s time to craft your first real artifact: **A fully working Quiz Game!**
+
+We will use everything you’ve learned to store questions, draw random ones, evaluate the player's answers,
+and calculate their final score.
+
+---
+
+## 🛑 The Top-Down Code (The Final Boss)
+
+Here is the complete, working code for our game.
+
+Take a deep breath, read through it, and try to understand how the pieces communicate before you scroll down.
+
+```csharp
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using static System.Console; // 💡 Pro-tip: This lets us write WriteLine instead of Console.WriteLine!
+
+namespace QuizGame
+{
+    public class Program
+    {
+        // 1. Our "Database" of Questions and Answers (4 options per question)
+        static public Dictionary<string, string[]> questionsAndAnswers = new()
+        {
+            { "How many wings does a bird have?", new[] { "10", "20", "2", "0" } },
+            { "How many hours should you sleep?", new[] { "100", "8", "300", "1" } },
+            { "Where do we buy bread?", new[] { "Pharmacy", "Bakery", "Cinema", "Museum" } },
+            { "Which month has the fewest days?", new[] { "February", "May", "November", "August" } },
+            { "What do we use an umbrella for?", new[] { "Eating", "Writing", "Rain protection", "Sitting" } },
+            { "What vehicle travels on tracks?", new[] { "Car", "Train", "Bicycle", "Motorcycle" } },
+            { "Which animal gives milk?", new[] { "Cow", "Horse", "Sheep", "Dog" } },
+            { "What shines in the sky during the day?", new[] { "Moon", "Sun", "Stars", "Planes" } },
+            { "Where do fish live?", new[] { "Desert", "Forest", "Tree", "Water" } },
+            { "What do we use to write on paper?", new[] { "Spoon", "Knife", "Pen", "Stick" } }
+        };
+
+        // 2. Our "Database" of Correct Answer Indexes (0-based)
+        static public Dictionary<string, int> questionsAndCorrectAnswers = new()
+        {
+            { "How many wings does a bird have?", 2 },
+            { "How many hours should you sleep?", 1 },
+            { "Where do we buy bread?", 1 },
+            { "Which month has the fewest days?", 0 },
+            { "What do we use an umbrella for?", 2 },
+            { "What vehicle travels on tracks?", 1 },
+            { "Which animal gives milk?", 0 },
+            { "What shines in the sky during the day?", 1 },
+            { "Where do fish live?", 3 },
+            { "What do we use to write on paper?", 2 }
+        };
+
+        public static void Main(string[] args)
+        {
+            var drawnQuestions = DrawRandomQuestions(questionsAndAnswers);
+            int score = 0;
+            int questionsLeft = 5;
+
+            WriteLine("--- WELCOME TO THE ULTIMATE QUIZ! ---");
+
+            // 3. The Game Loop
+            while (questionsLeft > 0)
+            {
+                int currentQuestionIndex = 5 - questionsLeft;
+                string currentQuestion = drawnQuestions[currentQuestionIndex];
+                string[] currentOptions = questionsAndAnswers[currentQuestion];
+
+                DisplayQuestion(currentQuestion, currentOptions);
+
+                bool isValidInput = int.TryParse(ReadLine(), out var playerChoice);
+
+                if (!isValidInput)
+                {
+                    WriteLine("Invalid input! You must type a number from 1 to 4.");
+                    continue; // Skip the rest of the loop and try again
+                }
+
+                bool isCorrect = CheckAnswer(currentQuestion, playerChoice);
+                WriteLine($"Your choice: {playerChoice}");
+
+                if (isCorrect)
+                {
+                    WriteLine("Correct! +1 point.\n");
+                    score++;
+                }
+                else
+                {
+                    // Notice the +1 below because players see 1-4, but our dictionary stores 0-3!
+                    int correctVisualNumber = questionsAndCorrectAnswers[currentQuestion] + 1;
+                    WriteLine($"Wrong! The correct answer was {correctVisualNumber}.\n");
+                }
+
+                questionsLeft--;
+            }
+
+            // 4. Final Score Calculation
+            // We use 5.0 (a double) to force decimal division, otherwise 3/5 would equal 0!
+            double percentage = (score / 5.0) * 100;
+            WriteLine($"--- GAME OVER ---");
+            WriteLine($"Your final score is {score}/5 ({percentage}%)");
+        }
+
+        // --- HELPER METHODS ---
+
+        public static List<string> DrawRandomQuestions(Dictionary<string, string[]> questionDb)
+        {
+            var allQuestions = questionDb.Keys.ToList();
+            var selectedQuestions = new List<string>();
+            var random = new Random();
+
+            while (selectedQuestions.Count < 5)
+            {
+                int index = random.Next(0, allQuestions.Count);
+                string question = allQuestions[index];
+
+                if (!selectedQuestions.Contains(question))
+                {
+                    selectedQuestions.Add(question);
+                }
+            }
+            return selectedQuestions;
+        }
+
+        public static void DisplayQuestion(string question, string[] answers)
+        {
+            WriteLine("Question: " + question);
+            int answerNumber = 1;
+            foreach (var answer in answers)
+            {
+                WriteLine($"{answerNumber}) {answer}");
+                answerNumber++;
+            }
+        }
+
+        private static bool CheckAnswer(string question, int playerChoice)
+        {
+            // Dictionary stores 0-based index. Player types 1-based index.
+            // So we add 1 to the dictionary value to compare apples to apples!
+            var correctAnswer = questionsAndCorrectAnswers[question] + 1;
+            return correctAnswer == playerChoice;
+        }
+    }
+}
+
+```
+🧠 The Hero's Challenge (Think about it!)
+- **Question 1**: Look closely at the `DrawRandomQuestions` method.
+Why do we need the `if (!selectedQuestions.Contains(question))` check? What would happen if we removed it?
+- **Question 2**: In the final score calculation, why did we divide by `5.0` instead of just `5`?
+
+:::tip The using static Magic Trick
+Tired of typing Console.WriteLine over and over?
+If you add `using static System.Console;` at the very top of your file,
+you are telling the compiler: *"Hey, assume every method I type comes from the Console class
+if you don't recognize it."*
+Now you can just write WriteLine() or ReadLine() directly!
+
+
+:::
+
+## 🔬 The 4w2h Breakdown
+We just built a fully functional application. Let's scan our entire game architecture using the 4w2h model
+to understand how the pieces fit together.
+
+### 0. WHAT are we processing? (Domain)
+- **Metaphor**: A game show host (the Loop) reading cards from a filing cabinet (the Dictionaries)
+to a contestant (the User), while keeping score on a chalkboard (the score variable).
+- **Definition**: We are using:
+    - `static` Dictionaries as a read-only data source (simulating a Database).
+    - We use a dynamic `List` to hold the session state (the randomly drawn questions), and primitive Integers
+  to track the player's progression and score.
+- **Humor**: We have two separate dictionaries — one for the answers and one for the solution.
+It's like a teacher keeping the test on their desk, but hiding the answer key in their pocket
+so the students can't peek!
+
+### 1. WHERE does the data live? (State & Storage)
+- **Static Memory**: `questionsAndAnswers` and `questionsAndCorrectAnswers` are marked `static`.
+They live in a special, shared area of memory the moment the program starts.
+They are global to the Program class.
+- **Local Stack**: `score`, `questionsLeft`, and `playerChoice` are local variables.
+They live on the temporary Stack memory inside the Main method.
+
+### 2. WHEN do we cook? (Evaluation Strategies)
+Eager Initialization.
+The dictionaries are fully populated with all 10 questions the absolute millisecond the program launches.
+We don't load them "on demand" — we load them upfront so they are ready for the game.
+
+### 3. WHO sets the pace? (Data Flow)
+Pull Model (Blocking Interactive). The while (`questionsLeft > 0`) loop acts as our Game Engine.
+It tries to run as fast as possible, but `ReadLine()` acts as a solid brick wall.
+The game engine pauses completely and waits for the user to push data (a number + Enter) into the system.
+The human controls the pace.
+
+### 4. HOW does the UI know? (Reactivity)
+Imperative UI (Standard Variables). When `score++` happens, the console doesn't magically flash
+a new score at the top of the screen.
+Standard variables are not reactive. We have to explicitly order the program to
+`WriteLine($"Your final score is {score}")` at the very end to show the result.
+
+### 5. HOW LONG does it survive? (Lifecycle)
+Application Session Lifecycle.
+The score, the drawn questions, and the user's inputs exist only while the `.exe` is running.
+The moment the console window closes, the game forgets everything.
+Every time you restart, it's a brand new game with a score of `0`.
+
+
+
+
+

@@ -79,12 +79,12 @@ When you wrote `x = "World";`, you didn't erase "Hello" inside the existing bind
 The computer created a brand new binder labeled "World" and updated `x`'s sticky note to point to the new shelf.
 `y` is still happily holding its original sticky note pointing to "Hello".
 The original object remains intact in memory!
-
+:::
 
 ---
 
 ## 3. Special Types in C#
-Now that you know how pointers and the Heap work, you need to meet two special keywords that will appear everywhere in your C# code.
+Now that you know how pointers and the Heap work, you need to meet a ultimate object `object`.
 
 ### The Ultimate Parent: object
 :::tip What is object?
@@ -106,7 +106,7 @@ Use strict typing whenever possible!
 
 ---
 
-### The Lazy Typist's Best Friend: `var`
+## The Lazy Typist's Best Friend: `var`
 :::tip What is var?
 var is a keyword that tells the compiler: "Look at the value on the right side of the equals sign,
 figure out the type yourself, and do the paperwork for me."
