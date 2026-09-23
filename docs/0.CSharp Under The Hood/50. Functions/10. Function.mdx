@@ -1,0 +1,199 @@
+---
+title: Introduction to Functions (Methods) in C#
+description: Learn how to organize your C# code using methods, with a little help from the Force.
+---
+
+# Introduction to Functions (Methods)
+
+Welcome, Padawan! Before you can build the Death Star (or, preferably, something less prone to exploding due
+to a single exhaust port), you need to learn how to organize your instructions.
+
+:::info Function
+A reusable block of code that performs a specific task.
+When a function is defined inside a class, we call it a **method**.
+
+Methods keep your code DRY (**Don't Repeat Yourself*) — because typing the exact same hyperdrive calculations
+a hundred times is a quick path to the Dark Side.
+
+Let's dive right in.
+
+:::
+
+
+---
+
+## 1. Top-Down: The Astromech Blueprint
+
+Here is a fully functional C# program. Read through the code below.
+Before scrolling down, ask yourself: **What will the console display when the `Main` method finishes executing?**
+
+```csharp
+using System;
+
+public class AstromechDroid
+{
+   // method 1
+    public int CalculateHyperjumpCoordinates(int sectorA, int sectorB)
+    {
+        return sectorA + sectorB;
+    }
+
+    // method 2
+    public void GreetJedi()
+    {
+        Console.WriteLine("Beep bloop! Welcome to the Jedi Order.");
+    }
+
+    // The Entry Point
+    public static void Main(string[] args)
+    {
+        // 1. We build our droid (Create an instance of the class)
+        AstromechDroid r2d2 = new AstromechDroid();
+
+        // 2. We call the method and store the result
+        int jumpResult = r2d2.CalculateHyperjumpCoordinates(3, 5);
+        Console.WriteLine("Hyperjump coordinate calculated: " + jumpResult);
+
+        // 3. We call a method that just executes an action
+        r2d2.GreetJedi();
+    }
+}
+```
+Did you figure it out? The droid will first calculate 8, print it, and then beep a greeting.
+Now, let's break this machinery apart using the 4w2h Method to see how the gears actually turn!
+
+
+## 2. The Breakdown (4w2h Model)
+
+### 0. The Domain: WHAT are we processing?
+- Metaphor: Supplying Kyber crystals to build a Lightsaber.
+- Technical Definition: Method Signatures, Primitives vs. Complex Objects.
+
+:::tip What is a Method Signature in C#?
+In C#, a method's signature is its **unique identifier** within a class.
+It consists of exactly two things:
+- **name**: the method name and
+- **parameters**:
+    - the number,
+    - type, and
+    - order of its parameters.
+
+**Crucially, the return type is not part of the signature.**
+
+
+**The Star Wars Metaphor**:
+Imagine you are piloting a starship requesting docking clearance at an Imperial spaceport on Coruscant.
+Your method signature is your clearance code.
+
+The control tower only needs to know your Ship's Name (the Method Name) and exactly
+who is on board (the Parameters: e.g., 1 Wookiee, 2 Astromech Droids).
+The tower does not care what cargo you plan to take with you when you leave (the Return Type).
+
+If a ship named *MillenniumFalcon* arrives carrying (Wookiee copilot, Droid astromech),
+it has a distinct signature.
+If another ship named *MillenniumFalcon* arrives carrying (Jedi passenger),
+the tower recognizes it as a completely different clearance request.
+This is exactly how C# handles method overloading — as long as the boarding party (parameters) is different,
+the ship name (method) can be exactly the same!
+:::
+
+
+To understand a method, look at its signature:
+```
+[modifier] [return_type] [MethodName]([parameters])
+```
+
+- Modifiers:
+    - `public`: Security clearance. public means anyone in the galaxy can use this method.
+    - `private` means only the droid itself can access it.
+- Return Type (`int`, `void`): What the method gives back.
+    - `void` is like a Jedi mind trick—it does something, but hands you nothing back.
+    - `int` means it will definitively hand you an integer number.
+- Parameters (`int sectorA`, `int sectorB`): The raw materials you drop into the machine.
+
+In our code, we process simple primitive types (`int`), but methods can also process and return complex objects
+(like entire Starships).
+
+
+
+### 1. State & Storage: WHERE does the data live?
+- Metaphor: The droid's short-term memory cache versus its permanent hard drive.
+- Technical Definition: Local Variables vs. Instance State (Heap).
+
+When you pass `3` and `5` into `CalculateHyperjumpCoordinates`, those values become local variables
+(`sectorA` and `sectorB`). They live entirely inside the method's memory area (the stack).
+Once the method finishes calculating, that short-term memory is wiped clean.
+
+On the other hand, the `AstromechDroid r2d2` variable lives in the `Main` method,
+holding a reference to the actual droid object in the heap memory.
+
+### 2. Evaluation Strategies: WHEN do we cook?
+- Metaphor: Pulling the hyperspace lever.
+- Technical Definition: Eager execution and Explicit Invocation.
+
+Just writing a method doesn't make it run. It’s just a blueprint sitting in the Jedi Archives.
+The code inside `GreetJedi()` is evaluated eagerly, but only exactly when you invoke it by writing `r2d2.GreetJedi();`.
+It doesn't guess when you want to be greeted; it waits for your direct command.
+
+### 3. Data Flow: WHO sets the pace?
+- Metaphor: The Jedi Master giving orders to the Droid.
+- Technical Definition: Call Stack and Control Flow (Push/Pull Model).
+
+The `Main` method is the ultimate Jedi Master—it sets the pace.
+1. It pushes data into the droid: `(3, 5)`.
+2. It pauses its own execution, waiting for the droid to finish.
+3. It pulls the result back: `int jumpResult = ...`
+4. Only then does `Main` resume and move on to the next line.
+
+Control flows sequentially down the stack.
+
+### 4. Reactivity: HOW does the UI know?
+- Metaphor: A holographic transmission.
+- Technical Definition: Console output as a side effect.
+
+C# methods aren't magic radios. The UI (in this case, the Console) has no idea that `CalculateHyperjumpCoordinates`
+added two numbers together. We only see it because we explicitly grabbed the result and fed it to `Console.WriteLine()`.
+
+Developer humor: If a method calculates a value in a forest, and no Console.WriteLine prints it,
+did it even execute? (Yes, it did, you just wasted CPU cycles).
+
+### 5. Lifecycle: HOW LONG does it survive?
+- Metaphor: A Force Ghost—here for a moment, then gone into the ether.
+- Technical Definition: Method Scope and Garbage Collection.
+
+The lifecycle of variables defined inside a method is tied to the `{ }` brackets (the method's body).
+The moment `CalculateHyperjumpCoordinates` hits its closing bracket `}`, the variables `sectorA` and `sectorB
+are destroyed. They do not survive. Only the return value escapes the destruction, handed safely back to the `Main`
+method before the method's memory collapses.
+
+
+## 3. Summary & Knowledge Check
+Methods/functions are the fundamental building blocks of C# logic. They:
+- take inputs (parameters),
+- do some work,
+- and optionally give you something back (return value).
+
+By mastering methods, you keep your code clean, readable, and infinitely reusable.
+
+
+**Padawan Quiz**: Test Your Knowledge
+1. If a method doesn't need to return any data to the caller, what return type should you use in its signature?
+2. What happens to the local variables (`sectorA` and `sectorB`) after the `CalculateHyperjumpCoordinates`
+method finishes executing?
+3. Look at this signature: `private string DecryptTransmission(string signal)`.
+Can a different class call this method? Why or why not?
+4. hy do we need to create an instance (`new AstromechDroid()`) before calling `GreetJedi()`?
+(Hint: Look closely at how the `Main` method differs from `GreetJedi()`)
+
+#### May the compiler be with you!
+
+
+
+
+
+
+
+
+
+
+
