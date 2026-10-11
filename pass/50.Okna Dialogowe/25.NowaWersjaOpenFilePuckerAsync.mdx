@@ -1,0 +1,114 @@
+---
+title: StorageProvider z OpenFilePickerAsync
+---
+
+# `StorageProvider` z `OpenFilePickerAsync`
+
+## Definicja
+:::info Co to jest `StorageProvider`?
+To nowy mechanizm w Avalonii, który:
+    - działa spójnie na wielu platformach (Windows, Linux, macOS),
+    - zastępuje stare `OpenFileDialog` i `SaveFileDialog`,
+    - udostępnia metody:
+        - `OpenFilePickerAsync()`
+        - `SaveFilePickerAsync()`
+        - `OpenFolderPickerAsync()`
+
+:::
+
+## Przykład - wczytywanie wiersza
+W poprzedniej lekcji wczytywaliśmy plik tekstowy.
+W tej lekcji zaimplementujemy tę samą funkcjonalność, ale przy użyciu nowego mechanizmu.
+
+A zatem `.axaml` pozostaje bez zmian.
+Metoda obsługująca wczytanie pliku zostanie zmieniona:
+```cs
+ private async void OnOpenFileClick(object? sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var storageProvider = this.StorageProvider;
+
+            /*
+              files to List<IStorageFile>
+              IStorageFile to:
+                - są specjalne obiekty plików,
+                - możesz z niech:
+                    - otwierać streamy,
+                    - pobierać nazwy,
+                    - a czasem ścieżki lokalne.
+            */
+            var files = await storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+            {
+                Title = "Wybierz plik tekstowy",
+                AllowMultiple = false, // nie można wybrać wielu pliku
+                FileTypeFilter =
+                [
+                    new FilePickerFileType("Pliki tekstowe")
+                    {
+                        Patterns = ["*.txt"],
+                        AppleUniformTypeIdentifiers = ["public.plain-text"], //dostosowanie do Apple
+                        MimeTypes = ["text/plain"] // dostosowanie do Linux
+                    },
+                    new FilePickerFileType("Wszystkie pliki")
+                    {
+                        Patterns = ["*.*"]
+                    }
+
+                ]
+            });
+
+            var file = files.Count > 0 ? files[0] : null;
+            if(file is null) return; //“Jeżeli file jest null, to przerywamy metodę i nic więcej nie robimy.”
+
+            await using var stream = await file.OpenReadAsync();
+            using var reader = new StreamReader(stream);
+            var content = await reader.ReadToEndAsync();
+
+            OutputBox.Text = content;
+        }
+        catch (Exception exception)
+        {
+            OutputBox.Text = $"Błąd: {exception.Message}";
+
+        }
+
+    }
+```
+
+:::tip `await using var stream = await file.OpenReadAsync();`
+- `file.OpenReadAsync()`
+    - prosi system o otwarcie pliku do odczytu i zwraca strumień (`Stream`).
+- `await` bo otwieranie pliku może wymagać dostępu do dysku (operacja asynchroniczna).
+- `await using` automatycznie zwalnia (zamknie) strumień po zakończeniu bloku,nawet jeśli wystąpi wyjątek.
+
+Po co stream?
+Strumień (`Stream`) to "rurka", przez którą czytamy bajty z pliku.
+
+:::
+
+:::tip `using var reader = new StreamReader(stream);`
+- Tworzy czytnik tekstowy (`StreamReader`) podłączony do strumienia.
+- `StreamReader` potrafi zamienić bajty na tekst.
+- Bez niego trzeba byłoby samodzielnie konwertować bajty na znaki (bardzo skomplikowane).
+- `using` - `reader` zostanie automatycznie zamknięty po zakończeniu bloku.
+
+:::
+
+:::tip `var content = await reader.ReadToEndAsync();`
+- Czyta całą zawartość pliku, aż do końca, i zapisuje ją jako string.
+- `ReadToEndAsync()` wersja asynchroniczna
+- `content` będzie zwykłym tekstem z pliku
+
+:::
+
+:::danger W skrócie
+- `stream` rura z pliku
+- `reader` tłumacz bajtów na tekst
+- `ReadToEndAsync`  "przeczytaj cały tekst z pliku"
+
+:::
+
+
+
+
