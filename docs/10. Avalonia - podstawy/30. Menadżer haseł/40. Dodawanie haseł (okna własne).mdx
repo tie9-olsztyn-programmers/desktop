@@ -1,0 +1,162 @@
+---
+title: 3. Dodawanie haseł (Własne Okno)
+---
+
+# Tworzenie własnych okien dialogowych
+
+Mamy już listę, która pięknie formatuje nasze dane dzięki `DataTemplate`.
+Nadszedł czas, aby ożywić przycisk **"Dodaj nowe hasło"**.
+
+W starszych, konsolowych aplikacjach prosilibyśmy użytkownika o wpisanie danych w terminalu.
+W aplikacjach okienkowych (GUI) używamy do tego tzw. **okien dialogowych (Dialogs)**.
+Stworzymy zupełnie nowe okno z formularzem, wywołamy je z głównego programu, a po
+wypełnieniu przekażemy dane z powrotem.
+
+## 1. Dodanie nowego okna do projektu
+Dodajmy do projektu nowe okno (Na folderze aplikacji: prawy klawisz myszki `Add > Awalonia Window`)
+Nazwijmy je **`AddPasswordWindow`** (powstaną dwa pliki: `.axaml` oraz `.axaml.cs`).
+
+### Wygląd formularza (XAML)
+
+Otwórzmy plik `AddPasswordWindow.axaml`. Zaprojektujemy w nim prosty układ oparty na
+`StackPanel`.
+
+Zwróć uwagę na właściwości okna (tag `<Window>`):
+* Ustawiliśmy `Width="400"` i `Height="350"`, aby okno było małe.
+* `WindowStartupLocation="CenterOwner"` sprawi, że pojawi się dokładnie na środku naszej
+głównej aplikacji.
+
+```xml title="AddPasswordWindow.axaml"
+<Window
+    <!-- ... --?
+    Height="350" Title="Dodaj nowe hasło" Width="400"
+    WindowStartupLocation="CenterOwner"
+    >
+
+    <StackPanel Margin="20" Spacing="10">
+
+        <TextBlock FontWeight="Bold" Text="Nazwa serwisu (np. Facebook):"/>
+        <TextBox Name="TxtService" Watermark="Wpisz nazwę serwisu..."/>
+
+        <TextBlock FontWeight="Bold" Margin="0, 10, 0, 0" Text="Login / E-mail:"/>
+        <TextBox Name="TxtUsername" Watermark="jan@kowalski.pl"/>
+
+        <TextBlock FontWeight="Bold" Margin="0, 10, 0, 0" Text="Hasło:"/>
+        <TextBox Name="TxtPassword" PasswordChar="•" Watermark="TajneHaslo123"/>
+
+        <!-- Panel na przyciski na dole -->
+        <StackPanel HorizontalAlignment="Right" Margin="0, 20, 0, 0" Orientation="Horizontal" Spacing="10">
+            <Button Click="BtnCancel_Click" Content="Anuluj" Name="BtnCancel"/>
+            <Button Classes="accent" Click="BtnSave_Click" Content="Zapisz" Name="BtnSave"/>
+        </StackPanel>
+
+    </StackPanel>
+
+</Window>
+
+```
+:::tip Zwróć uwagę na PasswordChar
+W kontrolce TextBox dla hasła użyliśmy właściwości `PasswordChar="•"`.
+Dzięki temu, cokolwiek użytkownik wpisze, na ekranie pojawią się tylko kropki.
+To absolutna podstawa bezpieczeństwa przy formularzach logowania.
+:::
+
+
+## 2. Logika nowego okna (Code-Behind)
+Teraz przejdźmy do pliku `AddPasswordWindow.axaml.cs`. Musimy obsłużyć kliknięcia dwóch przycisków.
+
+Avalonia posiada metodę `Close()`, która może przyjąć jako argument obiekt, który
+chcemy zwrócić do okna-rodzica. W naszym przypadku zwrócimy gotowy obiekt `PasswordEntry`
+(jeśli użytkownik kliknie "Zapisz") lub `null` (jeśli kliknie "Anuluj").
+
+```csharp
+public partial class AddPasswordWindow : Window
+{
+    public AddPasswordWindow()
+    {
+        InitializeComponent();
+    }
+
+    private void BtnSave_Click(object? sender, RoutedEventArgs e)
+    {
+
+        string service = TxtService.Text ?? "";
+        string user = TxtUsername.Text ?? "";
+        string pass = TxtPassword.Text ?? "";
+
+        if (string.IsNullOrWhiteSpace(service) || string.IsNullOrWhiteSpace(pass))
+        {
+            return;
+        }
+
+        var newEntry = new PasswordEntry(service, user, pass);
+
+        Close(newEntry);
+    }
+
+    private void BtnCancel_Click(object? sender, RoutedEventArgs e)
+    {
+        Close(null);
+    }
+}
+```
+
+## 3. Wywołanie okna z `MainWindow`
+Wracamy do naszego głównego okna (`MainWindow.axaml.cs`). Znajdź przygotowaną w pierwszej
+lekcji pustą metodę `BtnAdd_Click`.
+
+Zastąpimy ją teraz kodem, który otwiera nasz nowy formularz. Użyjemy metody `ShowDialog<T>()`.
+Służy ona do otwierania okien w trybie modalnym (użytkownik nie może kliknąć niczego
+w głównym oknie, dopóki nie zamknie tego mniejszego formularza).
+
+:::warning Bardzo ważne: `async` i `await`
+Wywołanie okna dialogowego zatrzymuje przepływ logiki programu, aż do momentu zamknięcia okna.
+W nowoczesnym C# nie możemy w ten sposób zablokować głównego wątku (aplikacja by "zamarzła").
+Dlatego do definicji metody musimy dodać słowo `async`, a przy wywołaniu okna słowo `await`.
+:::
+
+Zaktualizuj kod w `MainWindow.axaml.cs`:
+```csharp
+// UWAGA: Dodaliśmy słowo 'async' przed void!
+    private async void BtnAdd_Click(object? sender, RoutedEventArgs e)
+    {
+        var dialog = new AddPasswordWindow();
+
+        //  Otwieramy okno i CZEKAMY (await) na jego zamknięcie.
+        // Spodziewamy się, że zwróci obiekt PasswordEntry (lub null)
+        var result = await dialog.ShowDialog<PasswordEntry?>(this);
+
+        //  Jeśli użytkownik kliknął "Zapisz", result zawiera nowy obiekt
+        if (result == null) return;
+        _passwordsDatabase.Add(result);
+
+        // Ponownie nasze "przekleństwo" Code-Behind
+        // Musimy wymusić odświeżenie!
+        RefreshList();
+
+    }
+
+```
+
+## Podsumowanie części 3
+Przetestuj działanie aplikacji! Po kliknięciu "Dodaj nowe hasło" powinno pojawić się nowe,
+okno na środku ekranu głównego. Po wypełnieniu formularza i wciśnięciu "Zapisz",
+nowy wpis natychmiast wskoczy na główną listę.
+
+
+Czego się nauczyliśmy?
+- Jak przekazywać dane między dwoma osobnymi oknami (mechanizm `Close(obiekt)` oraz
+`ShowDialog<Typ>()`).
+- Dlaczego okna dialogowe wymagają programowania asynchronicznego (async/await).
+- W kolejnej, ostatniej już części naszego miniprojektu sprawimy, aby nasze cenne hasła
+nie znikały po wyłączeniu programu. Użyjemy `StorageProvider`, by zapisać naszą bazę do pliku!
+
+
+
+
+
+
+
+
+
+

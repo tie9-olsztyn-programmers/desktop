@@ -1,0 +1,66 @@
+---
+title: Usuwanie elementów z listy
+---
+
+# Odczytywanie zaznaczenia i usuwanie wpisów
+
+Nasz Menedżer Haseł potrafi już zapisywać, wczytywać i dodawać nowe wpisy.
+Brakuje nam tylko jednej podstawowej operacji: możliwości usunięcia hasła,
+które przestało być nam potrzebne.
+
+W pierwszej lekcji przygotowaliśmy w pliku `MainWindow.axaml` przycisk:
+`<Button Click="BtnDelete_Click" Content="Usuń wybrane" Name="BtnDelete"/>`
+
+Teraz wreszcie wprowadzimy do niego życie.
+
+## 1. Jak działa zaznaczanie w ListBox?
+
+Kiedy użytkownik klika element w kontrolce `ListBox`, Avalonia zapisuje ten obiekt
+w specjalnej właściwości o nazwie **`SelectedItem`**.
+
+Ponieważ `ListBox` z definicji może przechowywać wszystko (teksty, liczby, a
+w naszym przypadku obiekty `PasswordEntry`), właściwość `SelectedItem` zwraca
+ogólny typ `object`. Musimy więc użyć mechanizmu rzutowania (lub sprawdzania typu `is`),
+aby upewnić się, że to, co chcemy usunąć, to faktycznie nasze hasło.
+
+## 2. Implementacja usuwania
+
+Otwórz plik `MainWindow.axaml.cs` i znajdź pustą metodę `BtnDelete_Click`.
+Uzupełnij ją następującym kodem:
+
+```csharp title="MainWindow.axaml.cs"
+   private void BtnDelete_Click(object? sender, RoutedEventArgs e)
+    {
+        if (LbxPasswords.SelectedItem is not PasswordEntry selectedEntry) return;
+        _passwordsDatabase.Remove(selectedEntry);
+
+        // Nasza ulubiona operacja... ręczne odświeżenie widoku!
+        RefreshList();
+    }
+```
+
+**Jak działa ten kod?**
+- Wyrażenie `LbxPasswords.SelectedItem is PasswordEntry selectedEntry` robi dwie
+rzeczy jednocześnie:
+- Sprawdza, czy zaznaczony element nie jest "pusty" (czyli czy użytkownik w ogóle coś kliknął,
+zanim wcisnął przycisk "Usuń").
+- Jeśli kliknął, od razu rzutuje (zmienia) ten element na nasz typ `PasswordEntry` i
+podstawia go pod nową zmienną `selectedEntry`, z której korzystamy
+w następnej linijce do usunięcia wpisu z kolekcji `_passwordsDatabase`.
+
+:::tip Przetestuj działanie!
+Uruchom aplikację, dodaj dwa nowe wpisy.
+Zaznacz jeden z nich na liście (podświetli się na niebiesko) i
+kliknij przycisk "Usuń wybrane". Wpis natychmiast zniknie! Jeśli po tym
+zapiszesz bazę do pliku, usunięty wpis również nie pojawi się w pliku `.json`.
+:::
+
+
+
+
+
+
+
+
+
+

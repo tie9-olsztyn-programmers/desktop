@@ -1,0 +1,127 @@
+---
+title: 4. Zapis i odczyt bazy (JSON)
+---
+
+# Zapis i odczyt z użyciem StorageProvider
+
+Nasza aplikacja wygląda świetnie i potrafi dodawać nowe hasła. Niestety ma jedną ogromną wadę –
+po jej wyłączeniu wszystkie wpisy bezpowrotnie znikają. Dzieje się tak, ponieważ lista
+`_passwordsDatabase` istnieje tylko w ulotnej pamięci RAM.
+
+W tej lekcji nauczymy naszą aplikację rozmawiać z systemem operacyjnym.
+Wyświetlimy standardowe okna zapisu/odczytu pliku przy użyciu mechanizmu **`StorageProvider`** i
+zapiszemy nasze dane w nowoczesnym formacie **JSON**.
+
+## 1. Drobna zmiana w modelu danych (Wymóg JSON-a)
+
+Zanim zaczniemy zapisywać dane, musimy zrozumieć, jak działa konwersja obiektów na tekst
+(tzw. **serializacja**). Użyjemy do tego wbudowanej biblioteki `System.Text.Json`.
+
+Biblioteka ta podczas wczytywania (deserializacji) pliku z powrotem do programu musi wiedzieć,
+jak zbudować obiekt. Domaga się ona **pustego, bezparametrowego konstruktora**, którego nasza
+klasa obecnie nie ma.
+
+Otwórz plik `PasswordEntry.cs` i dodaj pusty konstruktor (zaraz nad lub pod tym istniejącym):
+
+```csharp title="PasswordEntry.cs"
+// Pusty konstruktor wymagany przez system serializacji JSON
+public PasswordEntry() { }
+```
+
+## 2. Przygotowanie importów (using)
+Otwórz plik `MainWindow.axaml.cs`. Będziemy pracować z plikami i formatem JSON,
+więc na samej górze pliku, do listy using, musimy dodać trzy nowe wpisy:
+```csharp
+using Avalonia.Platform.Storage; // Do wywoływania okien systemowych
+using System.IO;                 // Do obsługi strumieni plików
+using System.Text.Json;          // Do zamiany listy na JSON i odwrotnie
+```
+
+## 3. Zapisywanie bazy (BtnSave_Click)
+Znajdź pustą metodę `BtnSave_Click`. Ponieważ otwieranie okien systemowych i zapisywanie
+plików to operacje, które mogą zająć dłuższą chwilę (np. gdy dysk jest wolny), musimy użyć
+programowania asynchronicznego. Pamiętaj o dopisaniu słówka `async`!
+
+```csharp
+private async void BtnSave_Click(object? sender, RoutedEventArgs e)
+    {
+        //  Konfigurujemy wygląd systemowego okna zapisu
+        var options = new FilePickerSaveOptions
+        {
+            Title = "Zapisz swoją bazę haseł",
+            DefaultExtension = "json",
+            FileTypeChoices = new[]
+            {
+                new FilePickerFileType("Plik JSON") { Patterns = new[] { "*.json" } }
+            }
+        };
+
+        //  Wywołujemy okno za pomocą StorageProvider
+        IStorageFile file = await StorageProvider.SaveFilePickerAsync(options);
+
+        if (file == null) return;
+
+        // Otwieramy plik do zapisu w postaci strumienia (Stream)
+        await using var stream = await file.OpenWriteAsync();
+
+        // Serializujemy naszą listę do JSON-a i wrzucamy do pliku
+        await JsonSerializer.SerializeAsync(stream, _passwordsDatabase);
+    }
+
+
+```
+
+
+
+
+:::info Co to jest IStorageFile?
+W Avalonia UI zmienna file nie jest zwykłą ścieżką do pliku (tekstem), lecz obiektem IStorageFile. Wynika to z faktu, że Avalonia jest wieloplatformowa – obsługuje pliki na Windowsie, Linuxie, a nawet potrafi obsłużyć wirtualny system plików, gdy uruchomimy ją w oknie przeglądarki (WebAssembly)!
+:::
+
+
+## 4. Wczytywanie bazy (BtnLoad_Click)
+Teraz czas na operację odwrotną. Odpytamy system o plik `.json`, otworzymy go, odkodujemy
+zawartość i podmienimy naszą główną listę `_passwordsDatabase`.
+
+```csharp
+ private async void BtnLoad_Click(object? sender, RoutedEventArgs e)
+    {
+        var options = new FilePickerOpenOptions
+        {
+            Title = "Wczytaj bazę haseł",
+            AllowMultiple = false, // Chcemy otworzyć tylko jeden plik na raz
+            FileTypeFilter = new[]
+            {
+                new FilePickerFileType("Plik JSON") { Patterns = new[] { "*.json" } }
+            }
+        };
+
+        // Okno wyboru plików zwraca LISTĘ wybranych plików (nawet jeśli wybierzemy jeden)
+        var result = await StorageProvider.OpenFilePickerAsync(options);
+
+        // Sprawdzamy czy coś wybrano
+        if (result.Count <= 0) return;
+        // Wyciągamy pierwszy (i jedyny) wybrany plik
+        var file = result[0];
+
+        // Otwieramy strumień do odczytu
+        await using var stream = await file.OpenReadAsync();
+
+        // Magia! Zmieniamy tekst w pliku z powrotem na gotową listę obiektów C#
+        var loadedData = await JsonSerializer.DeserializeAsync<List<PasswordEntry>>(stream);
+
+        if (loadedData == null) return;
+        // Podmieniamy bazę w pamięci
+        _passwordsDatabase = loadedData;
+
+        // I po raz kolejny, musimy ręcznie zaktualizować ListBox!
+        RefreshList();
+    }
+```
+
+
+
+
+
+
+
