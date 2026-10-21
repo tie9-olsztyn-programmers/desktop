@@ -1,0 +1,149 @@
+---
+title: Komunikaty (własny MessageBox)
+---
+
+# Własny MessageBox i wyłapywanie błędów (Try..Catch)
+
+Zapisywanie plików na dysku to tzw. operacja wejścia/wyjścia (I/O).
+Co się stanie, jeśli użytkownik spróbuje nadpisać plik, który jest aktualnie
+zablokowany przez inny program (np. antywirusa), albo nie ma uprawnień do zapisu na
+wybranym dysku? Nasza aplikacja najprawdopodobniej by się zawiesiła (scrashowała).
+
+Co więcej, użytkownik lubi wiedzieć, że program "coś zrobił". Zamiast zgadywać,
+czy plik się zapisał, chcemy wyświetlić mu prosty komunikat o sukcesie lub porażce.
+
+W starych technologiach (WinForms/WPF) istniała wbudowana funkcja `MessageBox.Show()`.
+W nowoczesnej, wieloplatformowej Avalonia UI musimy (i możemy!) napisać ją sami.
+
+
+## 1. Tworzymy okno komunikatu (MessageBoxWindow)
+
+Dodaj do projektu nowe okno (folder projektu `Add > Avalonia Window`) i nazwij je **`MessageBoxWindow`**.
+Będzie ono bardzo proste: tekst na środku i jeden przycisk "OK".
+
+Zmień właściwości okna: niech będzie małe i nie pozwala na zmianę rozmiaru (`CanResize="False"`).
+
+
+```xml title="MessageBoxWindow.axaml"
+<Window
+<!-- ... -->
+    CanResize="False"
+    Height="150" Width="300" WindowStartupLocation="CenterOwner"
+>
+
+    <StackPanel HorizontalAlignment="Center" Margin="10" Spacing="20" VerticalAlignment="Center">
+
+        <!-- Tu wyświetlimy treść komunikatu (TextWrapping pozwala na łamanie wierszy) -->
+        <TextBlock FontSize="14" Name="TxtMessage" TextAlignment="Center" TextWrapping="Wrap"/>
+
+        <Button Classes="accent" Click="BtnOk_Click" Content="Rozumiem (OK)" HorizontalAlignment="Center" Name="BtnOk"/>
+
+    </StackPanel>
+
+</Window>
+
+```
+
+
+## 2. Przekazywanie tekstu w Code-Behind
+Teraz otwórzmy plik `MessageBoxWindow.axaml.cs`.
+Stworzymy w nim dedykowany konstruktor, który przyjmie jako parametr tekst
+komunikatu i natychmiast wrzuci go do naszego kontrolki `TextBlock`.
+
+```csharp
+
+public partial class MessageBoxWindow : Window
+{
+
+    public MessageBoxWindow()
+    {
+        InitializeComponent();
+    }
+
+    // NASZ WŁASNY KONSTRUKTOR - Przyjmuje wiadomość i tytuł okna
+    public MessageBoxWindow(string message, string title = "Informacja")
+    {
+        InitializeComponent();
+
+        Title = title;               // Ustawiamy tytuł okna (na pasku)
+        TxtMessage.Text = message;   // Ustawiamy treść na środku
+    }
+
+    // Zwykłe zamknięcie okna po kliknięciu "OK"
+    private void BtnOk_Click(object? sender, RoutedEventArgs e)
+    {
+        Close();
+    }
+}
+
+```
+
+:::info Parametry domyślne w C#
+Zwróć uwagę na parametr string title = "Informacja".
+Dzięki temu, jeśli nie podamy tytułu podczas wywoływania okna, domyślnie wyświetli
+się słowo "Informacja". Jeśli jednak podamy drugi argument, tytuł zostanie nadpisany
+(np. na "Błąd Krytyczny!").
+:::
+
+
+## 3. Dodanie obsługi błędów podczas zapisu pliku
+Mając gotowy "MessageBox", wracamy do pliku `MainWindow.axaml.cs` i aktualizujemy
+naszą metodę odpowiedzialną za zapisywanie.
+
+Całą logikę zapisu otulamy blokiem `try { ... } catch { ... }`.
+Jeśli podczas zapisu coś pójdzie nie tak, program nie "wybuchnie",
+tylko płynnie przejdzie do sekcji `catch` i wywoła nasze czerwone okienko z błędem.
+
+
+```csharp
+ private async void BtnSave_Click(object? sender, RoutedEventArgs e)
+    {
+        //  Konfigurujemy wygląd systemowego okna zapisu
+        var options = new FilePickerSaveOptions
+        {
+            Title = "Zapisz swoją bazę haseł",
+            DefaultExtension = "json",
+            FileTypeChoices = new[]
+            {
+                new FilePickerFileType("Plik JSON") { Patterns = new[] { "*.json" } }
+            }
+        };
+
+        //  Wywołujemy okno za pomocą StorageProvider
+        IStorageFile file = await StorageProvider.SaveFilePickerAsync(options);
+
+        if (file == null) return;
+
+        // --------  NOWA ELEMENT --------
+        try
+        {
+            // Próbujemy zapisać plik...
+            await using var stream = await file.OpenWriteAsync();
+            await JsonSerializer.SerializeAsync(stream, _passwordsDatabase);
+
+            // Jeśli doszliśmy do tej linijki, to znaczy że nie było błędu!
+            // Wywołujemy nasz własny MessageBox (Sukces)
+            var msgBox = new MessageBoxWindow("Baza haseł została zapisana pomyślnie!", "Sukces");
+            await msgBox.ShowDialog(this);
+        }
+        catch (System.Exception ex)
+        {
+            // Jeśli wystąpił JAKIKOLWIEK błąd (np. brak miejsca, brak uprawnień)
+            // Zmienna 'ex' zawiera szczegóły błędu
+            var msgBox = new MessageBoxWindow($"Ups, coś poszło nie tak!\n\nSzczegóły: {ex.Message}", "Błąd zapisu");
+            await msgBox.ShowDialog(this);
+        }
+    }
+
+```
+
+
+
+
+
+
+
+
+
+
+

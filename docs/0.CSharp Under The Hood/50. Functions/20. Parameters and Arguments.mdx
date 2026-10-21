@@ -1,0 +1,144 @@
+---
+title: Parameters and Arguments
+---
+
+:::tip
+### Lesson Theme: Star Wars
+:::
+
+# Master the Force: Parameters and Arguments in C#
+
+Welcome, Padawan. Today we tackle one of the most fundamental concepts
+in the C# galaxy: **getting data into your methods**.
+
+People often use the words "Parameter" and "Argument" interchangeably,
+but in the strict halls of the Jedi Temple (and the C# compiler),
+they mean very entirely different things.
+
+Let's dive straight into the main computer terminal.
+
+## 1. Top-Down: The Jedi Mission Coordinator
+
+Take a look at this fully operational battle station... I mean, C# script.
+Read the code below and see if you can predict what will be printed
+to the console before reading further.
+
+```csharp
+using System;
+
+public class JediMissionCoordinator
+{
+    // The blueprint of our method. Notice the default values!
+    public void AssignMission(
+        string jediName,
+        string planet,
+        int droids = 1,
+        bool stealthMode = false
+    )
+    {
+        Console.WriteLine($"Mission to {planet}: Master {jediName} is taking {droids} droid(s). Stealth: {stealthMode}.");
+    }
+
+    public static void Main()
+    {
+        JediMissionCoordinator coordinator = new JediMissionCoordinator();
+
+        //  Standard arguments (matching parameters by exact position)
+        coordinator.AssignMission("Obi-Wan", "Utapau", 3, false);
+
+        // Using optional parameters (default standard-issue values kick in)
+        coordinator.AssignMission("Anakin", "Mustafar");
+
+        // Named arguments: Order doesn't matter anymore!
+        coordinator.AssignMission(stealthMode: true, planet: "Endor", jediName: "Luke");
+
+        // Mixing positional and named arguments
+        coordinator.AssignMission("Ahsoka", droids: 2, planet: "Mandalore");
+    }
+}
+
+```
+
+:::note 🧠 Jedi Mind Trick (Think about it):
+In call #2, we only provided two strings, but the method requires an int and a bool.
+Why doesn't the compiler throw a red Sith-lightning error?
+And in call #3, we scrambled the order of the inputs completely.
+How does the compiler know what goes where?
+
+:::
+
+## 2. Breakdown and Explanation (The 4w2h Model)
+Let's dissect this code like a Jawa dismantling a stray astromech droid.
+
+Before we hit the 4w2h dimensions, we must establish the golden rule of the C#
+Republic:
+- Parameter: The variable declared in the method signature (`string jediName`). It’s the empty slot.
+- Argument: The actual value passed into the method (`"Obi-Wan"`). It’s the cargo you put into the slot.
+
+Now, let's break it down using our 6 dimensions:
+
+### 0. The Domain: WHAT are we processing?
+- Metaphor: Cargo manifests, hyperspace coordinates, and droid serial numbers.
+- Technical Definition: We are processing Primitives (`string`, `int`, `bool`).
+The method signature (`AssignMission`) defines the exact data types it accepts.
+- The Corny joke: Try passing a `float` into a `string` parameter, and the compiler will reject it faster
+than a cantina bartender rejecting droids.
+
+### 1. State & Storage: WHERE does the data live?
+- Metaphor: Temporary holding cells on Coruscant.
+- Technical Definition: Parameters act as Local Variables inside the method.
+When you pass an argument to a parameter, it lives temporarily in the thread's execution Stack.
+They receive the values passed during the method call.
+
+### 2. Evaluation Strategies: WHEN do we cook?
+- Metaphor: Packing your lightsaber before jumping to lightspeed.
+- Technical Definition: C# generally uses the Eager Paradigm for arguments.
+The values ("Anakin", "Mustafar") are fully evaluated and resolved before they are actually passed into the parameter
+slots of the method.
+
+Optional Parameters: If an argument is missing (like in `AssignMission("Anakin", "Mustafar")`),
+the compiler eagerly substitutes the default values (`droids = 1, stealthMode = false)` at compile time.
+
+### 3. Data Flow: WHO sets the pace?
+- Metaphor: The Jedi High Council issuing top-down orders.
+- Technical Definition: This is a Push Model. The calling code (`Main`) forcefully pushes the arguments into the method.
+- Named Arguments: The caller has absolute power! By using named arguments (`planet: "Endor"`),
+the caller explicitly pushes data to specific parameter names, overriding the default positional order.
+This massively improves code readability when dealing with a lot of parameters.
+
+### 4. Reactivity: HOW does the UI know?
+- Metaphor: A recorded Holocron message.
+- Technical Definition: We are dealing with Simple variables, not reactive states. Passing an argument
+to a parameter copies the value. If `jediName` changes inside `AssignMission`,
+the original `string` in `Main` doesn't know or care. It is a one-way street, not a two-way reactive comm-link.
+
+### 5. Lifecycle: HOW LONG does it survive?
+- Metaphor: A lightsaber ignition. It exists while the button is pressed, and vanishes when released.
+- Technical Definition: Volatile memory / Short-lived. The parameters (`jediName`, `planet`) are born
+the microsecond the method is called. The moment the closing bracket `}` of the method is reached,
+they are destroyed, wiped from memory like Alderaan.
+
+## 3. Summary & Jedi Trials
+To recap:
+1. Parameters are the variables defined in the method's brackets (the parking spots).
+2. Arguments are the actual values you pass in when calling the method (the spaceships).
+3. Optional Parameters allow you to assign default values (`int droids = 1`), meaning the caller can simply skip them.
+4. Named Arguments (planet: "Tatooine") let you ignore the strict order of parameters, making your method calls
+highly readable.
+
+## 📝 Jedi Trials (Check your knowledge)
+1. Look at this method: `public void UseForce(int powerLevel)`. When I call `UseForce(9000);`,
+which one is the parameter and which one is the argument?
+2. If I define a method as `public void BuildLightsaber(string crystalColor = "Blue")`, what happens if
+I call `BuildLightsaber();` with nothing inside the parentheses?
+3. Why might you choose to use Named Arguments when a method has 5 boolean parameters in a row?
+(e.g., `DeployFleet(true, false, false, true, false)`).
+
+
+
+
+
+
+
+
+

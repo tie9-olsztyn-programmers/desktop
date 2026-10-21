@@ -1,0 +1,217 @@
+---
+title: Zapis i odczyt bazy (JSON)
+---
+
+:::tip Dlaczego używamy `StorageProvider`, a nie starych okien dialogowych?
+W starszej wersji (Avalonia 11) były klasy takie
+jak `OpenFileDialog` czy `SaveFileDialog`.
+Dlaczego w Avalonii 12 używamy jakiegoś `StorageProvider`?
+- Avalonia to framework wieloplatformowy. Wasza aplikacja z tym samym kodem może zostać
+uruchomiona na Windowsie, Linuxie, macOS, a nawet... w oknie przeglądarki internetowej
+(jako WebAssembly)!
+- W systemach mobilnych (Android/iOS) czy w przeglądarce nie ma klasycznego dysku
+`C:\`.  `StorageProvider` to nowoczesny, sprytny "pośrednik".
+Dzięki niemu piszecie kod tylko raz, a Avalonia sama domyśla się, na jakim systemie
+została uruchomiona, wywołując natywne okno wyboru plików (np. Eksplorator na Windowsie,
+Finder na macOS lub menedżer plików w Linuxie).
+
+:::
+
+
+
+# Zapis i odczyt z użyciem StorageProvider
+
+Nasza aplikacja wygląda świetnie i potrafi dodawać nowe hasła. Niestety ma jedną ogromną wadę –
+po jej wyłączeniu wszystkie wpisy bezpowrotnie znikają. Dzieje się tak, ponieważ lista
+`_passwordsDatabase` istnieje tylko w ulotnej pamięci RAM.
+
+W tej lekcji nauczymy naszą aplikację rozmawiać z systemem operacyjnym.
+Wyświetlimy standardowe okna zapisu/odczytu pliku przy użyciu mechanizmu **`StorageProvider`** i
+zapiszemy nasze dane w nowoczesnym formacie **JSON**.
+
+## 1. Drobna zmiana w modelu danych (Wymóg JSON-a)
+
+Zanim zaczniemy zapisywać dane, musimy zrozumieć, jak działa konwersja obiektów na tekst
+(tzw. **serializacja**). Użyjemy do tego wbudowanej biblioteki `System.Text.Json`.
+
+Biblioteka ta podczas wczytywania (deserializacji) pliku z powrotem do programu musi wiedzieć,
+jak zbudować obiekt. Domaga się ona **pustego, bezparametrowego konstruktora**, którego nasza
+klasa obecnie nie ma.
+
+Otwórz plik `PasswordEntry.cs` i dodaj pusty konstruktor (zaraz nad lub pod tym istniejącym):
+
+```csharp title="PasswordEntry.cs"
+// Pusty konstruktor wymagany przez system serializacji JSON
+public PasswordEntry() { }
+```
+
+## 2. Przygotowanie importów (using)
+Otwórz plik `MainWindow.axaml.cs`. Będziemy pracować z plikami i formatem JSON,
+więc na samej górze pliku, do listy using, musimy dodać trzy nowe wpisy:
+```csharp
+using Avalonia.Platform.Storage; // Do wywoływania okien systemowych
+using System.IO;                 // Do obsługi strumieni plików
+using System.Text.Json;          // Do zamiany listy na JSON i odwrotnie
+```
+
+## 3. Zapisywanie bazy (BtnSave_Click)
+Znajdź pustą metodę `BtnSave_Click`. Ponieważ otwieranie okien systemowych i zapisywanie
+plików to operacje, które mogą zająć dłuższą chwilę (np. gdy dysk jest wolny), musimy użyć
+programowania asynchronicznego. Pamiętaj o dopisaniu słówka `async`!
+
+```csharp
+private async void BtnSave_Click(object? sender, RoutedEventArgs e)
+    {
+        //  Konfigurujemy wygląd systemowego okna zapisu
+        var options = new FilePickerSaveOptions
+        {
+            Title = "Zapisz swoją bazę haseł",
+            DefaultExtension = "json",
+            FileTypeChoices = new[]
+            {
+                new FilePickerFileType("Plik JSON") { Patterns = new[] { "*.json" } }
+            }
+        };
+
+        //  Wywołujemy okno za pomocą StorageProvider
+        IStorageFile file = await StorageProvider.SaveFilePickerAsync(options);
+
+        if (file == null) return;
+
+        // Otwieramy plik do zapisu w postaci strumienia (Stream)
+        await using var stream = await file.OpenWriteAsync();
+
+        // Serializujemy naszą listę do JSON-a i wrzucamy do pliku
+        await JsonSerializer.SerializeAsync(stream, _passwordsDatabase);
+    }
+
+
+```
+:::note `FilePickerSaveOptions`
+
+- **`DefaultExtension = "json"`**
+Dzięki temu, jeśli użytkownik wpisze w polu nazwy pliku samo słowo `moje_hasla` i
+kliknie "Zapisz", system automatycznie doklei na końcu `.json` (tworząc `moje_hasla.json`). Zapobiega to tworzeniu plików bez rozszerzenia.
+-  **`FileTypeChoices = new[] { ... }`**
+    - To definicja filtrów rozszerzeń, które pojawiają się na samym dole okna zapisu
+(w liście rozwijanej "Zapisz jako typ:"). Wymaga ona podania tablicy (stąd `new[]`),
+ponieważ moglibyśmy chcieć dać użytkownikowi wybór (np. zapis do JSON albo do TXT).
+    - `"Plik JSON"` – to przyjazna nazwa, którą przeczyta człowiek na liście rozwijanej.
+    - `Patterns = new[] { "*.json" }` – to reguła (maska) dla systemu operacyjnego. G
+   wiazdka (`*`) oznacza "dowolna nazwa pliku", a `.json` wymusza konkretne rozszerzenie.
+   Jeśli w folderze byłyby inne pliki (np. zdjęcia `.jpg`), system ich nie pokaże,
+   filtrując widok tylko do plików JSON.
+
+:::info Ciekawostka: Inicjalizator obiektów
+Zauważ, że nie użyliśmy tutaj tradycyjnego przypisywania właściwości linijka po linijce
+(np. `options.Title = "..."`). Użyliśmy nawiasów klamrowych `{ }` od razu po
+`new FilePickerSaveOptions`. Ten mechanizm w języku C# nazywa się
+**Inicjalizatorem obiektów (Object Initializer)** i pozwala na stworzenie obiektu oraz
+ustawienie jego właściwości w jednym, czytelnym kroku.
+
+
+:::
+
+
+
+:::info Co to jest IStorageFile?
+W Avalonia UI zmienna file nie jest zwykłą ścieżką do pliku (tekstem),
+lecz obiektem IStorageFile. Wynika to z faktu, że Avalonia jest wieloplatformowa –
+obsługuje pliki na Windowsie, Linuxie, a nawet potrafi obsłużyć wirtualny system plików,
+gdy uruchomimy ją w oknie przeglądarki (WebAssembly)!
+
+:::
+
+
+---
+### Magia zapisu: Strumienie i Serializacja (Wyjaśnienie kodu)
+
+Przyjrzyjmy się dokładnie dwóm najważniejszym linijkom odpowiedzialnym za fizyczny zapis
+danych na dysk:
+
+```csharp
+await using var stream = await file.OpenWriteAsync();
+await JsonSerializer.SerializeAsync(stream, _passwordsDatabase);
+
+```
+
+#### Linijka 1: Otwieranie "rury" do pliku
+`await using var stream = await file.OpenWriteAsync();`
+- `file.OpenWriteAsync()` – Prosimy system operacyjny o otwarcie wybranego pliku w
+trybie do zapisu.
+- `stream` (Strumień) – Wyobraź sobie strumień jako "rurę" (potok danych) łączącą nasz
+program z fizycznym plikiem na dysku. Nasz program nie zapisuje pliku w ułamku sekundy w
+całości – on "pompuje" do tej rury porcje danych (bajty).
+- `await using` (Bardzo ważne!) – Strumienie mają to do siebie, że blokują plik
+(dlatego nie możesz usunąć pliku, który jest otwarty w innym programie).
+Słówko `using` gwarantuje nam, że gdy tylko program skończy zapisywać, ta rura
+zostanie automatycznie i bezpiecznie zamknięta, a plik odblokowany.
+Nawet jeśli wystąpi błąd (np. wyciągniemy pendrive w trakcie zapisu), `using` posprząta
+po nas pamięć!
+
+#### Linijka 2: Tłumaczenie obiektów na tekst (Serializacja)
+`await JsonSerializer.SerializeAsync(stream, _passwordsDatabase);`
+- **Serializacja** – To proces zamiany skomplikowanych obiektów w pamięci RAM
+(naszej listy `_passwordsDatabase`) na płaski tekst (format JSON), który można zapisać
+na dysku.
+- `JsonSerializer.SerializeAsync(...)` – To wbudowany w język C# "tłumacz".
+Przekazujemy mu dwa argumenty:
+    - Gdzie ma pompować dane? (do naszego strumienia `stream`).
+    - Co ma przetłumaczyć? (naszą listę haseł `_passwordsDatabase`).
+
+- `await` – Ponieważ dysk twardy (nawet SSD) jest tysiące razy wolniejszy niż procesor
+i pamięć RAM, zapisywanie dużego pliku może zająć chwilę. Słówko await mówi programowi:
+"Poczekaj tu, aż tłumacz skończy wysyłać dane na dysk, ale pozwól użytkownikowi w tym
+czasie normalnie ruszać oknem aplikacji" (zapobiega to zjawisku "Brak odpowiedzi /
+Not responding").
+
+---
+
+
+
+## 4. Wczytywanie bazy (BtnLoad_Click)
+Teraz czas na operację odwrotną. Odpytamy system o plik `.json`, otworzymy go, odkodujemy
+zawartość i podmienimy naszą główną listę `_passwordsDatabase`.
+
+```csharp
+ private async void BtnLoad_Click(object? sender, RoutedEventArgs e)
+    {
+        var options = new FilePickerOpenOptions
+        {
+            Title = "Wczytaj bazę haseł",
+            AllowMultiple = false, // Chcemy otworzyć tylko jeden plik na raz
+            FileTypeFilter = new[]
+            {
+                new FilePickerFileType("Plik JSON") { Patterns = new[] { "*.json" } }
+            }
+        };
+
+        // Okno wyboru plików zwraca LISTĘ wybranych plików (nawet jeśli wybierzemy jeden)
+        var result = await StorageProvider.OpenFilePickerAsync(options);
+
+        // Sprawdzamy czy coś wybrano
+        if (result.Count <= 0) return;
+        // Wyciągamy pierwszy (i jedyny) wybrany plik
+        var file = result[0];
+
+        // Otwieramy strumień do odczytu
+        await using var stream = await file.OpenReadAsync();
+
+        // Magia! Zmieniamy tekst w pliku z powrotem na gotową listę obiektów C#
+        var loadedData = await JsonSerializer.DeserializeAsync<List<PasswordEntry>>(stream);
+
+        if (loadedData == null) return;
+        // Podmieniamy bazę w pamięci
+        _passwordsDatabase = loadedData;
+
+        // I po raz kolejny, musimy ręcznie zaktualizować ListBox!
+        RefreshList();
+    }
+```
+
+
+
+
+
+
+

@@ -1,0 +1,145 @@
+---
+title: Wygląd Listy (DataTemplate)
+---
+
+# Zmiana wyglądu elementów (DataTemplate)
+
+W poprzedniej lekcji nasz `ListBox` wyświetlał dane korzystając z metody `ToString()`.
+Efekt to zwykły, nudny tekst. W profesjonalnych aplikacjach listy wyglądają znacznie lepiej –
+przypominają interaktywne "karty" lub wiersze tabeli.
+
+Aby zmienić to, w jaki sposób obiekt (np. nasz `PasswordEntry`) jest rysowany na ekranie,
+użyjemy mechanizmu **DataTemplate** (Szablon Danych).
+
+## 1. Czym jest DataTemplate?
+
+`DataTemplate` to "przepis" dla kontrolki `ListBox` na to, z jakich elementów interfejsu (`TextBlock`, `Image`, `Button`
+itp.) ma zbudować pojedynczy wiersz listy, oraz skąd ma pobrać do nich dane.
+
+:::info Mini-Binding (Wstęp do MVVM)
+Choć pełny wzorzec MVVM wprowadzimy w kolejnym module, w `DataTemplate` **musimy** użyć
+zapisu `{Binding NazwaWlasciwosci}`. Tłumaczy on widokowi (XAML):
+*"W to miejsce wstaw wartość właściwości z obiektu C#, który aktualnie rysujesz"*.
+:::
+
+## 2. Tworzymy Szablon
+
+Otwórz plik `MainWindow.axaml` i znajdź kontrolkę `ListBox`,
+którą dodaliśmy w poprzedniej lekcji. Zmodyfikuj ją w następujący sposób:
+
+```xml title="MainWindow.axaml"
+<!-- Główna lista haseł -->
+<ListBox Grid.Row="1" Margin="10" Name="LbxPasswords">
+    <ListBox.ItemTemplate>
+        <DataTemplate>
+            <!-- Border tworzy nam ładną "kartę" wokół każdego wpisu -->
+            <Border BorderBrush="Gray" BorderThickness="1" CornerRadius="8" Margin="0, 5" Padding="10">
+
+                <Grid ColumnDefinitions="*, Auto">
+
+                    <!-- Lewa strona: Nazwa serwisu i login -->
+                    <StackPanel Grid.Column="0">
+                        <TextBlock FontSize="16" FontWeight="Bold" Text="{Binding ServiceName}"/>
+                        <TextBlock FontStyle="Italic" Foreground="Gray" Margin="0, 5, 0, 0" Text="{Binding Username}"/>
+                    </StackPanel>
+
+                    <!-- Prawa strona: Hasło (zakamuflowane) -->
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock FontWeight="Bold" Foreground="DarkRed" Text="••••••••"/>
+                        <TextBlock FontSize="10" Foreground="Gray" Text="{Binding CreatedAt, StringFormat='{}{0:dd.MM.yyyy}'}" TextAlignment="Right"/>
+                    </StackPanel>
+
+                </Grid>
+
+            </Border>
+        </DataTemplate>
+    </ListBox.ItemTemplate>
+</ListBox>
+
+```
+
+**Co tu się wydarzyło? Rozbijmy to na czynniki**:
+- `ListBox.ItemTemplate` – Informujemy `ListBox`, że chcemy nadpisać domyślny wygląd elementu.
+- `Border` – Tworzy obramowanie wokół każdego wpisu (grubość 1, szary kolor, zaokrąglone rogi `CornerRadius="8"`).
+Daje to nowoczesny efekt kart (`Cards`).
+- `Grid ColumnDefinitions="*, Auto"` – Dzielimy kartę na dwie kolumny.
+    - Lewa (`*`) zajmuje całą dostępną przestrzeń.
+    - Prawa (`Auto`) zajmuje tyle, ile potrzebuje na ukryte hasło i datę.
+- `{Binding ServiceName}` – Tekst z właściwości `ServiceName` naszego obiektu C# ląduje dokładnie w tym TextBlocku.
+- `StringFormat` – W kontrolce daty użyliśmy `StringFormat='{}{0:dd.MM.yyyy}'`.
+To wbudowany w XAML sposób na formatowanie dat (bez potrzeby pisania dodatkowego kodu w C#).
+Format `dd.MM.yyyy` ucina nam niepotrzebne w tym miejscu godziny i sekundy.
+
+:::tip Dlaczego ukrywamy hasło w XAML?
+Aplikacja to Menedżer Haseł. Wyświetlanie haseł jawnym tekstem na głównej liście
+to fatalna praktyka z punktu widzenia bezpieczeństwa.
+Dlatego w prawej kolumnie wpisaliśmy "na sztywno" znaki `••••••••`. Opcję podglądu hasła lub jego edycji dodamy
+w osobnym oknie.
+:::
+
+## Błąd DataTemplate
+Uruchomy program.
+Powinniśmy dostać błąd związany z tym, że `DataTemplate` nie zna obiektu `PasswordEntry` i jego właściwości.
+
+:::warning Ważne: Skompilowane Wiązania (*Compiled Bindings*)
+Nowoczesne aplikacje Avalonia sprawdzają literówki w bindingach jeszcze przed uruchomieniem aplikacji!
+Zanim dodamy nasz `DataTemplate`, musimy "nauczyć" nasz plik XAML, gdzie znajduje się klasa `PasswordEntry`,
+aby mógł sprawdzić, czy właściwość `ServiceName` faktycznie w niej istnieje.
+
+:::
+
+### Naprawa
+
+#### Krok 1:
+Na samej górze pliku `MainWindow.axaml` (w znaczniku `<Window>`) dodaj deklarację
+swojej przestrzeni nazw (namespace):
+```xml
+<Window ...
+        xmlns:local="using:<NazwaWaszegoProjektu>"
+        ...
+    >
+...
+```
+U nas będzie to
+```
+xmlns:local="using:MenadzerHasel"
+```
+
+:::tip 1. Jaki ma sens `xmlns:local`?
+Skrót xmlns oznacza XML Namespace (przestrzeń nazw XML). Dodając dwukropek i dowolną nazwę
+(tutaj `local`), tworzysz w pliku XAML alias (skrót) do Twojego kodu C#.
+
+Plik `.axaml` z natury nie wie nic o klasach, które napisałeś w C#. To mechanizm, który
+działa dokładnie tak samo, jak dopisanie `using MenadzerHasel;` na samej górze pliku `.cs`.
+Słowo `local` to tylko powszechna konwencja programistów oznaczająca
+"klasy z tego lokalnego projektu". Mógłbyś to nazwać dowolnie:
+
+`xmlns:apka="using:MenadzerHasel"`
+
+A potem w kodzie użyłbyś po prostu:
+
+`<DataTemplate x:DataType="apka:PasswordEntry">`
+:::
+
+
+#### Krok 2.
+W definicji `<DataTemplate>` musimy wyraźnie powiedzieć, jakiego typu dane będziemy tam
+wstrzykiwać za pomocą atrybutu `x:DataType`:
+```xml
+<DataTemplate x:DataType="local:PasswordEntry">
+```
+
+```xml
+<!-- ... -->
+<ListBox Grid.Row="1" Margin="10" Name="LbxPasswords">
+            <ListBox.ItemTemplate>
+                <!-- WSKAZANIE TYPU (Rozwiązuje błąd AVLN2000!) -->
+                <DataTemplate x:DataType="local:PasswordEntry">
+
+                    <Border BorderBrush="Gray" <!-- ... -->
+```
+
+Teraz mamy listę elementów stylizowaną przez `DataTemplate`
+Czas na dodawanie haseł.
+
+

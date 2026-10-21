@@ -1,0 +1,79 @@
+---
+title: Tworzymy Menedżer Haseł
+---
+
+# Moduł 3: Zarządzanie danymi i plikami (Code-Behind)
+
+W tym module stworzymy w pełni funkcjonalną aplikację okienkową: **Lokalny Menedżer Haseł**.
+Będzie to aplikacja, która pozwoli nam przechowywać nazwy kont, loginy oraz hasła, a następnie zapisywać
+je do pliku na dysku komputera.
+
+:::info Czego się nauczysz?
+Podczas tworzenia tego projektu poznasz:
+* Zaawansowaną obsługę kontrolki **`ListBox`**.
+* Zmianę wyglądu elementów listy za pomocą **`DataTemplate`**.
+* Tworzenie i wywoływanie **własnych okien dialogowych** (dodawanie haseł).
+* Pracę z plikami systemowymi przy użyciu **`StorageProvider`**.
+* Podstawy serializacji danych do formatu **JSON**.
+:::
+
+:::warning Zanim zaczniemy: Ostrzeżenie architektoniczne
+W tym module całą logikę aplikacji będziemy pisać w tzw. **Code-Behind**
+(czyli bezpośrednio w plikach `.axaml.cs`). Jest to podejście intuicyjne na start,
+ale przy większych projektach prowadzi do tzw. "spaghetti code".
+Pod koniec tego projektu sami zauważycie pewne niedogodności – będą one doskonałym wstępem
+do profesjonalnego wzorca **MVVM**, który poznamy w kolejnym module.
+:::
+
+---
+
+## 1. Model Danych (Klasa)
+
+Każda aplikacja, która przetwarza informacje, potrzebuje struktury do ich przechowywania.
+Nie będziemy trzymać w liście zwykłych stringów (tekstów), ale pełnoprawne obiekty.
+
+Dodaj do swojego projektu nową klasę o nazwie `PasswordEntry.cs`.
+Będzie ona reprezentować pojedynczy wpis w naszym menedżerze.
+
+```csharp title="PasswordEntry.cs"
+using System;
+
+namespace PasswordManagerApp;
+
+public class PasswordEntry
+{
+    public string ServiceName { get; set; }
+    public string Username { get; set; }
+    public string Password { get; set; }
+    public DateTime CreatedAt { get; set; }
+
+    // Konstruktor
+    public PasswordEntry(string serviceName, string username, string password)
+    {
+        ServiceName = serviceName;
+        Username = username;
+        Password = password;
+        CreatedAt = DateTime.Now;
+    }
+
+    // Nadpisujemy ToString(), aby domyślnie ListBox wiedział, co wyświetlić (na razie!)
+    public override string ToString()
+    {
+        return $"{ServiceName} ({Username})";
+    }
+}
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+

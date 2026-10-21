@@ -1,0 +1,150 @@
+---
+title: Podstawowa struktura aplikacji
+---
+
+
+## 1. Przygotowanie Głównego Okna (Interfejs Użytkownika)
+
+Nasz interfejs będzie się składał z dwóch głównych części:
+
+Górny panel (Menu): Przyciski do dodawania, usuwania oraz zapisu/odczytu bazy haseł.
+
+Obszar główny: Lista (ListBox), która wyświetli nasze wpisy.
+
+Otwórz plik MainWindow.axaml i zaktualizuj jego zawartość:
+
+
+```xml<Grid RowDefinitions="Auto, *">
+
+        <!-- Górny panel przycisków -->
+        <StackPanel Grid.Row="0" Margin="10" Orientation="Horizontal" Spacing="10">
+            <Button Classes="accent" Click="BtnAdd_Click" Content="Dodaj nowe hasło" Name="BtnAdd"/>
+            <Button Click="BtnDelete_Click" Content="Usuń wybrane" Name="BtnDelete"/>
+            <Separator Background="Transparent" Width="20"/>
+            <Button Click="BtnSave_Click" Content="Zapisz bazę" Name="BtnSave"/>
+            <Button Click="BtnLoad_Click" Content="Wczytaj bazę" Name="BtnLoad"/>
+        </StackPanel>
+
+        <!-- Główna lista haseł -->
+        <ListBox Grid.Row="1" Margin="10" Name="LbxPasswords">
+            <!-- Tutaj w kolejnej lekcji dodamy piękny wygląd elementów za pomocą DataTemplate -->
+        </ListBox>
+
+    </Grid>
+
+```
+
+
+
+## 2. Podpięcie Kolekcji w Code-Behind
+Teraz musimy sprawić, by nasz ListBox wyświetlał dane. Otwórz plik `MainWindow.axaml.cs`.
+
+Stworzymy w nim listę (np. `List<PasswordEntry>`), do której dodamy kilka testowych wpisów,
+aby zobaczyć efekty naszej pracy od razu po uruchomieniu.
+
+```csharp
+public partial class MainWindow : Window
+{
+    // Nasza główna baza danych w pamięci RAM
+    private List<PasswordEntry> _passwordsDatabase;
+
+    public MainWindow()
+    {
+        InitializeComponent();
+
+        // Inicjalizujemy listę
+        _passwordsDatabase = new List<PasswordEntry>();
+
+        // Dodajemy przykładowe dane (Mock data)
+        _passwordsDatabase.Add(new PasswordEntry("GitHub", "jan.kowalski@szkola.pl", "TrudneHaslo123!"));
+        _passwordsDatabase.Add(new PasswordEntry("E-dziennik Vulcan", "jkowalski", "Zima2026#"));
+
+        // Przypisujemy naszą listę do kontrolki ListBox
+        RefreshList();
+    }
+
+    // Metoda pomocnicza - wymusza odświeżenie widoku w ListBoxie
+    private void RefreshList()
+    {
+        // Czyszczenie i ponowne przypisanie źródła (uroki Code-Behind!)
+        LbxPasswords.ItemsSource = null;
+        LbxPasswords.ItemsSource = _passwordsDatabase;
+    }
+
+    // Puste metody na kliknięcia przycisków (uzupełnimy je w kolejnych lekcjach)
+    private void BtnAdd_Click(object? sender, RoutedEventArgs e)
+    {
+        // TODO: Wywołanie okna dialogowego
+    }
+
+    private void BtnDelete_Click(object? sender, RoutedEventArgs e)
+    {
+        // TODO: Usuwanie elementu
+    }
+
+    private void BtnSave_Click(object? sender, RoutedEventArgs e)
+    {
+        // TODO: Zapis przez StorageProvider
+    }
+
+    private void BtnLoad_Click(object? sender, RoutedEventArgs e)
+    {
+        // TODO: Odczyt przez StorageProvider
+    }
+}
+```
+
+:::tip Zwróć uwagę na metodę RefreshList()
+W architekturze opartej na kodzie ukrytym (Code-Behind),
+kontrolki wizualne same z siebie nie wiedzą, że do listy _passwordsDatabase dodano nowy element.
+Dlatego po każdej zmianie musimy sztucznie "zresetować" właściwość ItemsSource. Pamiętaj o tym niedociągnięciu!
+:::
+
+
+:::info Co oznacza `Classes="accent"`?
+Właściwość `Classes` w Avalonii działa identycznie jak `class` w języku HTML/CSS.
+Wartość `"accent"` (akcent) to wbudowany styl, który sprawia, że przycisk staje się głównym,
+wyróżnionym elementem interfejsu (najczęściej zmienia kolor tła na niebieski).
+W świecie projektowania interfejsów (UI/UX) takie wyróżnienie nazywamy **Call to Action**,
+by przyciągnąć wzrok użytkownika do najważniejszej akcji.
+:::
+
+
+:::tip Jak stworzyć własne klasy "success" i "danger"?
+Domyślny motyw Avalonii nie ma wbudowanych klas typu `danger` (czerwony) czy `success` (zielony). Zamiast pisać kolor "na sztywno" w każdym przycisku (`Background="Red"`), w profesjonalnych aplikacjach tworzymy własne style (klasy) w tagu `<Window.Styles>`.
+
+Skopiuj ten kod i wklej go w pliku `MainWindow.axaml` na samej górze (zaraz pod tagiem otwierającym `<Window>`):
+
+```xml
+<Window.Styles>
+    <!-- Nasza własna klasa 'danger' (np. do usuwania) -->
+    <Style Selector="Button.danger">
+        <Setter Property="Background" Value="#d9534f"/>
+        <Setter Property="Foreground" Value="White"/>
+    </Style>
+
+    <!-- Nasza własna klasa 'success' (np. do zapisu) -->
+    <Style Selector="Button.success">
+        <Setter Property="Background" Value="#5cb85c"/>
+        <Setter Property="Foreground" Value="White"/>
+    </Style>
+</Window.Styles>
+```
+
+Teraz możemy użyć tych motywów"
+```csharp
+<Button Classes="danger">Usuń</Button>
+<Button Classes="success">Zapisz</Button>
+```
+
+## Podsumowanie
+Uruchom aplikację. Powinieneś zobaczyć proste okno z przyciskami i listą zawierającą dwa wpisy testowe.
+Wyświetlają się one jako tekst, ponieważ kontrolka ListBox domyślnie wywołuje metodę `ToString()` na każdym obiekcie.
+
+W następnej lekcji nauczymy się, jak użyć `<DataTemplate>`, aby zamiast zwykłego tekstu wyświetlać ładne,
+sformatowane karty haseł z ukrytymi znakami!
+
+
+
+
+

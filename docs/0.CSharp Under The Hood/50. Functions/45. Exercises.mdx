@@ -1,0 +1,59 @@
+---
+title: C# Static Function Exercises Star Wars Edition
+---
+
+
+1. The Hyperdrive Calculator (Basic Math)
+Create a static class called `NaviComputer`.
+Inside it, write a static method `ParsecsToLightYears(double parsecs)` that converts parsecs to light-years
+(1 parsec = 3.26 light-years).
+
+2. The Jedi Test (Boolean Logic)
+Create a static method bool `IsForceSensitive(int midichlorianCount)` inside a `JediCouncil class`.
+It should return true if the count is over 7000, and false otherwise.
+
+3. Bounty Poster Formatter (String Manipulation)
+In a class named `BountyGuild`, write a static method `string CreatePoster(string targetName, int creditReward)`.
+It should return a formatted string, exactly like this: `"WANTED: [targetName] - REWARD: [creditReward] credits"`.
+
+4. The Clone Factory (Factory Method Pattern)
+Create a class or record called `Trooper`. Inside the `KaminoFacility class`, write a static method
+`Trooper CreateStandardClone(string idNumber)`. This method should return a new `Trooper` object with predefined
+default stats (e.g.,` Aim = 50`, `Loyalty = 100`) and the provided ID.
+
+5. Fleet Firepower (Array/Iteration in Static Method)
+Create a static method `int CalculateTotalFirepower(int[] shipPowerLevels)` in an `ImperialFleet class`.
+It should take an array of integers representing the weapon power of individual Star Destroyers and return the
+sum of the entire fleet's power.
+
+6. Lightsaber Forge (Switch Expression/Statement)
+In a `KyberCrystal class`, write a static method `string GetSaberColor(string alignment)`.
+Use a switch statement to return "Red" if alignment is "Dark", "Blue" or "Green" if "Light", and "Purple" if "Neutral".
+Return "White" for any unknown input.
+
+7. Duel Simulator (Object Comparison)
+Inside a `CombatArena class`, write a static method `Character DetermineWinner(Character fighter1, Character fighter2)`.
+It should compare their `PowerLevel` properties and return the `Character` object that has the higher power level.
+If it's a tie, return fighter1.
+
+8. Droid Counter (Static State/Fields)
+Create a `DroidFactory class`. Add a `private static` integer field called` _totalDroidsBuilt` set to `0`.
+Write a static method `void BuildDroid()` that increments this counter by 1. Write another static method int `GetTotalBuilt()`
+that returns the current count.
+
+9. The Sith Title (Extension Method)(Note: Extension methods must be static and inside a static class).
+Create a static class SithExtensions. Write a static method string AddDarthTitle(this string name) that
+automatically prepends "Darth " to any string. (Usage: "Vader".AddDarthTitle() should return "Darth Vader").
+
+10. Hyperspace Jump (Method Overloading)
+In the NaviComputer class, write two static methods with the same name:
+
+double CalculateJump(int distance) – returns distance * 1.5
+
+double CalculateJump(int distance, double massShadow) – returns (distance * 1.5) + massShadow
+
+
+
+
+
+
