@@ -5,7 +5,7 @@
 <meta name="generator" content="Docusaurus v3.7.0">
 <title data-rh="true">C# Static Function Exercises Star Wars Edition | Aplikacje desktopowe</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:image" content="https://tie9-olsztyn-programmers.github.io/desktop/img/docusaurus-social-card.jpg"><meta data-rh="true" name="twitter:image" content="https://tie9-olsztyn-programmers.github.io/desktop/img/docusaurus-social-card.jpg"><meta data-rh="true" property="og:url" content="https://tie9-olsztyn-programmers.github.io/desktop/docs/CSharp Under The Hood/Functions/Exercises"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="C# Static Function Exercises Star Wars Edition | Aplikacje desktopowe"><meta data-rh="true" name="description" content="1. The Hyperdrive Calculator (Basic Math)"><meta data-rh="true" property="og:description" content="1. The Hyperdrive Calculator (Basic Math)"><link data-rh="true" rel="icon" href="/desktop/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://tie9-olsztyn-programmers.github.io/desktop/docs/CSharp Under The Hood/Functions/Exercises"><link data-rh="true" rel="alternate" href="https://tie9-olsztyn-programmers.github.io/desktop/docs/CSharp Under The Hood/Functions/Exercises" hreflang="en"><link data-rh="true" rel="alternate" href="https://tie9-olsztyn-programmers.github.io/desktop/docs/CSharp Under The Hood/Functions/Exercises" hreflang="x-default"><link rel="alternate" type="application/rss+xml" href="/desktop/blog/rss.xml" title="Aplikacje desktopowe RSS Feed">
 <link rel="alternate" type="application/atom+xml" href="/desktop/blog/atom.xml" title="Aplikacje desktopowe Atom Feed"><link rel="stylesheet" href="/desktop/assets/css/styles.396ae736.css">
-<script src="/desktop/assets/js/runtime~main.1a4ad954.js" defer="defer"></script>
+<script src="/desktop/assets/js/runtime~main.fd85889e.js" defer="defer"></script>
 <script src="/desktop/assets/js/main.32ef8c00.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -41,32 +41,41 @@ sum of the entire fleet&#x27;s power.</p>
 <li>
 <p>Lightsaber Forge (Switch Expression/Statement)
 In a <code>KyberCrystal class</code>, write a static method <code>string GetSaberColor(string alignment)</code>.
-Use a switch statement to return &quot;Red&quot; if alignment is &quot;Dark&quot;, &quot;Blue&quot; or &quot;Green&quot; if &quot;Light&quot;, and &quot;Purple&quot; if &quot;Neutral&quot;.
+Use a switch statement to return &quot;Red&quot; if alignment is &quot;Dark&quot;, &quot;Blue&quot; or &quot;Green&quot; if &quot;Light&quot;,
+and &quot;Purple&quot; if &quot;Neutral&quot;.
 Return &quot;White&quot; for any unknown input.</p>
 </li>
 <li>
 <p>Duel Simulator (Object Comparison)
-Inside a <code>CombatArena class</code>, write a static method <code>Character DetermineWinner(Character fighter1, Character fighter2)</code>.
-It should compare their <code>PowerLevel</code> properties and return the <code>Character</code> object that has the higher power level.
+Inside a <code>CombatArena class</code>, write a static method
+<code>Character DetermineWinner(Character fighter1, Character fighter2)</code>.
+It should compare their <code>PowerLevel</code> properties and return the <code>Character</code>
+object that has the higher power level.
 If it&#x27;s a tie, return fighter1.</p>
 </li>
+</ol>
+<div class="language-csharp codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_biex"><pre tabindex="0" class="prism-code language-csharp codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#393A34"><span class="token keyword" style="color:#00009f">class</span><span class="token plain"> </span><span class="token class-name">Character</span><span class="token plain"> </span><span class="token punctuation" style="color:#393A34">{</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">    </span><span class="token keyword" style="color:#00009f">public</span><span class="token plain"> </span><span class="token class-name keyword" style="color:#00009f">int</span><span class="token plain"> PowerLevel </span><span class="token operator" style="color:#393A34">=</span><span class="token plain"> </span><span class="token number" style="color:#36acaa">0</span><span class="token punctuation" style="color:#393A34">;</span><span class="token plain"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain"></span><span class="token punctuation" style="color:#393A34">}</span><br></span></code></pre><div class="buttonGroup__atx"><button type="button" aria-label="Copy code to clipboard" title="Copy" class="clean-btn"><span class="copyButtonIcons_eSgA" aria-hidden="true"><svg viewBox="0 0 24 24" class="copyButtonIcon_y97N"><path fill="currentColor" d="M19,21H8V7H19M19,5H8A2,2 0 0,0 6,7V21A2,2 0 0,0 8,23H19A2,2 0 0,0 21,21V7A2,2 0 0,0 19,5M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z"></path></svg><svg viewBox="0 0 24 24" class="copyButtonSuccessIcon_LjdS"><path fill="currentColor" d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"></path></svg></span></button></div></div></div>
+<ol start="8">
 <li>
 <p>Droid Counter (Static State/Fields)
 Create a <code>DroidFactory class</code>. Add a <code>private static</code> integer field called<code> _totalDroidsBuilt</code> set to <code>0</code>.
-Write a static method <code>void BuildDroid()</code> that increments this counter by 1. Write another static method int <code>GetTotalBuilt()</code>
+Write a static method <code>void BuildDroid()</code> that increments this counter by <code>1</code>.
+Write another static method int <code>GetTotalBuilt()</code>
 that returns the current count.</p>
 </li>
 <li>
 <p>The Sith Title (Extension Method)(Note: Extension methods must be static and inside a static class).
-Create a static class SithExtensions. Write a static method string AddDarthTitle(this string name) that
-automatically prepends &quot;Darth &quot; to any string. (Usage: &quot;Vader&quot;.AddDarthTitle() should return &quot;Darth Vader&quot;).</p>
+Create a <code>static class SithExtensions</code>. Write a <code>static method string AddDarthTitle(this string name)</code> that
+automatically prepends &quot;Darth &quot; to any string. (Usage: <code>&quot;Vader&quot;.AddDarthTitle()</code> should return <code>&quot;Darth Vader&quot;</code>).</p>
 </li>
 <li>
 <p>Hyperspace Jump (Method Overloading)
-In the NaviComputer class, write two static methods with the same name:</p>
+In the <code>NaviComputer</code> class, write two static methods with the same name:</p>
 </li>
 </ol>
-<p>double CalculateJump(int distance) – returns distance * 1.5</p>
-<p>double CalculateJump(int distance, double massShadow) – returns (distance * 1.5) + massShadow</p></div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col"><a href="https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/0.CSharp Under The Hood/50. Functions/45. Exercises.mdx" target="_blank" rel="noopener noreferrer" class="theme-edit-this-page"><svg fill="currentColor" height="20" width="20" viewBox="0 0 40 40" class="iconEdit_Z9Sw" aria-hidden="true"><g><path d="m34.5 11.7l-3 3.1-6.3-6.3 3.1-3q0.5-0.5 1.2-0.5t1.1 0.5l3.9 3.9q0.5 0.4 0.5 1.1t-0.5 1.2z m-29.5 17.1l18.4-18.5 6.3 6.3-18.4 18.4h-6.3v-6.2z"></path></g></svg>Edit this page</a></div><div class="col lastUpdated_JAkA"></div></div></footer></article><nav class="pagination-nav docusaurus-mt-lg" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/desktop/docs/CSharp Under The Hood/Functions/Lambdas"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Lambdas Star - Wars Edition</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/desktop/docs/CSharp Under The Hood/Functions/Exercises"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">C# Lambda Exercises Star Wars Edition</div></a></nav></div></div></div></div></main></div></div></div><footer class="footer footer--dark"><div class="container container-fluid"><div class="footer__bottom text--center"><div class="footer__copyright">Copyright © 2026 My Project, Inc. Built with Docusaurus.</div></div></div></footer></div>
+<ul>
+<li><code>double CalculateJump(int distance)</code> – returns distance * 1.5</li>
+<li><code>double CalculateJump(int distance, double massShadow)</code> – returns (distance * 1.5) + massShadow</li>
+</ul></div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col"><a href="https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/0.CSharp Under The Hood/50. Functions/45. Exercises.mdx" target="_blank" rel="noopener noreferrer" class="theme-edit-this-page"><svg fill="currentColor" height="20" width="20" viewBox="0 0 40 40" class="iconEdit_Z9Sw" aria-hidden="true"><g><path d="m34.5 11.7l-3 3.1-6.3-6.3 3.1-3q0.5-0.5 1.2-0.5t1.1 0.5l3.9 3.9q0.5 0.4 0.5 1.1t-0.5 1.2z m-29.5 17.1l18.4-18.5 6.3 6.3-18.4 18.4h-6.3v-6.2z"></path></g></svg>Edit this page</a></div><div class="col lastUpdated_JAkA"></div></div></footer></article><nav class="pagination-nav docusaurus-mt-lg" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/desktop/docs/CSharp Under The Hood/Functions/Lambdas"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Lambdas Star - Wars Edition</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/desktop/docs/CSharp Under The Hood/Functions/Exercises"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">C# Lambda Exercises Star Wars Edition</div></a></nav></div></div></div></div></main></div></div></div><footer class="footer footer--dark"><div class="container container-fluid"><div class="footer__bottom text--center"><div class="footer__copyright">Copyright © 2026 My Project, Inc. Built with Docusaurus.</div></div></div></footer></div>
 </body>
 </html>
