@@ -1,0 +1,169 @@
+---
+title: "Properties"
+---
+
+# Properties (Właściwości)
+
+:::note Properties as Bouncers
+In C#, Properties act like strict bouncers at the door of a Bronowice tavern.
+
+They are special class members that provide controlled, monitored access to the internal state (fields) of an object.
+
+Properties allow external code to read from or write to private fields, but without giving direct access to the raw data.
+
+Because a Property is actually made of two hidden methods (an accessor get and a mutator set), you can inject custom logic—like validation or triggering events—the exact moment someone tries to change the data.
+:::
+
+## The Full Property (Kontrolowany Dostęp)
+
+Imagine Gospodarz has a secret stash of golden horseshoes. He doesn't want just anyone reaching into his pockets (a public field). Instead, he provides a controlled Property.
+
+```csharp
+public class Gospodarz
+{
+    // The private backing field (The actual stash hidden in his coat)
+    private int _goldenHorseshoes;
+
+    // The Property (The official interface to interact with the stash)
+    public int GoldenHorseshoes
+    {
+        get
+        {
+            // The 'get' accessor reads the value
+            return _goldenHorseshoes;
+        }
+        set
+        {
+            // The 'set' accessor writes the value using the implicit 'value' parameter
+            if (value < 0)
+            {
+                Console.WriteLine("Nie możesz mieć ujemnych podków! (You can't have negative horseshoes!)");
+            }
+            else
+            {
+                _goldenHorseshoes = value;
+            }
+        }
+    }
+}
+
+// --- Using the Property ---
+Gospodarz wlodzimierz = new Gospodarz();
+
+wlodzimierz.GoldenHorseshoes = 3; // Calls the 'set' block safely
+Console.WriteLine(wlodzimierz.GoldenHorseshoes); // Calls the 'get' block
+
+// wlodzimierz._goldenHorseshoes = 10; // ERROR! Inaccessible due to its protection level.
+
+```
+
+## Auto-Implemented Properties (Auto-właściwości)
+
+If `Jasiek` just wants to hold a simple string indicating his current hat style, and we don't need any complex validation logic, writing a full private backing field and a large property block is tedious.
+
+Instead, C# offers Auto-Properties. The compiler will automatically generate a hidden, anonymous backing field behind the scenes for you.
+
+```csharp
+public class Jasiek
+{
+    // Auto-Property: Clean, concise, and generates a hidden field automatically
+    public string HatStyle { get; set; }
+}
+
+Jasiek j = new Jasiek();
+j.HatStyle = "Czapka z pawim piórem (Cap with a peacock feather)";
+Console.WriteLine(j.HatStyle);
+```
+
+
+## Read-Only Properties (Właściwość tylko do odczytu)
+Some things in Bronowice are destined by fate and cannot be changed once established. If we omit the set accessor (or mark it private), the property becomes read-only from the outside.
+
+
+If you use a pure get-only auto-property, its value can only be assigned during the object's creation—inside the constructor.
+
+```csharp
+public class Phantom
+{
+    // Read-only Auto-Property
+    public string TrueIdentity { get; }
+
+    public Phantom(string identity)
+    {
+        // This is the ONLY place TrueIdentity can be assigned!
+        TrueIdentity = identity;
+    }
+}
+
+Phantom w = new Phantom("Wernyhora");
+// w.TrueIdentity = "Chochoł"; // ERROR! Property or indexer cannot be assigned to -- it is read only.
+```
+
+---
+## Knowledge Check: Properties
+
+Try to answer these questions on your own before clicking to reveal the solutions!
+
+### 1. Public Fields vs. Properties
+
+What is the fundamental difference between a public field and a property in C#?
+
+<details>
+    <summary>👁️ Click to reveal the answer</summary>
+
+    A **public field** exposes its value directly. External code can read or modify it without going through any additional logic.
+
+    A **property** provides controlled access through accessors such as `get` and `set`. These accessors can contain validation, restrict access, calculate a value, or perform additional actions when the value is read or changed.
+
+</details>
+
+---
+
+### 2. Auto-Properties and Backing Fields
+
+If you create an auto-property such as `public string Faction { get; set; }`,
+where is the actual data stored if you did not define a private field?
+
+<details>
+    <summary>👁️ Click to reveal the answer</summary>
+
+    The C# compiler automatically generates a **hidden private backing field** for the property.
+    You do not have to declare it yourself because the compiler creates and manages it during compilation.
+
+</details>
+
+---
+
+### 3. Encapsulation and Access Modifiers on Setters
+
+How would you define a property so that anyone can read the `GoldenHorn` status,
+but only the object itself can change it?
+
+<details>
+    <summary>👁️ Click to reveal the answer</summary>
+
+    Make the property publicly readable and mark its `set` accessor as `private`:
+
+    ```csharp
+    public bool GoldenHorn { get; private set; }
+    ```
+
+    The property can be read from outside the class, but its value can only be changed by code inside the class:
+
+    ```csharp
+    public class WeddingCharacter
+    {
+        public bool GoldenHorn { get; private set; }
+
+        public void FindGoldenHorn()
+        {
+            GoldenHorn = true;
+        }
+    }
+    ```
+
+</details>
+
+
+
+

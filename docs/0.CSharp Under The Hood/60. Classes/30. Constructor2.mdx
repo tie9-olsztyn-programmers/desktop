@@ -1,0 +1,117 @@
+---
+title: "OOP in Bronowice: Constructor Chaining"
+---
+
+# Constructor Chaining (The `this` Keyword)
+
+
+## The Problem: Repeating the Summoning Ritual
+When we overload constructors to provide different ways of bringing a character onto the stage, we often find ourselves writing the same initialization code over and over again. In programming, repeating yourself violates the DRY (Don't Repeat Yourself) principle.
+
+If Gospodarz changes how a WeddingGuest is registered in the Bronowice cottage, we don't want to update three different constructors.
+
+
+## The Solution: Delegating with : this()
+Constructor chaining allows one constructor to call another constructor within the same class before executing its own body. We do this using the : this(...) syntax.
+
+Think of it as delegating the heavy lifting to a "Master Constructor". The lesser constructors simply fill in the missing default details (like assuming someone is a peasant if they don't specify their faction) and pass the paperwork down the chain to the main ritual.
+
+
+```csharp
+public class WeddingGuest
+{
+    public string Name { get; }
+    public string Faction { get; }
+    public string CurrentAction { get; }
+
+    // 1. The Master Constructor (Does the actual heavy lifting)
+    // All other constructors will eventually route their data here.
+    public WeddingGuest(string name, string faction, string currentAction)
+    {
+        Name = name;
+        Faction = faction;
+        CurrentAction = currentAction;
+
+        Console.WriteLine($"{Name} from the {Faction} entered the cottage and is {CurrentAction}.");
+    }
+
+    // 2. Overloaded Constructor: Only Name is provided
+    // Delegates to the Master Constructor, assuming they are a Peasant who is Dancing.
+    public WeddingGuest(string name) : this(name, "Peasant", "Dancing to the Chochoł's tune")
+    {
+        // The body is empty because the Master Constructor handled the assignment!
+    }
+
+    // 3. Overloaded Constructor: Name and Faction provided
+    // Delegates to the Master Constructor, assuming they are currently Debating.
+    public WeddingGuest(string name, string faction) : this(name, faction, "Debating Poland's future")
+    {
+        // Again, the body can be empty or contain additional specific logic if needed.
+    }
+}
+
+// --- Spawning the Guests ---
+
+// Triggers Constructor #2, which immediately forwards to Constructor #1
+WeddingGuest jasiek = new WeddingGuest("Jasiek");
+
+// Triggers Constructor #3, which immediately forwards to Constructor #1
+WeddingGuest dziennikarz = new WeddingGuest("Dziennikarz", "Intelligentsia");
+
+// Triggers Constructor #1 directly
+WeddingGuest czepiec = new WeddingGuest("Czepiec", "Peasant", "Looking for a fight");
+```
+
+:::tip DRY Principle & Centralized Logic
+By chaining constructors, the actual assignment to properties (Name = name;, etc.) happens in exactly one place. If you later decide that every guest entering the cottage must also be logged into a security system or equipped with a shot of vodka, you only have to add that logic to the Master Constructor. All the chained constructors will automatically inherit that new behavior!
+:::
+
+
+---
+# Knowledge Check
+## Knowledge Check: Constructors
+
+Try to answer these questions on your own before clicking to reveal the solutions!
+
+### 1. The Default Summoning Ritual
+If you create a `WeddingGuest` class but do not write *any* constructor for it, what happens when you call `new WeddingGuest()`?
+
+<details>
+    <summary>👁️ Click to reveal the answer</summary>
+
+    The C# compiler automatically generates a hidden, **default parameterless constructor** (inherited from the base `object` class). It allocates memory for the `WeddingGuest` on the Heap and initializes all its fields/properties to their default values (`null` for reference types like `string`, `0` for numeric types, and `false` for `bool`).
+
+    *Note:* The moment you write **even one** custom constructor (e.g., a parameterized one), the compiler stops generating the default parameterless constructor automatically!
+
+</details>
+
+---
+
+### 2. Constructor Chaining
+Why is the `this` keyword used when chaining multiple constructors together? What problem does it solve?
+
+<details>
+    <summary>👁️ Click to reveal the answer</summary>
+
+    Using `: this(...)` allows one constructor to delegate the initialization work to another "Master Constructor" within the same class.
+
+    It solves the problem of **code duplication**, directly enforcing the **DRY (Don't Repeat Yourself)** principle. Instead of copying and pasting assignment and validation logic across three or four overloaded constructors, you keep all core initialization in one central place.
+
+</details>
+
+---
+
+### 3. Constructors & Immutability
+How does assigning values in a parameterized constructor help enforce the concept of Immutability?
+
+<details>
+    <summary>👁️ Click to reveal the answer</summary>
+
+    In C#, `readonly` fields and get-only auto-properties (`{ get; }`) can **only** be assigned a value at declaration or inside the class's constructor.
+
+    By passing data through a parameterized constructor into these `readonly` members, you guarantee that the object is spawned in a complete, valid state and **can never be modified again** during its entire lifecycle (just like a Phantom's historical identity cannot be rewritten once summoned).
+
+</details>
+
+
+

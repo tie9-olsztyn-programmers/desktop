@@ -1,0 +1,17 @@
+---
+title: "Abstract Classes vs. Interfaces"
+---
+
+
+| Feature / Dimension | Abstract Class (`abstract class`) | Interface (`interface`) |
+| :--- | :--- | :--- |
+| **Ontological Meaning** | **"Is-A"** (*Czym obiekt JEST*). Defines core identity and shared lineage. | **"Can-Do"** (*Co obiekt POTRAFI*). Defines roles, capabilities, and contracts. |
+| ***Wesele* Metaphor** | **`Phantom` (*Osoba Dramatu*)**: A foundational spiritual state shared by Wernyhora, Stańczyk, and Hetman. | **`IHornBlower` / `IDancer`**: A theatrical duty or skill that anyone (a Peasant, a Poet, or a Bush) can perform. |
+| **Multiple Inheritance** | **No.** A class can inherit from only **one** abstract (or base) class. | **Yes.** A class can implement **many** interfaces simultaneously (`Jasiek : IDancer, IMessenger`). |
+| **State (Fields)** | **Yes.** Can hold instance fields (e.g., `protected int _spiritualEnergy;`) and constants. | **No.** Cannot contain instance fields—only signatures of properties, methods, events, and indexers. |
+| **Constructors** | **Yes.** Has constructors called via `: base()` by derived classes to initialize shared state. | **No.** Has no instance state to initialize, so constructors do not exist. |
+| **Method Implementation** | Mixes **abstract** methods (no body) with **concrete/virtual** methods (full shared code). | Pure contract signatures (though **C# 8.0+** allows optional *Default Interface Methods*). |
+| **Access Modifiers** | Supports `public`, `protected`, `internal`, `private` for fine-grained encapsulation. | Members are implicitly `public` by default (designed as an external API contract). |
+| **Primary Design Pattern** | **Template Method Pattern** (enforces an algorithm's skeleton while delegating specific steps). | **Strategy Pattern & Dependency Injection** (decouples components so implementations are swappable). |
+
+

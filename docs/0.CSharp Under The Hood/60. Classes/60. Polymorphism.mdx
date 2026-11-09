@@ -1,0 +1,487 @@
+---
+title: "Polymorphism"
+---
+
+# Polymorphism (Polimorfizm)
+
+## Definition
+
+:::note What is Polymorphism?
+- From Greek *poly* (many) and *morphē* (form), polymorphism is an object-oriented mechanism
+that allows different derived classes to respond to the exact same method call in completely different,
+highly specific ways.
+- In simpler terms: The same method signature (e.g., `Dance()`) can have a different implementation
+in every class that inherits it.
+
+In C#, this ontological flexibility is achieved primarily through:
+- Virtual methods and the override keyword (Runtime Polymorphism).
+- Interfaces.
+- Method overloading (Compile-time Polymorphism).
+:::
+
+## The Metaphorical Explanation
+
+Imagine the climax of the play when the Chochoł (the straw-man) begins playing his hypnotic tune.
+He doesn't give specific instructions to each person. He simply issues a single, universal command: "Dance".
+- The Peasant (Chłop) dances a vigorous, heavy krakowiak.
+- The Poet (Poeta) sways romantically and dreamily.
+- The Black Knight (Rycerz) moves with the slow, terrifying clanking of medieval armor.
+
+The command (message) was identical, but each object interpreted it according to its own internal nature.
+This is polymorphism: one message, many distinct behaviors depending on the exact object receiving it.
+
+
+### Examples - `override` / `virtual` (Runtime Polymorphism)
+A method marked as `virtual` in the base class can be redefined in a derived class using the `override` keyword.
+
+:::tip Why use virtual in the base class?
+- `virtual` is an architectural permission slip.
+It declares:"This behavior is a default suggestion. Derived classes are explicitly allowed to change it."
+- If you do not mark a method as `virtual` (or `abstract`), the C# compiler strictly forbids any derived
+class from using `override`. The base behavior becomes absolute.
+-
+:::
+
+:::tip What does `override` do?
+`override` in the derived class declares:"I acknowledge the base class provided a behavior,
+but I am replacing it with my own specific implementation."
+
+:::
+
+### Example - The Chochoł's Dance
+Here is how we model the hypnotic dance using Polymorphism. Notice how it satisfies the Open/Closed Principle (OCP)
+from the SOLID guidelines: the `StartTheTrance` logic doesn't need to know what specific types of characters exist;
+it just tells them all to dance. If we add a `Musician` class later, we don't have to touch the loop!
+
+:::tip SOLID Principles in Bronowice
+Think of SOLID as the stage directions for a perfectly architected play:
+
+Single Responsibility: Every character has one specific job (Jasiek's only job is to fetch help; the Chochoł's only job is to play music).
+
+Open/Closed: You can invite new guests to the wedding (add new classes) without rewriting the foundational rules of the tavern.
+
+Liskov Substitution: A supernatural Phantom must be able to stand in for a regular WeddingCharacter without crashing the scene.
+
+Interface Segregation: Don't force a regular Peasant to implement an ISpellcaster interface they don't need. Keep interfaces small and specific.
+
+Dependency Inversion: High-level characters (like Gospodarz) should rely on abstractions (like an IArtifact interface) rather than concrete implementations, so you can easily swap a Golden Horn for a Silver one without changing his code!
+:::
+
+
+```csharp
+public class WeddingCharacter
+{
+    // The base definition. 'virtual' allows subclasses to change this.
+    public virtual void Dance()
+    {
+        Console.WriteLine("The character awkwardly shuffles their feet.");
+    }
+}
+
+public class Peasant : WeddingCharacter
+{
+    public override void Dance()
+    {
+        Console.WriteLine("The Peasant stomps heavily to a lively folk rhythm.");
+    }
+}
+
+public class Intelligentsia : WeddingCharacter
+{
+    public override void Dance()
+    {
+        Console.WriteLine("The Intelligentsia member sways thoughtfully, lost in melancholy.");
+    }
+}
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        // Polymorphism in action: A list of the base type 'WeddingCharacter'
+        List<WeddingCharacter> weddingGuests = new List<WeddingCharacter>
+        {
+            new WeddingCharacter(), // Generic character
+            new Peasant(),          // Specific derived character
+            new Intelligentsia()    // Specific derived character
+        };
+
+        Console.WriteLine("--- The Chochoł starts playing ---");
+
+        foreach (WeddingCharacter guest in weddingGuests)
+        {
+            // The runtime determines the actual type of the object in memory
+            // and calls the correct version of Dance()!
+            guest.Dance();
+        }
+    }
+}
+```
+
+## Method Overloading (Przeciążanie metod) - Compile-time Polymorphism
+
+While `override` deals with inheritance hierarchies, method overloading happens within the exact same class.
+
+In C#, method overloading means you can have:
+- Multiple methods with the exact same name,
+- But a completely different list of parameters (different types or different number of arguments).
+
+### Example - Wernyhora's Prophecies
+Wernyhora, the legendary bard, delivers prophecies. Depending on the context
+(how much information he has at the moment), he uses different versions of his `DeliverProphecy` method.
+
+```csharp
+public class Wernyhora
+{
+    //  A general prophecy to the air
+    public void DeliverProphecy()
+    {
+        Console.WriteLine("[PROPHECY] A great change is coming to Poland, though the people sleep.");
+    }
+
+    //  A specific prophecy directed at a single person
+    public void DeliverProphecy(string receiverName)
+    {
+        Console.WriteLine($"[PROPHECY to {receiverName}] Wake up the nation and gather them at dawn!");
+    }
+
+    //  A specific prophecy involving a magical artifact
+    public void DeliverProphecy(string receiverName, string artifact)
+    {
+        Console.WriteLine($"[PROPHECY to {receiverName}] Take this {artifact}. Do not lose it, or all is lost!");
+    }
+}
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        Wernyhora wernyhora = new Wernyhora();
+
+        // The C# compiler knows exactly which method to call based on the arguments provided.
+        wernyhora.DeliverProphecy();
+        wernyhora.DeliverProphecy("Gospodarz");
+        wernyhora.DeliverProphecy("Gospodarz", "Golden Horn");
+    }
+}
+```
+---
+## Knowledge Check: Polymorphism
+
+Try to answer these questions on your own before clicking to reveal the solutions!
+
+### 1. The Architecture of Choice: Runtime vs. Compile-Time Polymorphism
+
+What is the conceptual difference between runtime polymorphism, which uses `virtual` and `override` across an inheritance hierarchy, and compile-time polymorphism, which uses method overloading?
+
+<details>
+    <summary>👁️ Click to reveal the answer</summary>
+
+    These mechanisms determine which method should be called at different stages.
+
+    #### Runtime polymorphism
+
+    Runtime polymorphism works through inheritance and method overriding.
+
+    The base class marks a method as `virtual`, and a derived class provides a different implementation using `override`:
+
+    ```csharp
+    public class WeddingCharacter
+    {
+        public virtual void Speak()
+        {
+            Console.WriteLine("The character speaks.");
+        }
+    }
+
+    public class Peasant : WeddingCharacter
+    {
+        public override void Speak()
+        {
+            Console.WriteLine("The Peasant speaks.");
+        }
+    }
+    ```
+
+    The implementation that is executed depends on the actual type of the object:
+
+    ```csharp
+    WeddingCharacter character = new Peasant();
+
+    character.Speak();
+    // Calls Peasant.Speak()
+    ```
+
+    Although the variable is declared as `WeddingCharacter`, the actual object is a `Peasant`. Therefore, C# executes the overridden method from `Peasant`.
+
+    #### Compile-time polymorphism
+
+    Compile-time polymorphism is commonly achieved through method overloading.
+
+    Overloaded methods have the same name but different parameter lists:
+
+    ```csharp
+    public class WeddingCharacter
+    {
+        public void Speak()
+        {
+            Console.WriteLine("The character speaks.");
+        }
+
+        public void Speak(string message)
+        {
+            Console.WriteLine(message);
+        }
+
+        public void Speak(string message, int times)
+        {
+            for (int i = 0; i < times; i++)
+            {
+                Console.WriteLine(message);
+            }
+        }
+    }
+    ```
+
+    The compiler selects the appropriate method based on the number and types of arguments:
+
+    ```csharp
+    WeddingCharacter character = new WeddingCharacter();
+
+    character.Speak();
+    character.Speak("Welcome!");
+    character.Speak("Dance!", 3);
+    ```
+
+    In short:
+
+    - With **method overriding**, the implementation is selected at runtime based on the actual type of the object.
+    - With **method overloading**, the method is selected at compile time based on the available overloads and the supplied arguments.
+
+    Method overloading does not require inheritance. Overloads are often declared in the same class, although inherited methods can also participate in overload resolution.
+
+</details>
+
+---
+
+### 2. The `virtual` Contract
+
+If `WeddingCharacter` has a `Speak()` method that is not marked as `virtual`, what compiler error will occur if you try to write `public override void Speak()` inside the `Peasant` class?
+
+<details>
+    <summary>👁️ Click to reveal the answer</summary>
+
+    The compiler rejects the code because a derived method can use `override` only when the corresponding base-class method is marked as `virtual`, `abstract`, or `override`.
+
+    The following code is invalid:
+
+    ```csharp
+    public class WeddingCharacter
+    {
+        public void Speak()
+        {
+            Console.WriteLine("The character speaks.");
+        }
+    }
+
+    public class Peasant : WeddingCharacter
+    {
+        public override void Speak()
+        {
+            Console.WriteLine("The Peasant speaks.");
+        }
+    }
+    ```
+
+    The compiler reports error **CS0506**, with a message similar to:
+
+    ```text
+    'Peasant.Speak()': cannot override inherited member
+    'WeddingCharacter.Speak()' because it is not marked
+    virtual, abstract, or override
+    ```
+
+    To allow derived classes to override the method, mark it as `virtual` in the base class:
+
+    ```csharp
+    public class WeddingCharacter
+    {
+        public virtual void Speak()
+        {
+            Console.WriteLine("The character speaks.");
+        }
+    }
+
+    public class Peasant : WeddingCharacter
+    {
+        public override void Speak()
+        {
+            Console.WriteLine("The Peasant speaks.");
+        }
+    }
+    ```
+
+    The `virtual` keyword establishes that derived classes may provide their own implementations.
+
+    If `Speak()` is not virtual, `Peasant` could declare another method with the same name and use the `new` keyword:
+
+    ```csharp
+    public class Peasant : WeddingCharacter
+    {
+        public new void Speak()
+        {
+            Console.WriteLine("The Peasant speaks.");
+        }
+    }
+    ```
+
+    This is method hiding, not method overriding. It does not provide the same runtime polymorphic behavior.
+
+</details>
+
+---
+
+### 3. The SOLID Connection: Open/Closed Principle
+
+Look at the `foreach` loop in the Chochoł's Dance example. How does runtime polymorphism help satisfy the Open/Closed Principle if we introduce a new class called `Phantom` to the game?
+
+<details>
+    <summary>👁️ Click to reveal the answer</summary>
+
+    The **Open/Closed Principle (OCP)** states that software components should be open for extension but closed for modification.
+
+    Suppose `WeddingCharacter` defines a virtual `Dance()` method:
+
+    ```csharp
+    public class WeddingCharacter
+    {
+        public string Name { get; }
+
+        public WeddingCharacter(string name)
+        {
+            Name = name;
+        }
+
+        public virtual void Dance()
+        {
+            Console.WriteLine($"{Name} performs a dance.");
+        }
+    }
+    ```
+
+    Existing character classes can override this method:
+
+    ```csharp
+    public class Peasant : WeddingCharacter
+    {
+        public Peasant(string name)
+            : base(name)
+        {
+        }
+
+        public override void Dance()
+        {
+            Console.WriteLine($"{Name} performs a folk dance.");
+        }
+    }
+
+    public class Chochol : WeddingCharacter
+    {
+        public Chochol(string name)
+            : base(name)
+        {
+        }
+
+        public override void Dance()
+        {
+            Console.WriteLine($"{Name} begins the Chochol's Dance.");
+        }
+    }
+    ```
+
+    The application can process all characters through their common base type:
+
+    ```csharp
+    List<WeddingCharacter> characters = new()
+    {
+        new Peasant("Klimina"),
+        new Chochol("Chochoł")
+    };
+
+    foreach (WeddingCharacter character in characters)
+    {
+        character.Dance();
+    }
+    ```
+
+    To introduce a new character, create a class that inherits from `WeddingCharacter` and overrides `Dance()`:
+
+    ```csharp
+    public class Phantom : WeddingCharacter
+    {
+        public Phantom(string name)
+            : base(name)
+        {
+        }
+
+        public override void Dance()
+        {
+            Console.WriteLine(
+                $"{Name} performs a mysterious dance."
+            );
+        }
+    }
+    ```
+
+    A `Phantom` object can now be added to the collection:
+
+    ```csharp
+    characters.Add(new Phantom("The Phantom"));
+    ```
+
+    The existing loop does not need to be changed:
+
+    ```csharp
+    foreach (WeddingCharacter character in characters)
+    {
+        character.Dance();
+    }
+    ```
+
+    At runtime, C# calls the appropriate implementation of `Dance()` for each object.
+
+    Without runtime polymorphism, the loop might require explicit type checks:
+
+    ```csharp
+    foreach (WeddingCharacter character in characters)
+    {
+        if (character is Peasant peasant)
+        {
+            peasant.Dance();
+        }
+        else if (character is Chochol chochol)
+        {
+            chochol.Dance();
+        }
+        else if (character is Phantom phantom)
+        {
+            phantom.Dance();
+        }
+    }
+    ```
+
+    This version must be modified whenever a new type of character is introduced.
+
+    Runtime polymorphism allows the program to be extended by adding new character classes without rewriting the existing loop or adding more type checks.
+
+    The application still needs to be compiled after the new class is added. The benefit is that the existing processing logic does not need to be modified.
+
+</details>
+
+
+
+
+
+
+
+

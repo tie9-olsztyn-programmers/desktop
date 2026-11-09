@@ -1,0 +1,134 @@
+---
+title: "Object-Oriented Programming in Bronowice: The Wedding (Wesele) Architecture"
+---
+
+Today, we are architecting Stanisław Wyspiański’s literary masterpiece, The Wedding (Wesele), in C#.
+We'll explore classes, objects, and how modern software design patterns perfectly describe a 19th-century peasant-intelligentsia party crashing into the supernatural.
+
+A Class is the script of the play—a blueprint detailing what a character is and what they can do.
+An Object is the actual actor stepping onto the stage in Bronowice.
+
+
+Let's break this down using the 4W2H Architectural Framework.
+
+
+## 0. WHAT: What exactly are you processing?
+#### IT Metaphor: Binary Flag (Primitive) vs. RPG Character Sheet (Object)
+If you only want to know if someone lost the Golden Horn, you could use a simple primitive type
+(`bool lostHorn = true`). But a guest in Bronowice is complex. A class acts like an RPG Character Sheet—
+it encapsulates state (`fields`/`properties`) and behavior (`methods`) into one cohesive entity.
+This aligns with the Single Responsibility Principle (SRP): a class should model one concept perfectly.
+
+
+```csharp
+public class WeddingGuest
+{
+    // Fields / Properties (The RPG Character Stats)
+    public string Name { get; private set; }
+    public string Faction { get; private set; } // "Peasant" or "Intelligentsia"
+    public bool HasGoldenHorn { get; private set; }
+
+    // Constructor (Spawning the character into the world)
+    public WeddingGuest(string name, string faction, bool hasHorn = false)
+    {
+        Name = name;
+        Faction = faction;
+        HasGoldenHorn = hasHorn;
+    }
+
+    // Methods (Behaviors and Actions)
+    public void LoseTheHorn()
+    {
+        HasGoldenHorn = false;
+        Console.WriteLine($"{Name}: Ostał mi się ino sznur... (I'm left with nothing but a string...)");
+    }
+}
+
+// --- Instantiating the Object ---
+// Spawning Jasiek into the memory heap
+WeddingGuest jasiek = new WeddingGuest("Jasiek", "Peasant", true);
+jasiek.LoseTheHorn(); // Triggering the behavior
+```
+
+## 1. WHERE: Where do these data live?
+#### IT Metaphor: Buff Disappearing over Time vs. Server Leaderboard
+
+When you write `new WeddingGuest()`, where does Jasiek actually go? In C#, classes are Reference Types,
+meaning they live on the Heap (the dynamic memory). The variable `jasiek` is just a pointer on the Stack
+(like a temporary buff) looking at the actual object in the Heap.
+If we want Jasiek's blunder (losing the horn) to be permanent across the whole network,
+we'd have to serialize this object and send it to a database—moving from a localized,
+temporary state to a permanent "Server Leaderboard."
+
+
+
+## 2. WHEN: When do we load data?
+#### IT Metaphor: Loading Screen (Eager) vs. World Chunking (Lazy)
+Do we instantiate all the supernatural Phantoms (Widma) as soon as the application starts?
+No. That would eat up all our RAM during the initial "Loading Screen" (Eager Loading).
+
+Instead, we use Lazy Initialization (World Chunking). We only instantiate the Phantom object (like Wernyhora
+or the Black Knight) exactly at midnight when a specific WeddingGuest is ready to see them.
+
+
+```csharp
+private Wernyhora _wernyhoraInstance;
+
+// Lazy Loading Wernyhora - only create him when Gospodarz actually looks for him!
+public Wernyhora GetWernyhora()
+{
+    if (_wernyhoraInstance == null)
+    {
+        _wernyhoraInstance = new Wernyhora();
+        Console.WriteLine("Wernyhora has spawned from the mist!");
+    }
+    return _wernyhoraInstance;
+}
+```
+
+## 3. WHO: Who initiates the transport?
+#### IT Metaphor: Looting a chest with 'E' (Pull) vs. Damage out of nowhere (Push)
+
+How do the guests know it's time to start the somnambulic Chocholi Taniec (The Straw-man's Dance)?
+If the guests had to constantly ask "Is it time to dance? Is it time to dance?", that would be a Pull mechanism (pressing 'E' to check a chest). It's terribly inefficient.
+
+Instead, we use the Observer Pattern (a Push mechanism). The Chochoł (acting as a Singleton—there is only one Chochoł on the server) broadcasts an event. The music starts, and the event pushes the command to all subscribed guests out of nowhere, forcing them into a trance.
+
+:::tip Singleton (Design Pattern)
+The Singleton pattern guarantees that a class has exactly one unique instance in the entire system
+and provides a global point of access to it. In the architecture of The Wedding,
+the perfect Singleton is the Chochoł. Imagine a bug in your application where you accidentally
+call `new Chochol()` multiple times, and each one starts playing a different hypnotic tune!
+Instead, you lock down the constructor and only expose Chochol.Instance, ensuring all
+of Bronowice listens to the exact same entity.
+:::
+
+## 4. HOW: How does UI know about the change?
+#### IT Metaphor: Manual Inventory Refresh vs. Animated, blinking HUD
+
+When the Chochoł triggers the dance event, the UI doesn't require a manual page reload (Manual Inventory Refresh).
+Because our WeddingGuest objects would be bound to the UI using reactive streams or
+Data Binding (like `INotifyPropertyChanged` in C#), the moment IsInTrance becomes true, the frontend
+instantly reacts. The guests start spinning on the screen like an Animated, blinking HUD updating your
+health bar the moment you take a hit.
+
+## 5. HOW LONG: How long will it survive?
+#### IT Metaphor: Volatile RAM vs. Safe Checkpoint on SSD
+
+Once the sun rises and the C# Garbage Collector (GC) runs, the party is over. Objects in RAM are volatile.
+If the application stops, the memory is cleared. To remember the tragic ending of the play for the next run,
+we would need to map our `WeddingGuest` objects to an ORM (like Entity Framework) and
+commit their final state to a relational database—saving the game to a safe Checkpoint on the SSD.
+
+:::tip ORM (Object-Relational Mapping)
+An ORM (like Entity Framework in C#) acts as an automated translator between your object-oriented code and a relational SQL database (like SQLite or PostgreSQL). It’s the engine that grabs a `WeddingGuest`
+object from volatile RAM and—without you having to write raw `INSERT INTO Guests...`
+queries—automatically maps its properties to table columns, creating a permanent "save state" on your SSD.
+:::
+
+
+
+
+
+
+

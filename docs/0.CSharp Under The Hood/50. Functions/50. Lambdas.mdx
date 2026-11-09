@@ -1,10 +1,11 @@
 ---
-title: Lambdas Star - Wars Edition
+title: Lambdas - Star Wars Edition
 ---
 
 
 # Anonymous Functions & Lambdas in C#
-Welcome, young Padawan, to the Jedi Archives of C#. Today, we are studying a profound technique in the programming Force:
+Welcome, young Padawan, to the Jedi Archives of C#. Today, we are studying a profound technique
+in the programming Force:
 Anonymous Functions and Lambda Expressions.
 
 :::tip Anonymous functions
@@ -17,16 +18,23 @@ syntactically readable way to define anonymous functions. Let's ignite our light
 :::
 
 :::info The Power of LINQ: Declarative Pipelines & Efficiency
-LINQ (Language Integrated Query) transforms C# data manipulation from imperative (writing complex foreach loops and if statements to tell the computer how to do it) to declarative (chaining methods to tell the computer what you want to achieve).
+LINQ (Language Integrated Query) transforms C# data manipulation from imperative
+(writing complex `foreach` loops and `if` statements to tell the computer how to do it)
+to declarative (chaining methods to tell the computer what you want to achieve).
 
-Pro Tip for Performance: Any() vs. Count()
-A very common mistake when learning LINQ is checking for the existence of an item using .Count(). Always use .Any() instead:
+Pro Tip for Performance: `Any()` vs. `Count()`
+A very common mistake when learning LINQ is checking for the existence of an item using `.Count()`.
+Always use `.Any()` instead:
 
-Avoid: if (roster.Count(c => c.Alignment == "Dark") > 0)
-This forces LINQ to iterate through the entire collection to count every single match before evaluating the > 0 condition.
+Avoid: `if (roster.Count(c => c.Alignment == "Dark") > 0)`
+This forces LINQ to iterate through the entire collection to count every single match before
+evaluating the ` > 0` condition.
 
-Use: if (roster.Any(c => c.Alignment == "Dark"))
-This is highly optimized. It stops iterating the exact millisecond it finds the very first match. For large datasets or Entity Framework database queries, this simple swap saves significant CPU cycles and memory.
+Use: `if (roster.Any(c => c.Alignment == "Dark"))`
+This is highly optimized. It stops iterating the exact millisecond it finds the very first match.
+For large datasets or Entity Framework database queries, this simple swap saves significant
+CPU cycles and memory.
+
 :::
 
 
@@ -56,28 +64,27 @@ When to use it: Records are perfect for Data Transfer Objects (DTOs), configurat
 
 
 ```csharp
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
 public record Character(string Name, int PowerLevel, string Alignment);
 
 public class GalacticArchive
 {
     public static void Main()
     {
-     :::tip The Power of LINQ: Declarative Pipelines & Efficiency
-LINQ (Language Integrated Query) transforms C# data manipulation from imperative (writing complex foreach loops and if statements to tell the computer how to do it) to declarative (chaining methods to tell the computer what you want to achieve).
+        List<Character> roster = new List<Character>
+        {
+            new Character("Luke Skywalker", 15000, "Light"),
+            new Character("Darth Vader", 16000, "Dark"),
+            new Character("Yoda", 18000, "Light"),
+            new Character("Han Solo", 100, "Smuggler"),
+            new Character("Emperor Palpatine", 17000, "Dark")
+        };
 
-Pro Tip for Performance: Any() vs. Count()
-A very common mistake when learning LINQ is checking for the existence of an item using .Count(). Always use .Any() instead:
+        // Where: Filter the Dark Side
+        var sithLords = roster.Where(c => c.Alignment == "Dark").ToList();
+        Console.WriteLine(string.Join(", ", sithLords));
+        Console.WriteLine(" - - - - - - - -");
 
-Avoid: if (roster.Count(c => c.Alignment == "Dark") > 0)
-This forces LINQ to iterate through the entire collection to count every single match before evaluating the > 0 condition.
-
-Use: if (roster.Any(c => c.Alignment == "Dark"))
-This is highly optimized. It stops iterating the exact millisecond it finds the very first match. For large datasets or Entity Framework database queries, this simple swap saves significant CPU cycles and memory.
-::: the names
+        // Select: Extract just the names
         var names = roster.Select(c => c.Name);
         Console.WriteLine(string.Join(", ", names));
         Console.WriteLine(" - - - - - - - -");

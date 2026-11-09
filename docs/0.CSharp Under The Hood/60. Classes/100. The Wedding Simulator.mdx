@@ -1,0 +1,315 @@
+---
+title: "The Wedding Simulator"
+---
+
+# Bronowice Wedding Simulator (Console App)
+- Build a dramatic simulator of Stanisław Wyspiański’s The Wedding (Wesele).
+- We will combine Abstract Classes, Interfaces, Polymorphism, Primary Constructors, and
+the Service Layer Pattern into a modular architecture.
+
+## 1. Project Structure & Namespaces
+In a real multi-file project, organizing classes into directories and matching namespaces
+keeps the architecture clean. Don't forget the required `using` directives at the top of your files!
+
+```
+BronowiceSimulator/
+│
+├── Program.cs
+│
+├── Characters/
+│   ├── WeddingParticipant.cs
+│   ├── Czepiec.cs
+│   ├── Jasiek.cs
+│   └── Wernyhora.cs
+│
+├── Interfaces/
+│   ├── IParticipant.cs
+│   ├── IDancer.cs
+│   ├── IConspirator.cs
+│   └── IApparition.cs
+│
+└── Services/
+    └── BronowiceCottage.cs
+```
+
+1. Interfaces (Interfaces/ folder)
+:::tip SOLID Alert: Interface Segregation Principle (ISP)
+Instead of putting `Dance()`, `PlotUprising()`, and `VanishIntoMist()`
+into one giant `IParticipant` interface (which would force regular peasants to
+know how to vanish like ghosts!), we segregate capabilities into small, role-specific contracts.
+
+:::
+
+```csharp
+// IParticipant.cs
+namespace BronowiceSimulator.Interfaces;
+
+public interface IParticipant
+{
+    string Name { get; }
+    string DeliverLine();
+}
+
+```
+
+```csharp
+// IDancer.cs
+namespace BronowiceSimulator.Interfaces;
+
+public interface IDancer
+{
+    void Dance();
+}
+```
+
+```csharp
+// IConspirator.cs
+
+namespace BronowiceSimulator.Interfaces;
+
+public interface IConspirator
+{
+    void PlotUprising();
+}
+```
+
+```csharp
+// IApparition.cs
+namespace BronowiceSimulator.Interfaces;
+
+public interface IApparition
+{
+    void VanishIntoMist();
+}
+
+```
+
+
+## 2. Characters (`Characters`/ folder)
+
+#### `WeddingParticipant.cs` (The Abstract Base)
+
+:::note  Primary Constructor
+Notice the syntax `public abstract class WeddingParticipant(string name, string faction)`.
+This is a **Primary Constructor**. It allows you to declare constructor parameters directly
+in the class header and use them immediately to initialize properties!
+
+:::
+
+```csharp
+using BronowiceSimulator.Interfaces;
+
+namespace BronowiceSimulator.Characters;
+
+public abstract class WeddingParticipant(string name, string faction) : IParticipant
+{
+    public string Name { get; } = name;
+    public string Faction { get; protected set; } = faction;
+
+    // Abstract method: Every concrete character MUST define their iconic quote
+    public abstract string DeliverLine();
+
+    // Overriding Object.ToString() for clean polymorphic logging
+    public override string ToString()
+    {
+        return $"[{GetType().Name}] {Name} (Faction: {Faction})";
+    }
+}
+```
+
+#### `Czepiec.cs`
+
+```csharp
+using System;
+using BronowiceSimulator.Interfaces;
+
+namespace BronowiceSimulator.Characters;
+
+public class Czepiec : WeddingParticipant, IDancer, IConspirator
+{
+    public Czepiec(string name, string faction) : base(name, faction) { }
+
+    public override string DeliverLine() => "Cóż tam, panie, w polityce? Chińczyki trzymają się mocno!?";
+
+    public void Dance() => Console.WriteLine($"-> {Name} stomps heavily in a traditional Krakowiak.");
+
+    public void PlotUprising() => Console.WriteLine($"-> {Name} grabs his vertical scythe, ready to fight at a moment's notice!");
+}
+```
+
+#### `Jasiek.cs`
+```csharp
+using System;
+using BronowiceSimulator.Interfaces;
+
+namespace BronowiceSimulator.Characters;
+
+public class Jasiek : WeddingParticipant, IDancer, IConspirator
+{
+    public Jasiek(string name, string faction) : base(name, faction) { }
+
+    public override string DeliverLine() => "Ostał mi się ino sznur... (I'm left with nothing but a string...)";
+
+    public void Dance() => Console.WriteLine($"-> {Name} spins rapidly, admiring his peacock feather in the mirror.");
+
+    public void PlotUprising() => Console.WriteLine($"-> {Name} mounts his horse to summon the peasants, but drops the Golden Horn!");
+}
+```
+
+#### `Wernyhora.cs`
+```csharp
+using System;
+using BronowiceSimulator.Interfaces;
+
+namespace BronowiceSimulator.Characters;
+
+public class Wernyhora : WeddingParticipant, IApparition, IConspirator
+{
+    public Wernyhora(string name, string faction) : base(name, faction) { }
+
+    public override string DeliverLine() => "Przymierze! Lechici z Kozaki! (An alliance! Send out the riders at dawn!)";
+
+    public void PlotUprising() => Console.WriteLine($"-> {Name} hands the Golden Horn to Gospodarz to awaken the nation.");
+
+    public void VanishIntoMist() => Console.WriteLine($"-> {Name} dissolves into the midnight mist on his fiery steed!");
+}
+```
+
+## 3. Services (`Services`/ folder)
+
+:::tip What is a `Service`? (Separation of Concerns)
+In software architecture, we separate Domain Models (Entities like `Jasiek` or `Wernyhora`
+that hold state and character identity) from `Services`.
+
+A Service:
+- does not represent a physical person or prop on the stage.
+- represents
+  - orchestration,
+  - business logic, and
+  - action—such as
+    - managing the guest list,
+    - running the dramatic loop, or
+    - saving the state of the play to a database.
+
+:::
+
+#### `BronowiceCottage.cs`
+
+```csharp
+using System;
+using System.Collections.Generic;
+using BronowiceSimulator.Characters;
+using BronowiceSimulator.Interfaces;
+
+namespace BronowiceSimulator.Services;
+
+public class BronowiceCottage
+{
+    // Collection Expression `[]` initializes an empty list cleanly
+    private readonly List<WeddingParticipant> _participants = [];
+
+    public void EnterCottage(WeddingParticipant participant)
+    {
+        _participants.Add(participant);
+    }
+
+    public void RunActThree()
+    {
+        foreach (var p in _participants)
+        {
+            // Implicitly calls p.ToString()
+            Console.WriteLine(p);
+            Console.WriteLine($"Quote: \"{p.DeliverLine()}\"");
+
+            // C# Pattern Matching ('is'): Safely checks if the object implements the contract
+            // and immediately casts it to a local variable (d, c, or a)!
+            if (p is IDancer d) d.Dance();
+            if (p is IConspirator c) c.PlotUprising();
+            if (p is IApparition a) a.VanishIntoMist();
+
+            Console.WriteLine(new string('-', 50));
+        }
+    }
+}
+```
+
+## 4. Main Entry Point (`Program.cs`)
+Pay close attention to the using directives at the top—since `Program` orchestrates
+characters and services from separate folders/namespaces, we must import them explicitly.
+
+```csharp
+using System;
+using BronowiceSimulator.Characters;
+using BronowiceSimulator.Services;
+
+namespace BronowiceSimulator;
+
+class Program
+{
+    public static void Main(string[] args)
+    {
+        BronowiceCottage cottage = new BronowiceCottage();
+
+        // Spawning concrete characters and passing them to the Service
+        cottage.EnterCottage(new Czepiec("Błażej Czepiec", "Peasantry"));
+        cottage.EnterCottage(new Jasiek("Jasiek Drużba", "Peasantry"));
+        cottage.EnterCottage(new Wernyhora("Wernyhora", "Osoby Dramatu (Phantoms)"));
+
+        Console.WriteLine("=== WELCOME TO BRONOWICE: ACT III BEGINS ===\n");
+        cottage.RunActThree();
+
+        Console.WriteLine("The Chochoł's music plays on... Press any key to exit.");
+        Console.ReadKey();
+    }
+}
+```
+
+---
+## Knowledge Check: Architecture & Pattern Matching
+
+Try to answer these architectural questions on your own before clicking to reveal the solutions!
+
+### 1. Pattern Matching (`is` operator)
+In `BronowiceCottage.cs`, we wrote `if (p is IDancer d) d.Dance();`. What happens at runtime when the loop reaches `Wernyhora` (who does *not* implement `IDancer`), and why is this safer than forcibly casting via `((IDancer)p).Dance()`?
+
+<details>
+    <summary>👁️ Click to reveal the answer</summary>
+
+    When the loop reaches `Wernyhora`, the expression `p is IDancer` safely evaluates to `false`, and the `if` block is simply skipped without any issue.
+
+    If you used a forced explicit cast like `((IDancer)p).Dance()`, the C# compiler would allow it, but the application would crash at runtime with an **`InvalidCastException`** the moment `Wernyhora` is processed, because his class never signed the `IDancer` contract!
+
+</details>
+
+---
+
+### 2. Domain Model vs. Service
+Why did we create a separate `BronowiceCottage` service class to hold the `List<WeddingParticipant>` instead of putting that list directly inside the `WeddingParticipant` abstract class? Which SOLID principle does this protect?
+
+<details>
+    <summary>👁️ Click to reveal the answer</summary>
+
+    This protects the **Single Responsibility Principle (SRP)**.
+    * **`WeddingParticipant` (Domain Model)** has only one job: to represent the identity, state, and capabilities of a *single* character. A single guest shouldn't be responsible for managing the entire guest list of the wedding!
+    * **`BronowiceCottage` (Service)** is responsible for **orchestration**—managing the collection of guests and running the play's main loop. Keeping them separate prevents tight coupling and keeps the classes clean and focused.
+
+</details>
+
+---
+
+### 3. Namespace Imports (`using`)
+Why does `BronowiceCottage.cs` require *both* `using BronowiceSimulator.Characters;` and `using BronowiceSimulator.Interfaces;`, whereas `Program.cs` does *not* need `using BronowiceSimulator.Interfaces;`?
+
+<details>
+    <summary>👁️ Click to reveal the answer</summary>
+
+    * **`BronowiceCottage.cs`** needs both namespaces because it stores a list of `WeddingParticipant` (from `.Characters`) AND explicitly checks for `IDancer`, `IConspirator`, and `IApparition` (from `.Interfaces`) inside its `RunActThree()` loop.
+    * **`Program.cs`** only instantiates the concrete classes (`Czepiec`, `Jasiek`, `Wernyhora`) and passes them into `cottage.EnterCottage(...)`. Since `Program.cs` never explicitly types the name of any interface in its code, it doesn't need to import the `.Interfaces` namespace!
+
+</details>
+
+
+
+
+
+

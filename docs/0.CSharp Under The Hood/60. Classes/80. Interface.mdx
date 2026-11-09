@@ -1,0 +1,624 @@
+---
+title: "Interfaces - Bronowice Edition"
+---
+
+
+# Interface (Interfejs)
+## Definition of an Interface
+In C#, an interface is a strict theatrical contract (agreement) that defines a set of capabilities an object
+**promises** to fulfill:
+- It specifies signatures for methods, properties, events, or indexers that a class *must* implement
+if it declares that it supports the interface.
+> **Note on Indexers**:
+> - An indexer is a special C# member that allows an object to be indexed just like an array using
+square brackets `[]`—for example, accessing a specific guest straight from the cottage object via `bronowiceCottage[0]`.
+- An interface defines WHAT an object can do (its role), but says nothing about HOW it does it (the internal implementation).
+- Traditionally, an interface contains no instance data (fields)—only pure member signatures.
+Crucial ontological difference:
+  - While a class can inherit from only one base class (**Single Inheritance**),
+  - it can implement **multiple** interfaces simultaneously.
+
+
+
+## The Metaphor of an Interface
+Imagine Wernyhora’s Golden Horn (Złoty Róg) or a Theatrical Role:
+- The concept of "Being a Horn-Blower" (`IHornBlower`) is not a person. It’s a duty.
+- Anyone at the wedding—whether a `Peasant` (Jasiek), the `Host` (Gospodarz), or even a supernatural spirit—can
+sign the contract to become the `IHornBlower`.
+- Furthermore, one single character like Czepiec can simultaneously sign multiple contracts:
+  - he can be an `IWeddingGuest` (drinks and dances),
+  - an `IUprisingFighter` (wields a scythe mounted Vertically), and
+  - an `IPolitician` (argues with the Journalist about global affairs).
+
+:::tip Skill Scrolls & Dependency Inversion (DIP)
+- An interface is like an RPG skill scroll or a list of abilities waiting for an actor.
+- The interface itself does nothing—it only comes to life when a concrete class (like `Jasiek` or `Chochoł`) steps up,
+declares "I can do this!", and writes the actual code for the method.
+
+:::
+
+:::note SOLID Alert (Dependency Inversion Principle):
+- High-level modules (like the `BronowiceStage`) should not depend on concrete low-level classes (`Jasiek`, `Stanczyk`).
+Both should depend on abstractions (`IHornBlower`, `IHauntable`).
+- Programming to an interface decouples your architecture!
+
+:::
+
+## Creating and Implementing an Interface
+- Interfaces are declared using the interface keyword.
+- By convention in C#, interface names always start with a capital letter `I` (e.g., `IEnchantable`, `ISummonable`)
+so developers can immediately distinguish a contract from a concrete class.
+
+## Simple Example - `ISummonable`
+Both a supernatural `Phantom` and a mundane `RuralMusician` can be summoned at midnight,
+even though they share no common bloodline (no shared base class).
+
+
+```csharp
+public interface ISummonable
+{
+    void Appear();
+    int MidnightHour { get; set; }
+}
+
+public class Wernyhora : ISummonable
+{
+    public int MidnightHour { get; set; }
+
+    public void Appear()
+    {
+        Console.WriteLine($"At hour {MidnightHour}:00, Wernyhora rides in on a fiery steed with a message!");
+    }
+}
+
+public class TavernMusician : ISummonable
+{
+    public int MidnightHour { get; set; }
+
+    public void Appear()
+    {
+        Console.WriteLine($"At hour {MidnightHour}:00, the fiddler stumbles out of the alcove, tuning his strings.");
+    }
+}
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        Wernyhora prophet = new Wernyhora { MidnightHour = 12 };
+        prophet.Appear();
+
+        TavernMusician fiddler = new TavernMusician { MidnightHour = 1 };
+        fiddler.Appear();
+    }
+}
+
+```
+
+## Extended Example - `IEnchantable` (The Strategy / Orchestrator Pattern)
+
+When the Chochoł plays his hypnotic music, it doesn't matter if the target is a `Peasant`, a `Poet`,
+or even an inanimate bush in the garden. If the object implements `IEnchantable`, the `BronowiceCottage`
+can put it into a trance.
+
+```csharp
+using System;
+using System.Collections.Generic;
+
+// The Contract - anything capable of falling under the Chochoł's spell
+public interface IEnchantable
+{
+    void FallIntoTrance();
+}
+
+public class Peasant : IEnchantable
+{
+    public void FallIntoTrance()
+    {
+        Console.WriteLine("The Peasant drops his scythe and spins mechanically in a circle.");
+    }
+}
+
+public class Poet : IEnchantable
+{
+    public void FallIntoTrance()
+    {
+        Console.WriteLine("The Poet stares blankly into the void, whispering forgotten verses.");
+    }
+}
+
+public class Bride : IEnchantable
+{
+    public void FallIntoTrance()
+    {
+        Console.WriteLine("The Bride sways sleepily in her colorful Krakowiak dress.");
+    }
+}
+
+public class EnchantedViolin : IEnchantable
+{
+    public void FallIntoTrance()
+    {
+        Console.WriteLine("The violin bows itself in mid-air, weeping a melancholic melody!");
+    }
+}
+
+// The Orchestrator - completely decoupled from concrete character classes!
+public class BronowiceCottage
+{
+    // Depends ONLY on the interface (Dependency Inversion Principle)
+    private readonly List<IEnchantable> _enchantedEntities;
+
+    public BronowiceCottage()
+    {
+        _enchantedEntities = new List<IEnchantable>();
+    }
+
+    public void EnterCottage(IEnchantable entity)
+    {
+        _enchantedEntities.Add(entity);
+    }
+
+    public void StartChocholiDance()
+    {
+        Console.WriteLine("The Chochoł begins to play! Every entity in the cottage reacts:");
+        foreach (var entity in _enchantedEntities)
+        {
+            entity.FallIntoTrance();
+        }
+    }
+}
+
+public class Program
+{
+    public static void Main()
+    {
+        IEnchantable czepiec = new Peasant();
+        IEnchantable kazimierz = new Poet();
+        IEnchantable jagna = new Bride();
+        IEnchantable fiddle = new EnchantedViolin();
+
+        BronowiceCottage cottage = new BronowiceCottage();
+        cottage.EnterCottage(czepiec);
+        cottage.EnterCottage(kazimierz);
+        cottage.EnterCottage(jagna);
+        cottage.EnterCottage(fiddle);
+
+        cottage.StartChocholiDance();
+    }
+}
+```
+
+
+## Multiple Interface Implementation (Implementacja wielokrotna)
+:::tip SOLID Alert: Interface Segregation Principle (ISP)
+Instead of creating one massive, bloated `ISuperCharacter` interface that forces everyone to both fight and
+cast spells, we split capabilities into small, focused role interfaces (`IDancer`, `IUprisingLeader`).
+A class then picks and chooses only the exact contracts it actually fulfills!
+
+:::
+
+```csharp
+public interface IDancer
+{
+    void DanceKrakowiak();
+}
+
+public interface IUprisingLeader
+{
+    void SoundTheGoldenHorn();
+}
+
+// Jasiek implements BOTH contracts simultaneously
+public class Jasiek : IDancer, IUprisingLeader
+{
+    public void DanceKrakowiak()
+    {
+        Console.WriteLine("Jasiek clicks his heels and admires his peacock feather!");
+    }
+
+    public void SoundTheGoldenHorn()
+    {
+        Console.WriteLine("Jasiek reaches for the horn... wait, he only has the string!");
+    }
+}
+
+public class Program
+{
+    public static void Main()
+    {
+        Jasiek jasiek = new Jasiek();
+        jasiek.DanceKrakowiak();
+        jasiek.SoundTheGoldenHorn();
+    }
+}
+
+```
+
+## Default Interface Methods
+
+Starting with C# 8.0, interfaces can include a default implementation for a method.
+This allows architects to add new methods to an existing interface without breaking older classes that
+already implement it.
+
+```csharp
+public interface IToaster
+{
+    void RaiseGlass();
+
+    // Default implementation provided directly inside the interface
+    void SayTraditionalToast()
+    {
+        Console.WriteLine("Zdrowie Młodej Pary! (To the health of the Bride and Groom!)");
+    }
+}
+
+public class Czepiec : IToaster
+{
+    public void RaiseGlass()
+    {
+        Console.WriteLine("Czepiec slams his glass on the table.");
+    }
+
+    // Czepiec overrides the default toast with his own aggressive energy
+    public void SayTraditionalToast()
+    {
+        Console.WriteLine("Cóż tam, panie, w polityce?! Pijmy! (What's new in politics, sir?! Let's drink!)");
+    }
+}
+
+public class QuietGuest : IToaster
+{
+    public void RaiseGlass()
+    {
+        Console.WriteLine("The quiet guest shyly lifts a small glass.");
+    }
+    // Notice: QuietGuest does NOT implement SayTraditionalToast(), so it inherits the default one!
+}
+
+public class Program
+{
+    public static void Main()
+    {
+        IToaster czepiec = new Czepiec();
+        czepiec.RaiseGlass();
+        czepiec.SayTraditionalToast(); // Output: Cóż tam, panie, w polityce?! Pijmy!
+
+        IToaster quietGuest = new QuietGuest();
+        quietGuest.RaiseGlass();
+        quietGuest.SayTraditionalToast(); // Output: Zdrowie Młodej Pary!
+    }
+}
+
+```
+
+:::important When to use Interfaces?
+Reach for an interface when:
+
+You need a pure contract (API): You want to define what must be done without dictating how or forcing any shared fields.
+
+Unrelated classes share a behavior: A human Poet and an inanimate RoseBush (Chochoł) share no biological base class, yet both can be IVocal or IMovable.
+
+You need Multiple Inheritance of behavior: A character needs to combine several distinct roles (IDancer, IFighter, IDreamer).
+
+You want loose coupling and testability: Using interfaces makes it trivial to swap out a real database or service for a "Mock" (like swapping the real Golden Horn for a wooden prop during rehearsal).
+
+```csharp
+public interface IMovable
+{
+    void Move();
+}
+
+public interface ISpeakable
+{
+    void Speak();
+}
+
+// A straw wrap from the garden and a human Journalist share NO base class,
+// yet both fulfill the exact same interfaces!
+public class Chochol : IMovable, ISpeakable
+{
+    public void Move() => Console.WriteLine("Chochoł hobbles rhythmically into the main room.");
+    public void Speak() => Console.WriteLine("Miałeś, chamie, złoty róg... (You had, peasant, a golden horn...)");
+}
+
+public class Dziennikarz : IMovable, ISpeakable
+{
+    public void Move() => Console.WriteLine("Dziennikarz paces nervously across the parlor.");
+    public void Speak() => Console.WriteLine("I seek peace in this quiet village...");
+}
+```
+
+:::
+
+---
+
+## Knowledge Check: Interfaces
+
+Try to answer these questions on your own before clicking to reveal the solutions!
+
+### 1. Abstract Class vs. Interface: “Is-A” vs. “Can-Do”
+
+If `Wernyhora` is a `Phantom` but can also give prophecies and ride a horse, why can it not inherit from the `Phantom`, `Prophet`, and `HorseRider` classes at the same time?
+
+<details>
+    <summary>👁️ Click to reveal the answer</summary>
+
+    C# does not support multiple inheritance of classes. A class can directly inherit from only one base class:
+
+    ```csharp
+    public class Wernyhora : Phantom
+    {
+    }
+    ```
+
+    Multiple class inheritance could create ambiguity. For example, if both `Prophet` and `HorseRider` defined their own implementations of the same method, inherited the same member through different paths, or contained conflicting state, it might be unclear which implementation or state `Wernyhora` should inherit.
+
+    A well-known example of this kind of ambiguity is the **diamond problem**.
+
+    Interfaces provide a way to describe additional capabilities without requiring a class to inherit from multiple base classes. A class can inherit from one base class and implement multiple interfaces:
+
+    ```csharp
+    public interface IGiveProphecy
+    {
+        void GiveProphecy();
+    }
+
+    public interface IRideHorse
+    {
+        void RideHorse();
+    }
+
+    public class Wernyhora : Phantom, IGiveProphecy, IRideHorse
+    {
+        public void GiveProphecy()
+        {
+            Console.WriteLine("Wernyhora gives a prophecy.");
+        }
+
+        public void RideHorse()
+        {
+            Console.WriteLine("Wernyhora rides a horse.");
+        }
+    }
+    ```
+
+    In this design:
+
+    - `Wernyhora` **is a** `Phantom`.
+    - `Wernyhora` **can** give prophecies.
+    - `Wernyhora` **can** ride a horse.
+
+    The distinction between “is-a” and “can-do” is a useful design guideline. It is not a strict language rule, but it helps determine whether inheritance or an interface is the better choice.
+
+</details>
+
+---
+
+### 2. The Interface Segregation Principle (ISP)
+
+Imagine you create a single interface called `IWeddingParticipant` with the methods `DrinkVodka()`, `Dance()`, and `HauntSoul()`. Why does forcing the `Bride` class to implement this interface violate ISP, and how should you refactor it?
+
+<details>
+    <summary>👁️ Click to reveal the answer</summary>
+
+    The **Interface Segregation Principle (ISP)** states that clients should not be forced to depend on methods they do not need.
+
+    Consider the following interface:
+
+    ```csharp
+    public interface IWeddingParticipant
+    {
+        void DrinkVodka();
+        void Dance();
+        void HauntSoul();
+    }
+    ```
+
+    The `Bride` can participate in a toast and dance, but she cannot haunt souls. Forcing her to implement `HauntSoul()` would create a misleading contract:
+
+    ```csharp
+    public class Bride : IWeddingParticipant
+    {
+        public void DrinkVodka()
+        {
+            Console.WriteLine("The Bride drinks a toast.");
+        }
+
+        public void Dance()
+        {
+            Console.WriteLine("The Bride dances.");
+        }
+
+        public void HauntSoul()
+        {
+            throw new NotSupportedException(
+                "The Bride cannot haunt souls."
+            );
+        }
+    }
+    ```
+
+    Although `Bride` technically implements the interface, it cannot correctly perform every operation promised by that interface.
+
+    An empty method or one that throws `NotImplementedException` or `NotSupportedException` is often a sign that the interface contains responsibilities that do not belong together.
+
+    A better solution is to split the large interface into smaller, focused contracts:
+
+    ```csharp
+    public interface ICanDrinkToast
+    {
+        void DrinkVodka();
+    }
+
+    public interface ICanDance
+    {
+        void Dance();
+    }
+
+    public interface ICanHaunt
+    {
+        void HauntSoul();
+    }
+    ```
+
+    The `Bride` class can then implement only the capabilities it actually supports:
+
+    ```csharp
+    public class Bride : ICanDrinkToast, ICanDance
+    {
+        public void DrinkVodka()
+        {
+            Console.WriteLine("The Bride drinks a toast.");
+        }
+
+        public void Dance()
+        {
+            Console.WriteLine("The Bride dances.");
+        }
+    }
+    ```
+
+    A supernatural character can implement `ICanHaunt` separately:
+
+    ```csharp
+    public class Phantom : ICanHaunt
+    {
+        public void HauntSoul()
+        {
+            Console.WriteLine("The Phantom haunts a soul.");
+        }
+    }
+    ```
+
+    If drinking a toast and dancing always belong to the same role in the application, they can also remain together:
+
+    ```csharp
+    public interface IPartyGuest
+    {
+        void DrinkVodka();
+        void Dance();
+    }
+
+    public interface ISpirit
+    {
+        void HauntSoul();
+    }
+    ```
+
+    Then `Bride` implements only `IPartyGuest`:
+
+    ```csharp
+    public class Bride : IPartyGuest
+    {
+        public void DrinkVodka()
+        {
+            Console.WriteLine("The Bride drinks a toast.");
+        }
+
+        public void Dance()
+        {
+            Console.WriteLine("The Bride dances.");
+        }
+    }
+    ```
+
+    The purpose of ISP is not to create as many interfaces as possible. The goal is to avoid forcing classes to implement operations they do not support.
+
+</details>
+
+---
+
+### 3. The C# 8.0 Twist: Default Interface Methods
+
+In the `IToaster` example, `QuietGuest` was declared like this:
+
+```csharp
+IToaster quietGuest = new QuietGuest();
+```
+
+What happens if you declare it using its concrete type and try to call the default interface method?
+
+```csharp
+QuietGuest quietGuest = new QuietGuest();
+quietGuest.SayTraditionalToast();
+```
+
+Why must the object be accessed through an interface reference to call a default interface method that the class does not implement itself?
+
+<details>
+    <summary>👁️ Click to reveal the answer</summary>
+
+    Suppose `IToaster` provides a default implementation of `SayTraditionalToast()`:
+
+    ```csharp
+    public interface IToaster
+    {
+        void SayTraditionalToast()
+        {
+            Console.WriteLine(
+                "May the young couple live happily!"
+            );
+        }
+    }
+
+    public class QuietGuest : IToaster
+    {
+    }
+    ```
+
+    The following code does not compile:
+
+    ```csharp
+    QuietGuest quietGuest = new QuietGuest();
+    quietGuest.SayTraditionalToast();
+    ```
+
+    Although `IToaster` provides a default implementation, `SayTraditionalToast()` does not become a public member declared by the `QuietGuest` class.
+
+    To call the default implementation, the object must be accessed through the interface type:
+
+    ```csharp
+    IToaster quietGuest = new QuietGuest();
+    quietGuest.SayTraditionalToast();
+    ```
+
+    An existing `QuietGuest` reference can also be cast to `IToaster`:
+
+    ```csharp
+    QuietGuest quietGuest = new QuietGuest();
+
+    ((IToaster)quietGuest).SayTraditionalToast();
+    ```
+
+    The default method is available through the `IToaster` contract, not directly through the public API declared by `QuietGuest`.
+
+    If `QuietGuest` declares its own public method with the same signature, the method can be called directly through a `QuietGuest` variable:
+
+    ```csharp
+    public class QuietGuest : IToaster
+    {
+        public void SayTraditionalToast()
+        {
+            Console.WriteLine(
+                "The quiet guest gives a short toast."
+            );
+        }
+    }
+    ```
+
+    Now both calls are valid:
+
+    ```csharp
+    QuietGuest guest = new QuietGuest();
+    guest.SayTraditionalToast();
+
+    IToaster toaster = guest;
+    toaster.SayTraditionalToast();
+    ```
+
+    In this case, the method declared by `QuietGuest` implements the interface member and is used instead of the default implementation.
+
+    Default interface methods were introduced in C# 8.0 mainly to make it possible to add new members to an interface without immediately breaking all existing classes that implement it. They should still be used carefully because placing too much implementation logic in interfaces can make the design harder to understand.
+
+</details>

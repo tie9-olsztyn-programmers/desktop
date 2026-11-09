@@ -1,0 +1,380 @@
+---
+title: "Abstract Classes"
+---
+# Abstract Classes (Klasy abstrakcyjne)
+
+
+## Definition
+- Declared using the `abstract` keyword (`public abstract class`).
+- An abstract class acts as a foundational, unfinished archetype. It can contain:
+  - Abstract methods (signatures with no implementation `{}`; derived classes are forced to `override` and implement them).
+  - Regular / virtual methods (fully implemented behaviors that derived classes inherit out-of-the-box).
+  - Properties, fields, and constructors (used to initialize shared state when a derived class is spawned).
+- Crucial rule: You cannot instantiate an abstract class directly (new is strictly forbidden by the compiler).
+It exists solely to be inherited from.
+
+:::tip The Metaphor: Dramatic Archetypes
+An abstract class is like the literary concept of a "Phantom" (Osoba Dramatu) in Wyspiański’s script:
+- A "generic, nameless Phantom" never walks onto the stage in Bronowice—you cannot summon pure abstraction
+(`new Phantom()` makes no sense).
+- However, specific phantoms like Wernyhora, Stańczyk, or the Black Knight are concrete manifestations built
+upon that exact archetype. They all share the same ghostly nature (fading into the mist),
+yet each brings a completely unique historical message that they must deliver.
+
+:::
+
+
+:::note Design Pattern Alert: The Template Method Pattern
+Abstract classes are the backbone of the Template Method Pattern. You can write a public,
+concrete method in the abstract class (e.g., `HauntGuest()`) that defines the strict skeleton of an algorithm
+(1. Appear from the mist -> 2. Confront the guest -> 3. Vanish), while leaving step #2 (`Confront()`) as an abstract
+method. The base class controls the overarching theatrical flow, while the subclasses fill in the specific dramatic
+dialogue!
+
+
+:::
+
+```csharp
+public abstract class Phantom
+{
+    public string Name { get; set; }
+    public string TargetGuest { get; set; }
+
+    // Abstract method – NO body! Every specific phantom MUST define its own message.
+    public abstract void DeliverMessage();
+
+    // Regular concrete method – shared across all phantoms without changes.
+    public void FadeIntoMist()
+    {
+        Console.WriteLine($"{Name} dissolves back into the cold Bronowice night.");
+    }
+
+    // Template Method Pattern in action:
+    public void Haunt()
+    {
+        Console.WriteLine($"--- Midnight strikes for {TargetGuest} ---");
+        DeliverMessage(); // Calls the overridden abstract method!
+        FadeIntoMist();   // Calls the shared base method!
+    }
+}
+
+public class Stanczyk : Phantom
+{
+    // We are forced by the compiler to use 'override' and provide the implementation
+    public override void DeliverMessage()
+    {
+        Console.WriteLine($"{Name} hands {TargetGuest} the Caduceus to stir the muddy national waters.");
+    }
+}
+
+public class Hetman : Phantom
+{
+    public override void DeliverMessage()
+    {
+        Console.WriteLine($"{Name} screams at {TargetGuest} as golden coins burn his traitorous hands!");
+    }
+}
+
+```
+
+**Usage in the Play**
+
+```csharp
+class Program
+{
+    static void Main(string[] args)
+    {
+        // Phantom p = new Phantom(); // COMPILER ERROR! Cannot create an instance of the abstract type 'Phantom'.
+
+        Stanczyk jester = new Stanczyk { Name = "Stańczyk", TargetGuest = "Dziennikarz" };
+        Hetman traitor = new Hetman { Name = "Hetman Branicki", TargetGuest = "Pan Młody" };
+
+        jester.Haunt();
+        // Output:
+        // --- Midnight strikes for Dziennikarz ---
+        // Stańczyk hands Dziennikarz the Caduceus to stir the muddy national waters.
+        // Stańczyk dissolves back into the cold Bronowice night.
+
+        traitor.Haunt();
+        // Output:
+        // --- Midnight strikes for Pan Młody ---
+        // Hetman Branicki screams at Pan Młody as golden coins burn his traitorous hands!
+        // Hetman Branicki dissolves back into the cold Bronowice night.
+    }
+}
+
+```
+
+:::important When to use Abstract Classes?
+Use an abstract class when:
+- You want to avoid code duplication (DRY): Several classes share common state (`Name`, `TargetGuest`) and
+concrete behaviors (`FadeIntoMist()`) that you want to write once and inherit everywhere.
+- You need a partially built foundation: You want to provide ready-to-use base methods while strictly enforcing
+that every subclass implements missing critical pieces (`DeliverMessage()`).
+- You want to enforce a strict ontology ("Is-A" hierarchy): Since C# supports single inheritance only
+(a class can inherit from only one base class), an abstract class locks the derived classes into a single, closely
+related family tree.
+
+:::
+
+---
+## Knowledge Check: Abstract Classes
+
+Try to answer these questions on your own before clicking to reveal the solutions!
+
+### 1. The Instantiation Rule
+
+Why does the C# compiler report an error if you try to write `Phantom p = new Phantom();`? How can you still use `Phantom` as the type of a variable, for example, `Phantom p = new Stanczyk();`?
+
+<details>
+    <summary>👁️ Click to reveal the answer</summary>
+
+    If `Phantom` is an abstract class, it cannot be instantiated directly:
+
+    ```csharp
+    Phantom p = new Phantom();
+    // Compiler error: cannot create an instance of an abstract class
+    ```
+
+    An abstract class represents a general concept intended to serve as a base for more specific classes. It may contain abstract members that do not provide an implementation.
+
+    For example:
+
+    ```csharp
+    public abstract class Phantom
+    {
+        public abstract void Perform();
+    }
+    ```
+
+    However, an abstract class can still be used as the type of a variable:
+
+    ```csharp
+    Phantom p = new Stanczyk();
+    ```
+
+    This is valid if `Stanczyk` is a concrete class that inherits from `Phantom` and implements all inherited abstract members:
+
+    ```csharp
+    public class Stanczyk : Phantom
+    {
+        public override void Perform()
+        {
+            Console.WriteLine("Stańczyk performs.");
+        }
+    }
+    ```
+
+    The variable has the compile-time type `Phantom`, but the actual object has the runtime type `Stanczyk`:
+
+    ```csharp
+    Phantom p = new Stanczyk();
+
+    p.Perform();
+    // Calls Stanczyk.Perform()
+    ```
+
+    This allows different concrete subclasses to be accessed through the same abstract base type and is an example of runtime polymorphism.
+
+</details>
+
+---
+
+### 2. `virtual` vs. `abstract`
+
+Both `virtual` and `abstract` methods can be overridden in derived classes using the `override` keyword. What are the two critical differences between them regarding their implementation in the base class and the compiler's requirements for a derived class?
+
+<details>
+    <summary>👁️ Click to reveal the answer</summary>
+
+    There are two main differences.
+
+    #### 1. Implementation in the base class
+
+    A `virtual` method provides an implementation in the base class:
+
+    ```csharp
+    public abstract class Phantom
+    {
+        public virtual void Perform()
+        {
+            Console.WriteLine(
+                "The phantom performs a mysterious action."
+            );
+        }
+    }
+    ```
+
+    A derived class may replace this behavior, but it does not have to.
+
+    An `abstract` method does not provide an implementation. Its declaration ends with a semicolon:
+
+    ```csharp
+    public abstract class Phantom
+    {
+        public abstract void Perform();
+    }
+    ```
+
+    An abstract method can only be declared inside an abstract class.
+
+    #### 2. Requirements for derived classes
+
+    Overriding a `virtual` method is optional. If a derived class does not override it, it inherits the base implementation:
+
+    ```csharp
+    public class Stanczyk : Phantom
+    {
+        // Uses the inherited implementation of Perform().
+    }
+    ```
+
+    A concrete derived class must implement every inherited abstract member:
+
+    ```csharp
+    public abstract class Phantom
+    {
+        public abstract void Perform();
+    }
+
+    public class Stanczyk : Phantom
+    {
+        public override void Perform()
+        {
+            Console.WriteLine("Stańczyk performs.");
+        }
+    }
+    ```
+
+    If `Stanczyk` does not implement `Perform()`, the compiler reports error **CS0534**:
+
+    ```text
+    'Stanczyk' does not implement inherited abstract member
+    'Phantom.Perform()'
+    ```
+
+    A derived class may leave the abstract method unimplemented only if the derived class is also declared as abstract:
+
+    ```csharp
+    public abstract class Stanczyk : Phantom
+    {
+        // Perform() may remain unimplemented because
+        // Stanczyk is also an abstract class.
+    }
+    ```
+
+    In short:
+
+    - A `virtual` method provides default behavior that a derived class **may** override.
+    - An `abstract` method defines a requirement that a concrete derived class **must** implement.
+
+</details>
+
+---
+
+### 3. The Constructor Paradox
+
+If an abstract class cannot be instantiated with the `new` keyword, why is it still legal and common to define a constructor inside an abstract class? Who actually calls it?
+
+<details>
+    <summary>👁️ Click to reveal the answer</summary>
+
+    An abstract class can contain fields, properties, validation, and initialization logic shared by its derived classes.
+
+    For example:
+
+    ```csharp
+    public abstract class Phantom
+    {
+        public string Name { get; }
+
+        protected Phantom(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                throw new ArgumentException(
+                    "A phantom must have a name.",
+                    nameof(name)
+                );
+            }
+
+            Name = name;
+        }
+    }
+    ```
+
+    Although `Phantom` cannot be instantiated directly, the `Phantom` part of every derived object still has to be initialized.
+
+    A concrete derived class invokes the base-class constructor using `base(...)`:
+
+    ```csharp
+    public class Stanczyk : Phantom
+    {
+        public Stanczyk(string name)
+            : base(name)
+        {
+            Console.WriteLine(
+                "The Stanczyk constructor is running."
+            );
+        }
+    }
+    ```
+
+    When the following object is created:
+
+    ```csharp
+    Phantom p = new Stanczyk("Stańczyk");
+    ```
+
+    the constructors execute in this order:
+
+    1. The constructor of `Phantom` initializes the base-class part of the object.
+    2. The constructor body of `Stanczyk` initializes the derived-class part.
+
+    The constructor of the abstract class is therefore invoked as part of constructing a concrete derived object.
+
+    If the abstract base class has an accessible parameterless constructor, the compiler can insert an implicit `base()` call:
+
+    ```csharp
+    public abstract class Phantom
+    {
+        protected Phantom()
+        {
+            Console.WriteLine("Phantom constructor");
+        }
+    }
+
+    public class Stanczyk : Phantom
+    {
+        public Stanczyk()
+        {
+            Console.WriteLine("Stanczyk constructor");
+        }
+    }
+    ```
+
+    Creating the object:
+
+    ```csharp
+    Stanczyk p = new Stanczyk();
+    ```
+
+    is effectively equivalent to writing:
+
+    ```csharp
+    public Stanczyk()
+        : base()
+    {
+        Console.WriteLine("Stanczyk constructor");
+    }
+    ```
+
+    Constructors in abstract classes are commonly marked as `protected` because they are intended to be called by derived classes, not directly by unrelated external code.
+
+</details>
+
+
+
+
+
+

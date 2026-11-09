@@ -28,29 +28,38 @@ sum of the entire fleet's power.
 
 6. Lightsaber Forge (Switch Expression/Statement)
 In a `KyberCrystal class`, write a static method `string GetSaberColor(string alignment)`.
-Use a switch statement to return "Red" if alignment is "Dark", "Blue" or "Green" if "Light", and "Purple" if "Neutral".
+Use a switch statement to return "Red" if alignment is "Dark", "Blue" or "Green" if "Light",
+and "Purple" if "Neutral".
 Return "White" for any unknown input.
 
 7. Duel Simulator (Object Comparison)
-Inside a `CombatArena class`, write a static method `Character DetermineWinner(Character fighter1, Character fighter2)`.
-It should compare their `PowerLevel` properties and return the `Character` object that has the higher power level.
+Inside a `CombatArena class`, write a static method
+`Character DetermineWinner(Character fighter1, Character fighter2)`.
+It should compare their `PowerLevel` properties and return the `Character`
+object that has the higher power level.
 If it's a tie, return fighter1.
+
+```csharp
+class Character {
+    public int PowerLevel = 0;
+}
+```
+
 
 8. Droid Counter (Static State/Fields)
 Create a `DroidFactory class`. Add a `private static` integer field called` _totalDroidsBuilt` set to `0`.
-Write a static method `void BuildDroid()` that increments this counter by 1. Write another static method int `GetTotalBuilt()`
+Write a static method `void BuildDroid()` that increments this counter by `1`.
+Write another static method int `GetTotalBuilt()`
 that returns the current count.
 
 9. The Sith Title (Extension Method)(Note: Extension methods must be static and inside a static class).
-Create a static class SithExtensions. Write a static method string AddDarthTitle(this string name) that
-automatically prepends "Darth " to any string. (Usage: "Vader".AddDarthTitle() should return "Darth Vader").
+Create a `static class SithExtensions`. Write a `static method string AddDarthTitle(this string name)` that
+automatically prepends "Darth " to any string. (Usage: `"Vader".AddDarthTitle()` should return `"Darth Vader"`).
 
 10. Hyperspace Jump (Method Overloading)
-In the NaviComputer class, write two static methods with the same name:
-
-double CalculateJump(int distance) – returns distance * 1.5
-
-double CalculateJump(int distance, double massShadow) – returns (distance * 1.5) + massShadow
+In the `NaviComputer` class, write two static methods with the same name:
+- `double CalculateJump(int distance)` – returns distance * 1.5
+- `double CalculateJump(int distance, double massShadow)` – returns (distance * 1.5) + massShadow
 
 
 

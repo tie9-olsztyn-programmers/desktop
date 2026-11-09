@@ -1,0 +1,310 @@
+---
+title: "Inheritance"
+---
+
+# Inheritance (Dziedziczenie)
+
+
+## Definition
+
+:::note What is Inheritance?
+- Inheritance is an ontological mechanism that allows one class (the child/derived class) to assume the properties, fields, and behaviors of another class (the parent/base class).
+- It establishes a strict "Is-A" (jest) relationship, creating a logical hierarchy of types in the Bronowice universe.
+:::
+
+:::tip When to use it? & The Liskov Substitution Principle (LSP)
+
+- Inheritance is useful when dealing with classes that share a fundamental, structural identity. For example, both a Peasant and a Phantom are WeddingCharacters.
+
+- SOLID Principle Alert (LSP): The Liskov Substitution Principle states that anywhere the system expects a WeddingCharacter, you should be able to pass a Phantom without breaking the logic of the play. If a derived class cannot fulfill the basic contract of its parent (e.g., if a Painting class inherited from WeddingCharacter but couldn't physically Speak()), you should favor Composition over Inheritance!
+:::
+
+```csharp
+public class WeddingCharacter  // Base class
+{
+    public string Name { get; set; }
+
+    public void Speak()
+    {
+        Console.WriteLine($"{Name} utters a rhythmic verse.");
+    }
+}
+
+public class Phantom : WeddingCharacter  // Derived class
+{
+    public void Vanish()
+    {
+        Console.WriteLine($"{Name} dissolves back into the midnight mist.");
+    }
+}
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        Phantom wernyhora = new Phantom
+        {
+            Name = "Wernyhora"
+        };
+
+        wernyhora.Speak();  // Inherited from WeddingCharacter
+        wernyhora.Vanish(); // Defined specifically in Phantom
+    }
+}
+
+```
+
+## Referencing the Base Class (`base` Keyword)
+- The base keyword grants you direct access to the parent class's members and implementation.
+- It is crucial when constructing an object (to route parameters up the hierarchy) and when overriding methods (to extend, rather than completely destroy, the parent's original behavior).
+
+```csharp
+public class WeddingCharacter
+{
+    public string Name { get; set; }
+
+    // Base Constructor
+    public WeddingCharacter(string name)
+    {
+        Name = name;
+    }
+
+    // The 'virtual' keyword allows derived classes to change this behavior
+    public virtual void MakeEntrance()
+    {
+        Console.WriteLine($"{Name} walks through the tavern door.");
+    }
+}
+
+public class Phantom : WeddingCharacter
+{
+    // Calling the base class constructor to handle the 'Name' initialization
+    public Phantom(string name) : base(name)
+    {
+    }
+
+    // Overriding the base method with specific supernatural logic
+    public override void MakeEntrance()
+    {
+        // We can still trigger the original physical entrance behavior...
+        base.MakeEntrance();
+
+        // ...and then add the specific supernatural effects!
+        Console.WriteLine($"A chill fills the room, and a Podhalan sheepdog outside begins to howl at the approaching spirit.");
+    }
+}
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        Phantom rycerz = new Phantom("Black Knight");
+        rycerz.MakeEntrance();
+
+        // Output:
+        // Black Knight walks through the tavern door.
+        // A chill fills the room, and a Podhalan sheepdog outside begins to howl at the approaching spirit.
+    }
+}
+
+```
+
+---
+## Knowledge Check: Inheritance
+
+Try to answer these questions on your own before clicking to reveal the solutions!
+
+### 1. The Liskov Substitution Principle
+
+If `Phantom` inherits from `WeddingCharacter`, which SOLID design principle states that a `Phantom` object should be usable wherever a `WeddingCharacter` object is expected without breaking the application?
+
+<details>
+    <summary>👁️ Click to reveal the answer</summary>
+
+    This is the **Liskov Substitution Principle (LSP)**, the “L” in SOLID.
+
+    The principle states that an object of a derived class, such as `Phantom`, should be usable in place of an object of its base class, such as `WeddingCharacter`, without breaking the expected behavior of the program.
+
+    For example:
+
+    ```csharp
+    WeddingCharacter character = new Phantom("The Phantom");
+    character.MakeEntrance();
+    ```
+
+    Code written to work with `WeddingCharacter` should continue to work correctly when the actual object is a `Phantom`.
+
+    Inheritance alone does not guarantee that LSP is followed. If `Phantom` changes the expected behavior or violates assumptions established by `WeddingCharacter`, it violates the principle.
+
+</details>
+
+---
+
+### 2. Constructor Inheritance and `base()`
+
+Why is the `base(name)` call necessary in the `Phantom` constructor? Why should we not simply write `Name = name` directly inside the derived constructor's body?
+
+<details>
+    <summary>👁️ Click to reveal the answer</summary>
+
+    Constructors are not inherited. However, when a derived object is created, a constructor of its base class must run before the body of the derived-class constructor.
+
+    Suppose `WeddingCharacter` has a constructor that requires a name:
+
+    ```csharp
+    public class WeddingCharacter
+    {
+        public string Name { get; }
+
+        public WeddingCharacter(string name)
+        {
+            Name = name;
+        }
+    }
+    ```
+
+    Because `WeddingCharacter` does not have a parameterless constructor, `Phantom` must explicitly call the available base-class constructor:
+
+    ```csharp
+    public class Phantom : WeddingCharacter
+    {
+        public Phantom(string name)
+            : base(name)
+        {
+        }
+    }
+    ```
+
+    The `base(name)` call passes the value to the `WeddingCharacter` constructor and allows the base class to initialize the part of the object for which it is responsible.
+
+    Writing this inside the `Phantom` constructor might not be possible:
+
+    ```csharp
+    Name = name;
+    ```
+
+    In this example, `Name` is a read-only property. It can only be assigned inside the constructor of the class in which it was declared.
+
+    Even if `Name` had an accessible setter, assigning it directly in `Phantom` could duplicate or bypass validation and initialization logic defined by `WeddingCharacter`.
+
+    For example:
+
+    ```csharp
+    public WeddingCharacter(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            throw new ArgumentException(
+                "A character must have a name.",
+                nameof(name)
+            );
+        }
+
+        Name = name;
+    }
+    ```
+
+    Using `base(name)` ensures that every derived class follows the initialization rules established by the base class.
+
+</details>
+
+---
+
+### 3. Method Hiding vs. Runtime Polymorphism
+
+What is the structural difference between declaring a new `MakeEntrance()` method in the `Phantom` class and overriding the method using the `virtual` and `override` keywords?
+
+<details>
+    <summary>👁️ Click to reveal the answer</summary>
+
+    These approaches use two different mechanisms: **method hiding** and **method overriding**.
+
+    #### Method hiding
+
+    If the base method is not virtual and `Phantom` declares a method with the same name and signature, the derived method hides the base method.
+
+    The `new` keyword should be used to make this intention explicit:
+
+    ```csharp
+    public class WeddingCharacter
+    {
+        public void MakeEntrance()
+        {
+            Console.WriteLine(
+                "A wedding character enters."
+            );
+        }
+    }
+
+    public class Phantom : WeddingCharacter
+    {
+        public new void MakeEntrance()
+        {
+            Console.WriteLine(
+                "The Phantom appears mysteriously."
+            );
+        }
+    }
+    ```
+
+    With method hiding, the method that is called depends on the compile-time type of the variable:
+
+    ```csharp
+    Phantom phantom = new Phantom();
+    WeddingCharacter character = phantom;
+
+    phantom.MakeEntrance();
+    // Calls Phantom.MakeEntrance()
+
+    character.MakeEntrance();
+    // Calls WeddingCharacter.MakeEntrance()
+    ```
+
+    Although both variables refer to the same object, their declared types are different. This affects which hidden method is selected.
+
+    #### Runtime polymorphism
+
+    To enable runtime polymorphism, declare the base method as `virtual` and the derived implementation as `override`:
+
+    ```csharp
+    public class WeddingCharacter
+    {
+        public virtual void MakeEntrance()
+        {
+            Console.WriteLine(
+                "A wedding character enters."
+            );
+        }
+    }
+
+    public class Phantom : WeddingCharacter
+    {
+        public override void MakeEntrance()
+        {
+            Console.WriteLine(
+                "The Phantom appears mysteriously."
+            );
+        }
+    }
+    ```
+
+    The overridden implementation is selected according to the actual type of the object:
+
+    ```csharp
+    WeddingCharacter character = new Phantom();
+
+    character.MakeEntrance();
+    // Calls Phantom.MakeEntrance()
+    ```
+
+    Although the variable is declared as `WeddingCharacter`, the actual object is a `Phantom`. Therefore, C# executes the overridden implementation from `Phantom`.
+
+    In short:
+
+    - Method hiding with `new` depends on the **declared type of the variable**.
+    - Method overriding with `virtual` and `override` depends on the **actual type of the object**.
+
+</details>
+
+
+

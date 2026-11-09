@@ -1,0 +1,137 @@
+---
+title: "OOP in Bronowice: Constructors"
+---
+
+# Constructors
+
+
+## The Definition of a Constructor
+
+In the world of C#, constructors are the summoning rituals used to instantiate objects.
+- Their primary job is to assign initial values to an object's fields or properties the exact moment
+- it steps onto the stage, ensuring the object is fully prepared for its role before the play continues.
+- A constructor is a special public method that shares the exact same name as the class.
+- If you don't write your own constructor, the .NET compiler silently provides a default,
+- parameterless one inherited from the base object class.
+
+```csharp
+public class Apparition
+{
+    public string Name;
+    public string Summoner;
+    public string Prop;
+
+    // The Default Constructor
+    public Apparition()
+    {
+        Name = "Unknown Spirit";
+        Summoner = "No one";
+        Prop = "Mist";
+    }
+}
+
+// Summoning a generic ghost into the Bronowice cottage
+Apparition genericGhost = new Apparition();
+Console.WriteLine($"{genericGhost.Name} appears to {genericGhost.Summoner} holding {genericGhost.Prop}.");
+// Output: Unknown Spirit appears to No one holding Mist.
+```
+
+
+## The Parameterized Constructor
+
+A default constructor is rarely enough for a complex drama. We can define a constructor that accepts parameters.
+This allows the system to pass specific data exactly when the object is spawned in memory.
+
+:::tip Design Principle: Constructor Injection & Immutability
+Using a parameterized constructor is the foundation of Constructor Injection (a core concept
+of Dependency Injection). You provide the object with everything it needs to survive right at birth.
+Furthermore, by using a constructor, you can assign values to readonly fields. This makes your ghosts
+Immutable—once Wernyhora is spawned, his identity and mission cannot be accidentally modified by another
+piece of code!
+
+:::
+
+:::tip Dependency Injection (Design Pattern)
+Imagine if every guest at the Bronowice wedding had to personally distill their own vodka,
+bake their own bread, or forge their own Golden Horn just to participate in the party.
+That is tight coupling—where a class is forced to manually build everything it depends on using the new keyword.
+
+Dependency Injection (DI) is like having the Gospodarz act as the DI Container (the orchestrator).
+Instead of the guests fetching or manufacturing what they need, the Gospodarz stands at the door and injects
+(hands over) the exact dependencies—a glass, a scythe, or a magical horn—straight into the guest's hands
+(via their Constructor) as they enter the stage. The guest doesn't need to know how the item was created;
+they simply receive it, rely on its interface, and focus purely on playing their role in the drama!
+
+:::
+
+
+```csharp
+public class Apparition
+{
+    // Readonly fields ensure Immutability - the past cannot be changed!
+    public readonly string Name;
+    public readonly string Summoner;
+    public readonly string Prop;
+
+    // Parameterized Constructor
+    public Apparition(string name, string summoner, string prop)
+    {
+        Name = name;
+        Summoner = summoner;
+        Prop = prop;
+    }
+}
+
+// Spawning a specific phantom with exact parameters
+Apparition wernyhora = new Apparition("Wernyhora", "Gospodarz", "Golden Horn");
+Console.WriteLine($"{wernyhora.Name} appears to {wernyhora.Summoner} holding a {wernyhora.Prop}.");
+// Output: Wernyhora appears to Gospodarz holding a Golden Horn.
+```
+
+## Constructor Overloading
+C# allows you to define multiple constructors within the same class, a feature known as Constructor Overloading.
+
+This means you can have different versions of the summoning ritual, each accepting a different signature
+(a different set of parameters).
+
+The runtime will automatically figure out which constructor to use based on the arguments you pass when
+calling the new keyword.
+
+
+```csharp
+public class Apparition
+{
+    public string Name;
+    public string Summoner;
+    public string Prop;
+
+    // 1. Parameterless Constructor (For generic background ghosts)
+    public Apparition()
+    {
+        Name = "Unknown Spirit";
+        Summoner = "No one";
+        Prop = "Mist";
+    }
+
+    // 2. Parameterized Constructor (For crucial plot characters)
+    public Apparition(string name, string summoner, string prop)
+    {
+        Name = name;
+        Summoner = summoner;
+        Prop = prop;
+    }
+}
+
+// The runtime chooses the appropriate constructor based on provided arguments:
+Apparition ghost1 = new Apparition();
+Apparition ghost2 = new Apparition("Black Knight", "Poeta", "Great Sword");
+```
+
+
+
+
+
+
+
+
+
